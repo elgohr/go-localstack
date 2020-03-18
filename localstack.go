@@ -10,11 +10,13 @@ import (
 	"github.com/ory/dockertest"
 )
 
+// Manages a localstack instance
 type Instance struct {
 	pool     *dockertest.Pool
 	resource *dockertest.Resource
 }
 
+// Starts the localstack
 func (l *Instance) Start() error {
 	if isAlreadyRunning(l) {
 		if err := tearDown(l); err != nil {
@@ -35,6 +37,7 @@ func (l *Instance) Start() error {
 	return nil
 }
 
+// Stops the localstack
 func (l *Instance) Stop() error {
 	if l.pool != nil && l.resource != nil {
 		return l.pool.Purge(l.resource)
@@ -42,6 +45,8 @@ func (l *Instance) Stop() error {
 	return nil
 }
 
+// Returns the endpoint for the given service
+// Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (l *Instance) Endpoint(service Service) string {
 	if l.resource != nil {
 		return l.resource.GetHostPort(string(service))
@@ -49,8 +54,10 @@ func (l *Instance) Endpoint(service Service) string {
 	return ""
 }
 
+// Represents an AWS service
 type Service string
 
+// Supported AWS/localstack services
 const (
 	CloudFormation   = Service("4581/tcp")
 	CloudWatch       = Service("4582/tcp")
