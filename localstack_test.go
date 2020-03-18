@@ -1,7 +1,7 @@
 package localstack_test
 
 import (
-	localstack "github.com/elgohr/golang-localstack"
+	"github.com/elgohr/go-localstack"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"strings"

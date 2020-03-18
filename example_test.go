@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
-	localstack "github.com/elgohr/golang-localstack"
+	"github.com/elgohr/go-localstack"
 	"testing"
 )
 
