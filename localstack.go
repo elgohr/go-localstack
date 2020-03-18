@@ -81,7 +81,7 @@ func isAvailable(l *Instance) error {
 		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
 		DisableSSL:  aws.Bool(true),
 		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(l.resource.GetHostPort("4576/tcp")),
+		Endpoint:    aws.String(l.Endpoint(SQS)),
 	})
 	if err != nil {
 		fmt.Println("localstack: waiting on server to start...")
