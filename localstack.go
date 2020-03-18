@@ -10,72 +10,43 @@ import (
 	"github.com/ory/dockertest"
 )
 
-type LocalStack struct {
+type Instance struct {
 	pool     *dockertest.Pool
 	resource *dockertest.Resource
 }
 
-func (l *LocalStack) Start() error {
-	var err error
-	l.pool, err = dockertest.NewPool("")
-	if err != nil {
-		return fmt.Errorf("localstack: could not connect to docker: %w", err)
+func (l *Instance) Start() error {
+	if isAlreadyRunning(l) {
+		if err := tearDown(l); err != nil {
+			return err
+		}
 	}
-	l.resource, err = l.pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "localstack/localstack",
-		Tag:        "latest",
-	})
-	if err != nil {
-		return fmt.Errorf("localstack: could not start resource: %w", err)
+
+	if err := startLocalstack(l); err != nil {
+		return err
 	}
-	address := l.resource.GetHostPort("4576/tcp")
 
 	if err := l.pool.Retry(func() error {
-		var err error
-		sess, err := session.NewSession(&aws.Config{
-			Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-			DisableSSL:  aws.Bool(true),
-			Region:      aws.String(endpoints.UsWest1RegionID),
-			Endpoint:    aws.String(address),
-		})
-		if err != nil {
-			fmt.Println("localstack: waiting on server to start...")
-			return err
-		}
-
-		s := sqs.New(sess)
-
-		createQueue, err := s.CreateQueue(&sqs.CreateQueueInput{
-			QueueName: aws.String("queue"),
-			Attributes: map[string]*string{
-				"VisibilityTimeout": aws.String("1"),
-			},
-		})
-		if err != nil {
-			fmt.Println("localstack: waiting on server to initialize...")
-			return err
-		}
-
-		if _, err := s.DeleteQueue(&sqs.DeleteQueueInput{
-			QueueUrl: createQueue.QueueUrl,
-		}); err != nil {
-			return err
-		}
-
-		fmt.Println("localstack: finished waiting")
-		return err
+		return isAvailable(l)
 	}); err != nil {
 		return fmt.Errorf("localstack: could start environment: %w", err)
+	}
+
+	return nil
+}
+
+func (l *Instance) Stop() error {
+	if l.pool != nil && l.resource != nil {
+		return l.pool.Purge(l.resource)
 	}
 	return nil
 }
 
-func (l *LocalStack) Stop() error {
-	return l.pool.Purge(l.resource)
-}
-
-func (l *LocalStack) Endpoint(service Service) string {
-	return l.resource.GetHostPort(string(service))
+func (l *Instance) Endpoint(service Service) string {
+	if l.resource != nil {
+		return l.resource.GetHostPort(string(service))
+	}
+	return ""
 }
 
 type Service string
@@ -92,7 +63,6 @@ const (
 	Firehose         = Service("4573/tcp")
 	IAM              = Service("4593/tcp")
 	Kinesis          = Service("4568/tcp")
-	KMS              = Service("4599/tcp")
 	Lambda           = Service("4574/tcp")
 	Redshift         = Service("4577/tcp")
 	Route53          = Service("4580/tcp")
@@ -105,3 +75,61 @@ const (
 	STS              = Service("4592/tcp")
 	StepFunctions    = Service("4585/tcp")
 )
+
+func isAvailable(l *Instance) error {
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+		DisableSSL:  aws.Bool(true),
+		Region:      aws.String(endpoints.UsWest1RegionID),
+		Endpoint:    aws.String(l.resource.GetHostPort("4576/tcp")),
+	})
+	if err != nil {
+		fmt.Println("localstack: waiting on server to start...")
+		return err
+	}
+
+	s := sqs.New(sess)
+	createQueue, err := s.CreateQueue(&sqs.CreateQueueInput{
+		QueueName: aws.String("test-resource"),
+	})
+	if err != nil {
+		fmt.Println("localstack: waiting on server to initialize...")
+		return err
+	}
+
+	if _, err := s.DeleteQueue(&sqs.DeleteQueueInput{
+		QueueUrl: createQueue.QueueUrl,
+	}); err != nil {
+		return err
+	}
+
+	fmt.Println("localstack: finished waiting")
+	return nil
+}
+
+func startLocalstack(l *Instance) error {
+	var err error
+	l.pool, err = dockertest.NewPool("")
+	if err != nil {
+		return fmt.Errorf("localstack: could not connect to docker: %w", err)
+	}
+	l.resource, err = l.pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "localstack/localstack",
+		Tag:        "latest",
+	})
+	if err != nil {
+		return fmt.Errorf("localstack: could not start resource: %w", err)
+	}
+	return nil
+}
+
+func tearDown(l *Instance) error {
+	if err := l.Stop(); err != nil {
+		return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
+	}
+	return nil
+}
+
+func isAlreadyRunning(l *Instance) bool {
+	return l.pool != nil
+}
