@@ -3,7 +3,7 @@ Golang Wrapper for using [localstack](https://github.com/localstack/localstack) 
 
 # Installation
 ```bash
-go get github.com/elgohr/golang-localstack
+go get github.com/elgohr/go-localstack
 ```
 
 # Usage

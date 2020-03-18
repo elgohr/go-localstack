@@ -1,4 +1,4 @@
-module github.com/elgohr/golang-localstack
+module github.com/elgohr/go-localstack
 
 go 1.14
 
