@@ -1,4 +1,4 @@
-# golang-localstack
+# go-localstack
 [![Actions Status](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions)
 
 Golang Wrapper for using [localstack](https://github.com/localstack/localstack) in go testing
