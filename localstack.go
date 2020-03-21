@@ -8,48 +8,61 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/docker"
 )
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Pool
 
 // Instance manages the localstack
 type Instance struct {
-	pool     *dockertest.Pool
-	resource *dockertest.Resource
+	Pool     Pool
+	Resource *dockertest.Resource
+}
+
+func NewInstance() (*Instance, error) {
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
+	}
+	return &Instance{
+		Pool: pool,
+	}, nil
 }
 
 // Start starts the localstack
-func (l *Instance) Start() error {
-	if isAlreadyRunning(l) {
-		if err := tearDown(l); err != nil {
+func (i *Instance) Start() error {
+	if isAlreadyRunning(i) {
+		if err := tearDown(i); err != nil {
 			return err
 		}
 	}
 
-	if err := startLocalstack(l); err != nil {
+	if err := startLocalstack(i); err != nil {
 		return err
 	}
 
-	if err := l.pool.Retry(func() error {
-		return isAvailable(l)
+	if err := i.Pool.Retry(func() error {
+		return isAvailable(i)
 	}); err != nil {
-		return fmt.Errorf("localstack: could start environment: %w", err)
+		return fmt.Errorf("localstack: could not start environment: %w", err)
 	}
 
 	return nil
 }
 
 // Stop stops the localstack
-func (l *Instance) Stop() error {
-	if l.pool != nil && l.resource != nil {
-		return l.pool.Purge(l.resource)
+func (i Instance) Stop() error {
+	if i.Resource != nil {
+		return i.Pool.Purge(i.Resource)
 	}
 	return nil
 }
 
 // Endpoint returns the endpoint for the given service
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
-func (l *Instance) Endpoint(service Service) string {
-	if l.resource != nil {
-		return l.resource.GetHostPort(string(service))
+func (i Instance) Endpoint(service Service) string {
+	if i.Resource != nil {
+		return i.Resource.GetHostPort(string(service))
 	}
 	return ""
 }
@@ -97,7 +110,7 @@ func isAvailable(l *Instance) error {
 
 	s := sqs.New(sess)
 	createQueue, err := s.CreateQueue(&sqs.CreateQueueInput{
-		QueueName: aws.String("test-resource"),
+		QueueName: aws.String("test-Resource"),
 	})
 	if err != nil {
 		fmt.Println("localstack: waiting on server to initialize...")
@@ -116,16 +129,12 @@ func isAvailable(l *Instance) error {
 
 func startLocalstack(l *Instance) error {
 	var err error
-	l.pool, err = dockertest.NewPool("")
-	if err != nil {
-		return fmt.Errorf("localstack: could not connect to docker: %w", err)
-	}
-	l.resource, err = l.pool.RunWithOptions(&dockertest.RunOptions{
+	l.Resource, err = l.Pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "localstack/localstack",
 		Tag:        "latest",
 	})
 	if err != nil {
-		return fmt.Errorf("localstack: could not start resource: %w", err)
+		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
 	return nil
 }
@@ -138,5 +147,11 @@ func tearDown(l *Instance) error {
 }
 
 func isAlreadyRunning(l *Instance) bool {
-	return l.pool != nil
+	return l.Pool != nil
+}
+
+type Pool interface {
+	RunWithOptions(opts *dockertest.RunOptions, hcOpts ...func(*docker.HostConfig)) (*dockertest.Resource, error)
+	Purge(r *dockertest.Resource) error
+	Retry(op func() error) error
 }

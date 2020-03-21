@@ -6,13 +6,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/elgohr/go-localstack"
-	"testing"
+	"log"
 )
 
-func TestExampleLocalstack(t *testing.T) {
-	l := &localstack.Instance{}
+func ExampleLocalstack() {
+	l, err := localstack.NewInstance()
+	if err != nil {
+		log.Fatalf("Could not connect to Docker %v", err)
+	}
 	if err := l.Start(); err != nil {
-		t.Fatalf("Could not start localstack %v", err)
+		log.Fatalf("Could not start localstack %v", err)
 	}
 
 	session.NewSession(&aws.Config{
@@ -25,8 +28,9 @@ func TestExampleLocalstack(t *testing.T) {
 	myTest()
 
 	if err := l.Stop(); err != nil {
-		t.Fatalf("Could not stop localstack %v", err)
+		log.Fatalf("Could not stop localstack %v", err)
 	}
+	// Output: <nil>
 }
 
 func myTest() {}
