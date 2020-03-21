@@ -1,6 +1,7 @@
 package localstack_test
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -27,9 +28,7 @@ func ExampleLocalstack() {
 
 	myTest()
 
-	if err := l.Stop(); err != nil {
-		log.Fatalf("Could not stop localstack %v", err)
-	}
+	fmt.Println(l.Stop())
 	// Output: <nil>
 }
 
