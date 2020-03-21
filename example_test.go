@@ -28,8 +28,10 @@ func ExampleLocalstack() {
 
 	myTest()
 
-	fmt.Println(l.Stop())
-	// Output: <nil>
+	
+	if err := l.Stop(); err != nil {
+		log.Fatalf("Could not stop localstack %v", err)
+	}
 }
 
 func myTest() {}
