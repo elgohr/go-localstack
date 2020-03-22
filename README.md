@@ -1,5 +1,6 @@
 # go-localstack
 [![Actions Status](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions)
+[![codecov](https://codecov.io/gh/elgohr/go-localstack/branch/master/graph/badge.svg)](https://codecov.io/gh/elgohr/go-localstack)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elgohr/go-localstack)](https://goreportcard.com/report/github.com/elgohr/go-localstack)
 [![](https://godoc.org/github.com/elgohr/go-localstack?status.svg)](http://godoc.org/github.com/elgohr/go-localstack)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
