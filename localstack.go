@@ -30,7 +30,7 @@ func NewInstance() (*Instance, error) {
 }
 
 // Start starts the localstack
-func (i Instance) Start() error {
+func (i *Instance) Start() error {
 	if i.isAlreadyRunning() {
 		if err := i.tearDown(); err != nil {
 			return err
@@ -42,12 +42,7 @@ func (i Instance) Start() error {
 	}
 
 	if err := i.pool.Retry(func() error {
-		return isAvailable(&aws.Config{
-			Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-			DisableSSL:  aws.Bool(true),
-			Region:      aws.String(endpoints.UsWest1RegionID),
-			Endpoint:    aws.String(i.Endpoint(SQS)),
-		})
+		return i.isAvailable()
 	}); err != nil {
 		return fmt.Errorf("localstack: could not start environment: %w", err)
 	}
@@ -101,8 +96,13 @@ const (
 	StepFunctions    = Service("4585/tcp")
 )
 
-func isAvailable(config *aws.Config) error {
-	sess, err := session.NewSession(config)
+func (i Instance) isAvailable() error {
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+		DisableSSL:  aws.Bool(true),
+		Region:      aws.String(endpoints.UsWest1RegionID),
+		Endpoint:    aws.String(i.Endpoint(SQS)),
+	})
 	if err != nil {
 		fmt.Println("localstack: waiting on server to start...")
 		return err

@@ -2,7 +2,6 @@ package localstack
 
 import (
 	"errors"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
 	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
@@ -75,10 +74,10 @@ func TestInstance_Stop_Fails(t *testing.T) {
 }
 
 func TestInstance_isAvailable_Session_Fails(t *testing.T) {
-	empty := &aws.Config{}
 	if err := os.Setenv("AWS_STS_REGIONAL_ENDPOINTS", "FAILURE"); err != nil {
 		t.Fatal(err)
 	}
 	defer os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS")
-	assert.Error(t, isAvailable(empty))
+	i := &Instance{}
+	assert.Error(t, i.isAvailable())
 }
