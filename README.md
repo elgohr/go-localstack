@@ -1,5 +1,8 @@
 # go-localstack
 [![Actions Status](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/elgohr/go-localstack)](https://goreportcard.com/report/github.com/elgohr/go-localstack)
+[![](https://godoc.org/github.com/elgohr/go-localstack?status.svg)](http://godoc.org/github.com/elgohr/go-localstack)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
 
 Go Wrapper for using [localstack](https://github.com/localstack/localstack) in go testing
 
