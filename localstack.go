@@ -7,42 +7,47 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/elgohr/go-localstack/internal"
 	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
 )
-
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Pool
 
 // Instance manages the localstack
 type Instance struct {
-	Pool     Pool
-	Resource *dockertest.Resource
+	pool     internal.Pool
+	resource *dockertest.Resource
 }
 
+// Creates a new Instance
+// Fails when Docker is not reachable
 func NewInstance() (*Instance, error) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
 	return &Instance{
-		Pool: pool,
+		pool: pool,
 	}, nil
 }
 
 // Start starts the localstack
-func (i *Instance) Start() error {
-	if isAlreadyRunning(i) {
-		if err := tearDown(i); err != nil {
+func (i Instance) Start() error {
+	if i.isAlreadyRunning() {
+		if err := i.tearDown(); err != nil {
 			return err
 		}
 	}
 
-	if err := startLocalstack(i); err != nil {
+	if err := i.startLocalstack(); err != nil {
 		return err
 	}
 
-	if err := i.Pool.Retry(func() error {
-		return isAvailable(i)
+	if err := i.pool.Retry(func() error {
+		return isAvailable(&aws.Config{
+			Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+			DisableSSL:  aws.Bool(true),
+			Region:      aws.String(endpoints.UsWest1RegionID),
+			Endpoint:    aws.String(i.Endpoint(SQS)),
+		})
 	}); err != nil {
 		return fmt.Errorf("localstack: could not start environment: %w", err)
 	}
@@ -52,8 +57,8 @@ func (i *Instance) Start() error {
 
 // Stop stops the localstack
 func (i Instance) Stop() error {
-	if i.Resource != nil {
-		return i.Pool.Purge(i.Resource)
+	if i.resource != nil {
+		return i.pool.Purge(i.resource)
 	}
 	return nil
 }
@@ -61,8 +66,8 @@ func (i Instance) Stop() error {
 // Endpoint returns the endpoint for the given service
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i Instance) Endpoint(service Service) string {
-	if i.Resource != nil {
-		return i.Resource.GetHostPort(string(service))
+	if i.resource != nil {
+		return i.resource.GetHostPort(string(service))
 	}
 	return ""
 }
@@ -96,13 +101,8 @@ const (
 	StepFunctions    = Service("4585/tcp")
 )
 
-func isAvailable(l *Instance) error {
-	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-		DisableSSL:  aws.Bool(true),
-		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(l.Endpoint(SQS)),
-	})
+func isAvailable(config *aws.Config) error {
+	sess, err := session.NewSession(config)
 	if err != nil {
 		fmt.Println("localstack: waiting on server to start...")
 		return err
@@ -127,9 +127,9 @@ func isAvailable(l *Instance) error {
 	return nil
 }
 
-func startLocalstack(l *Instance) error {
+func (i *Instance) startLocalstack() error {
 	var err error
-	l.Resource, err = l.Pool.RunWithOptions(&dockertest.RunOptions{
+	i.resource, err = i.pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "localstack/localstack",
 		Tag:        "latest",
 	})
@@ -139,19 +139,13 @@ func startLocalstack(l *Instance) error {
 	return nil
 }
 
-func tearDown(l *Instance) error {
-	if err := l.Stop(); err != nil {
+func (i Instance) tearDown() error {
+	if err := i.Stop(); err != nil {
 		return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
 	}
 	return nil
 }
 
-func isAlreadyRunning(l *Instance) bool {
-	return l.Pool != nil
-}
-
-type Pool interface {
-	RunWithOptions(opts *dockertest.RunOptions, hcOpts ...func(*docker.HostConfig)) (*dockertest.Resource, error)
-	Purge(r *dockertest.Resource) error
-	Retry(op func() error) error
+func (i Instance) isAlreadyRunning() bool {
+	return i.pool != nil
 }

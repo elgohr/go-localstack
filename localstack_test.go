@@ -1,10 +1,7 @@
 package localstack_test
 
 import (
-	"errors"
 	"github.com/elgohr/go-localstack"
-	golocalstackfakes "github.com/elgohr/go-localstack/go-localstackfakes"
-	"github.com/ory/dockertest"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"strings"
@@ -63,68 +60,4 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 	l, err := localstack.NewInstance()
 	assert.NoError(t, err)
 	assert.Empty(t, l.Endpoint(localstack.S3))
-}
-
-func TestInstance_Start_Fails(t *testing.T) {
-	for _, tt := range [...]struct {
-		name  string
-		given func() *localstack.Instance
-		then  func(err error)
-	}{
-		{
-			name: "can't restart localstack when already running",
-			given: func() *localstack.Instance {
-				fakePool := &golocalstackfakes.FakePool{}
-				fakePool.PurgeReturns(errors.New("can't start"))
-				return &localstack.Instance{
-					Pool:     fakePool,
-					Resource: &dockertest.Resource{},
-				}
-			},
-			then: func(err error) {
-				assert.Equal(t, "localstack: can't stop an already running instance: can't start", err.Error())
-			},
-		},
-		{
-			name: "can't start container",
-			given: func() *localstack.Instance {
-				fakePool := &golocalstackfakes.FakePool{}
-				fakePool.RunWithOptionsReturns(nil, errors.New("can't start container"))
-				return &localstack.Instance{
-					Pool: fakePool,
-				}
-			},
-			then: func(err error) {
-				assert.Equal(t, "localstack: could not start container: can't start container", err.Error())
-			},
-		},
-		{
-			name: "fails during waiting on startup",
-			given: func() *localstack.Instance {
-				fakePool := &golocalstackfakes.FakePool{}
-				fakePool.RetryReturns(errors.New("can't wait"))
-				return &localstack.Instance{
-					Pool: fakePool,
-				}
-			},
-			then: func(err error) {
-				assert.Equal(t, "localstack: could not start environment: can't wait", err.Error())
-			},
-		},
-	} {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.then(tt.given().Start())
-		})
-	}
-}
-
-func TestInstance_Stop_Fails(t *testing.T) {
-	fakePool := &golocalstackfakes.FakePool{}
-	fakePool.PurgeReturns(errors.New("can't stop"))
-	i := &localstack.Instance{
-		Pool:     fakePool,
-		Resource: &dockertest.Resource{},
-	}
-
-	assert.Equal(t, "can't stop", i.Stop().Error())
 }
