@@ -17,7 +17,7 @@ type Instance struct {
 	resource *dockertest.Resource
 }
 
-// Creates a new Instance
+// NewInstance creates a new Instance
 // Fails when Docker is not reachable
 func NewInstance() (*Instance, error) {
 	pool, err := dockertest.NewPool("")

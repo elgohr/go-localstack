@@ -6,6 +6,8 @@ import (
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Pool
+
+// Pool represents a dockertest.Pool
 type Pool interface {
 	RunWithOptions(opts *dockertest.RunOptions, hcOpts ...func(*docker.HostConfig)) (*dockertest.Resource, error)
 	Purge(r *dockertest.Resource) error
