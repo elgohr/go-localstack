@@ -14,7 +14,7 @@ require (
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
 	github.com/opencontainers/image-spec v1.0.1 // indirect
-	github.com/ory/dockertest v3.3.5+incompatible
+	github.com/ory/dockertest v3.5.4+incompatible
 	github.com/ory/dockertest/v3 v3.5.4 // indirect
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/stretchr/testify v1.5.1
