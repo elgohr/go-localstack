@@ -3,7 +3,7 @@ package localstack
 import (
 	"errors"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"

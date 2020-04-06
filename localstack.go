@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/elgohr/go-localstack/internal"
-	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/v3"
 )
 
 // Instance manages the localstack
