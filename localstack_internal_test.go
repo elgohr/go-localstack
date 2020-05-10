@@ -26,7 +26,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.Equal(t, "localstack: can't stop an already running instance: can't start", err.Error())
+				assert.EqualError(t, err, "localstack: can't stop an already running instance: can't start")
 			},
 		},
 		{
@@ -39,7 +39,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.Equal(t, "localstack: could not start container: can't start container", err.Error())
+				assert.EqualError(t, err, "localstack: could not start container: can't start container")
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.Equal(t, "localstack: could not start environment: can't wait", err.Error())
+				assert.EqualError(t, err, "localstack: could not start environment: can't wait")
 			},
 		},
 	} {
@@ -69,8 +69,7 @@ func TestInstance_Stop_Fails(t *testing.T) {
 		pool:     fakePool,
 		resource: &dockertest.Resource{},
 	}
-
-	assert.Equal(t, "can't stop", i.Stop().Error())
+	assert.EqualError(t, i.Stop(), "can't stop")
 }
 
 func TestInstance_isAvailable_Session_Fails(t *testing.T) {
