@@ -180,6 +180,8 @@ github.com/aws/aws-sdk-go v1.34.19 h1:x3MMvAJ1nfWviixEduchBSs65DgY5Y2pA2/NAcxVGO
 github.com/aws/aws-sdk-go v1.34.19/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.34.20 h1:D9otznteZZyN5pRyFETqveYia/85Xzk7+RaPGB1I9fE=
 github.com/aws/aws-sdk-go v1.34.20/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
+github.com/aws/aws-sdk-go v1.34.21 h1:M97FXuiJgDHwD4mXhrIZ7RJ4xXV6uZVPvIC2qb+HfYE=
+github.com/aws/aws-sdk-go v1.34.21/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/cenkalti/backoff/v3 v3.0.0 h1:ske+9nBpD9qZsTBoF41nW5L+AIuFBKMeze18XQ3eG1c=
 github.com/cenkalti/backoff/v3 v3.0.0/go.mod h1:cIeZDE3IrqwwJl6VUwCN6trj1oXrTS4rc0ij+ULvLYs=
 github.com/cenkalti/backoff/v3 v3.2.2 h1:cfUAAO3yvKMYKPrvhDuHSwQnhZNk/RMHKdZqKTxfm6M=
