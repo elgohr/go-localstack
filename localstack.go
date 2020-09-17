@@ -2,6 +2,8 @@ package localstack
 
 import (
 	"fmt"
+
+	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -13,20 +15,59 @@ import (
 
 // Instance manages the localstack
 type Instance struct {
-	pool     internal.Pool
-	resource *dockertest.Resource
+	pool      internal.Pool
+	resource  *dockertest.Resource
+	version   string
+	fixedPort bool
+}
+
+// InstanceOption is an option that controls the behaviour of
+// localstack.
+type InstanceOption func(i *Instance)
+
+// WithVersion configures the instance to use a specific version of
+// localstack. Must be a valid version string or "latest".
+func WithVersion(version string) InstanceOption {
+	return func(i *Instance) {
+		i.version = version
+	}
 }
 
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
-func NewInstance() (*Instance, error) {
+func NewInstance(opts ...InstanceOption) (*Instance, error) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
-	return &Instance{
-		pool: pool,
-	}, nil
+
+	i := Instance{
+		pool:    pool,
+		version: "latest",
+	}
+
+	for j := range opts {
+		opts[j](&i)
+	}
+
+	portChangeIntroduced, err := semver.NewConstraint(">= 0.11.5")
+	if err != nil {
+		return nil, fmt.Errorf("localstack: invalid version constraint for port change: %w", err)
+	}
+
+	if i.version == "latest" {
+		i.fixedPort = true
+	} else {
+		version, err := semver.NewVersion(i.version)
+		if err != nil {
+			return nil, fmt.Errorf("localstack: invalid version %q specified: %w", i.version, err)
+		}
+
+		i.version = version.String()
+		i.fixedPort = portChangeIntroduced.Check(version)
+	}
+
+	return &i, nil
 }
 
 // Start starts the localstack
@@ -62,6 +103,10 @@ func (i Instance) Stop() error {
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i Instance) Endpoint(service Service) string {
 	if i.resource != nil {
+		if i.fixedPort {
+			return i.resource.GetHostPort("4566/tcp")
+		}
+
 		return i.resource.GetHostPort(string(service))
 	}
 	return ""
@@ -129,9 +174,15 @@ func (i Instance) isAvailable() error {
 
 func (i *Instance) startLocalstack() error {
 	var err error
+
+	tag := "latest"
+	if i.version != "" {
+		tag = i.version
+	}
+
 	i.resource, err = i.pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "localstack/localstack",
-		Tag:        "latest",
+		Tag:        tag,
 	})
 	if err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
