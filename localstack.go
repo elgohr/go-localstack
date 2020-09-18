@@ -33,6 +33,9 @@ func WithVersion(version string) InstanceOption {
 	}
 }
 
+// Semver constraint that tests it the version is affected by the port change.
+var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
+
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
 func NewInstance(opts ...InstanceOption) (*Instance, error) {
@@ -48,11 +51,6 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 
 	for j := range opts {
 		opts[j](&i)
-	}
-
-	portChangeIntroduced, err := semver.NewConstraint(">= 0.11.5")
-	if err != nil {
-		return nil, fmt.Errorf("localstack: invalid version constraint for port change: %w", err)
 	}
 
 	if i.version == "latest" {
