@@ -1,15 +1,29 @@
 package localstack_test
 
 import (
-	"github.com/elgohr/go-localstack"
-	"github.com/stretchr/testify/assert"
 	"net"
 	"strings"
 	"testing"
+
+	"github.com/elgohr/go-localstack"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalStack(t *testing.T) {
-	l, err := localstack.NewInstance()
+	t.Run("WithDefaults", func(t *testing.T) {
+		testLocalStack__WithOptions(t)
+	})
+
+	t.Run("WithOldVersion", func(t *testing.T) {
+		testLocalStack__WithOptions(t,
+			localstack.WithVersion("0.11.4"),
+		)
+	})
+
+}
+
+func testLocalStack__WithOptions(t *testing.T, opts ...localstack.InstanceOption) {
+	l, err := localstack.NewInstance(opts...)
 	assert.NoError(t, err)
 	assert.NoError(t, l.Start())
 	defer l.Stop()
@@ -48,6 +62,20 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	assert.NoError(t, l.Start())
 	_, err = net.Dial("tcp", firstInstance)
 	assert.Error(t, err, "should be teared down")
+}
+
+func TestInstanceWithVersions(t *testing.T) {
+	_, err := localstack.NewInstance(localstack.WithVersion("0.11.5"))
+	assert.NoError(t, err)
+
+	_, err = localstack.NewInstance(localstack.WithVersion("0.11.3"))
+	assert.NoError(t, err)
+
+	_, err = localstack.NewInstance(localstack.WithVersion("latest"))
+	assert.NoError(t, err)
+
+	_, err = localstack.NewInstance(localstack.WithVersion("bad.version.34"))
+	assert.Error(t, err)
 }
 
 func TestInstanceStopWithoutStarted(t *testing.T) {
