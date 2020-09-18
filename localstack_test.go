@@ -2,6 +2,7 @@ package localstack_test
 
 import (
 	"net"
+	"os"
 	"strings"
 	"testing"
 
@@ -19,7 +20,6 @@ func TestLocalStack(t *testing.T) {
 			localstack.WithVersion("0.11.4"),
 		)
 	})
-
 }
 
 func testLocalStack__WithOptions(t *testing.T, opts ...localstack.InstanceOption) {
@@ -75,6 +75,16 @@ func TestInstanceWithVersions(t *testing.T) {
 	assert.NoError(t, err)
 
 	_, err = localstack.NewInstance(localstack.WithVersion("bad.version.34"))
+	assert.Error(t, err)
+}
+
+func TestInstanceWithBadDockerEnvironment(t *testing.T) {
+	urlIfSet := os.Getenv("DOCKER_URL")
+	defer os.Setenv("DOCKER_URL", urlIfSet)
+
+	os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock")
+
+	_, err := localstack.NewInstance()
 	assert.Error(t, err)
 }
 
