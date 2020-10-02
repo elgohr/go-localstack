@@ -1,56 +1,57 @@
 package localstack_test
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/elgohr/go-localstack"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalStack(t *testing.T) {
-	t.Run("WithDefaults", func(t *testing.T) {
-		testLocalStack__WithOptions(t)
-	})
-
-	t.Run("WithOldVersion", func(t *testing.T) {
-		testLocalStack__WithOptions(t,
-			localstack.WithVersion("0.11.4"),
-		)
-	})
-}
-
-func testLocalStack__WithOptions(t *testing.T, opts ...localstack.InstanceOption) {
-	l, err := localstack.NewInstance(opts...)
-	assert.NoError(t, err)
-	assert.NoError(t, l.Start())
-	defer l.Stop()
-
-	assert.True(t, strings.HasPrefix(l.Endpoint(localstack.CloudFormation), "localhost:"), l.Endpoint(localstack.CloudFormation))
-	assert.NotEmpty(t, l.Endpoint(localstack.CloudFormation))
-	assert.NotEmpty(t, l.Endpoint(localstack.CloudWatch))
-	assert.NotEmpty(t, l.Endpoint(localstack.CloudWatchLogs))
-	assert.NotEmpty(t, l.Endpoint(localstack.CloudWatchEvents))
-	assert.NotEmpty(t, l.Endpoint(localstack.DynamoDB))
-	assert.NotEmpty(t, l.Endpoint(localstack.DynamoDBStreams))
-	assert.NotEmpty(t, l.Endpoint(localstack.EC2))
-	assert.NotEmpty(t, l.Endpoint(localstack.ES))
-	assert.NotEmpty(t, l.Endpoint(localstack.Firehose))
-	assert.NotEmpty(t, l.Endpoint(localstack.IAM))
-	assert.NotEmpty(t, l.Endpoint(localstack.Kinesis))
-	assert.NotEmpty(t, l.Endpoint(localstack.Lambda))
-	assert.NotEmpty(t, l.Endpoint(localstack.Redshift))
-	assert.NotEmpty(t, l.Endpoint(localstack.Route53))
-	assert.NotEmpty(t, l.Endpoint(localstack.S3))
-	assert.NotEmpty(t, l.Endpoint(localstack.SecretsManager))
-	assert.NotEmpty(t, l.Endpoint(localstack.SES))
-	assert.NotEmpty(t, l.Endpoint(localstack.SNS))
-	assert.NotEmpty(t, l.Endpoint(localstack.SQS))
-	assert.NotEmpty(t, l.Endpoint(localstack.SSM))
-	assert.NotEmpty(t, l.Endpoint(localstack.STS))
-	assert.NotEmpty(t, l.Endpoint(localstack.StepFunctions))
+	for _, s := range []struct {
+		name   string
+		input  []localstack.InstanceOption
+		expect func(t *testing.T, l *localstack.Instance)
+	}{
+		{
+			name:   "with version before breaking change",
+			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.4")},
+			expect: havingIndividualEndpoints,
+		},
+		{
+			name:   "with nil",
+			input:  nil,
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with empty",
+			input:  []localstack.InstanceOption{},
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with breaking change version",
+			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.5")},
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with version after breaking change",
+			input:  []localstack.InstanceOption{localstack.WithVersion("latest")},
+			expect: havingOneEndpoint,
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			l, err := localstack.NewInstance(s.input...)
+			require.NoError(t, err)
+			require.NoError(t, l.Start())
+			defer l.Stop()
+			s.expect(t, l)
+		})
+	}
 }
 
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
@@ -65,17 +66,20 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 }
 
 func TestInstanceWithVersions(t *testing.T) {
-	_, err := localstack.NewInstance(localstack.WithVersion("0.11.5"))
-	assert.NoError(t, err)
-
-	_, err = localstack.NewInstance(localstack.WithVersion("0.11.3"))
-	assert.NoError(t, err)
-
-	_, err = localstack.NewInstance(localstack.WithVersion("latest"))
-	assert.NoError(t, err)
-
-	_, err = localstack.NewInstance(localstack.WithVersion("bad.version.34"))
-	assert.Error(t, err)
+	for _, s := range []struct {
+		version string
+		expect  func(t require.TestingT, err error, msgAndArgs ...interface{})
+	}{
+		{version: "0.11.5", expect: require.NoError},
+		{version: "0.11.3", expect: require.NoError},
+		{version: "latest", expect: require.NoError},
+		{version: "bad.version.34", expect: require.Error},
+	} {
+		t.Run(s.version, func(t *testing.T) {
+			_, err := localstack.NewInstance(localstack.WithVersion(s.version))
+			s.expect(t, err)
+		})
+	}
 }
 
 func TestInstanceWithBadDockerEnvironment(t *testing.T) {
@@ -98,4 +102,56 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 	l, err := localstack.NewInstance()
 	assert.NoError(t, err)
 	assert.Empty(t, l.Endpoint(localstack.S3))
+}
+
+func havingOneEndpoint(t *testing.T, l *localstack.Instance) {
+	endpoints := map[string]struct{}{}
+	for _, service := range services {
+		endpoints[l.Endpoint(service)] = struct{}{}
+	}
+	require.Equal(t, 1, len(endpoints), endpoints)
+}
+
+func havingIndividualEndpoints(t *testing.T, l *localstack.Instance) {
+	endpoints := map[string]struct{}{}
+	for _, service := range services {
+		endpoint := l.Endpoint(service)
+		checkAddress(t, endpoint)
+
+		_, exists := endpoints[endpoint]
+		require.False(t, exists, fmt.Sprintf("%s duplicated in %v", endpoint, endpoints))
+
+		endpoints[endpoint] = struct{}{}
+	}
+	require.Equal(t, len(services), len(endpoints))
+}
+
+func checkAddress(t *testing.T, val string) {
+	require.True(t, strings.HasPrefix(val, "localhost:"), val)
+	require.NotEmpty(t, val[10:])
+}
+
+var services = []localstack.Service{
+	localstack.CloudFormation,
+	localstack.CloudWatch,
+	localstack.CloudWatchLogs,
+	localstack.CloudWatchEvents,
+	localstack.DynamoDB,
+	localstack.DynamoDBStreams,
+	localstack.EC2,
+	localstack.ES,
+	localstack.Firehose,
+	localstack.IAM,
+	localstack.Kinesis,
+	localstack.Lambda,
+	localstack.Redshift,
+	localstack.Route53,
+	localstack.S3,
+	localstack.SecretsManager,
+	localstack.SES,
+	localstack.SNS,
+	localstack.SQS,
+	localstack.SSM,
+	localstack.STS,
+	localstack.StepFunctions,
 }
