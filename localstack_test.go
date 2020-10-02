@@ -2,7 +2,6 @@ package localstack_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"
 	"os"
@@ -56,13 +55,13 @@ func TestLocalStack(t *testing.T) {
 
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	l, err := localstack.NewInstance()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer l.Stop()
-	assert.NoError(t, l.Start())
+	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)
-	assert.NoError(t, l.Start())
+	require.NoError(t, l.Start())
 	_, err = net.Dial("tcp", firstInstance)
-	assert.Error(t, err, "should be teared down")
+	require.Error(t, err, "should be teared down")
 }
 
 func TestInstanceWithVersions(t *testing.T) {
@@ -89,19 +88,19 @@ func TestInstanceWithBadDockerEnvironment(t *testing.T) {
 	os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock")
 
 	_, err := localstack.NewInstance()
-	assert.Error(t, err)
+	require.Error(t, err)
 }
 
 func TestInstanceStopWithoutStarted(t *testing.T) {
 	l, err := localstack.NewInstance()
-	assert.NoError(t, err)
-	assert.NoError(t, l.Stop())
+	require.NoError(t, err)
+	require.NoError(t, l.Stop())
 }
 
 func TestInstanceEndpointWithoutStarted(t *testing.T) {
 	l, err := localstack.NewInstance()
-	assert.NoError(t, err)
-	assert.Empty(t, l.Endpoint(localstack.S3))
+	require.NoError(t, err)
+	require.Empty(t, l.Endpoint(localstack.S3))
 }
 
 func havingOneEndpoint(t *testing.T, l *localstack.Instance) {

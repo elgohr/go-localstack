@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
 	"github.com/ory/dockertest/v3"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 )
@@ -26,7 +26,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.EqualError(t, err, "localstack: can't stop an already running instance: can't start")
+				require.EqualError(t, err, "localstack: can't stop an already running instance: can't start")
 			},
 		},
 		{
@@ -39,7 +39,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.EqualError(t, err, "localstack: could not start container: can't start container")
+				require.EqualError(t, err, "localstack: could not start container: can't start container")
 			},
 		},
 		{
@@ -52,7 +52,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(err error) {
-				assert.EqualError(t, err, "localstack: could not start environment: can't wait")
+				require.EqualError(t, err, "localstack: could not start environment: can't wait")
 			},
 		},
 	} {
@@ -69,7 +69,7 @@ func TestInstance_Stop_Fails(t *testing.T) {
 		pool:     fakePool,
 		resource: &dockertest.Resource{},
 	}
-	assert.EqualError(t, i.Stop(), "can't stop")
+	require.EqualError(t, i.Stop(), "can't stop")
 }
 
 func TestInstance_isAvailable_Session_Fails(t *testing.T) {
@@ -78,5 +78,5 @@ func TestInstance_isAvailable_Session_Fails(t *testing.T) {
 	}
 	defer os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS")
 	i := &Instance{}
-	assert.Error(t, i.isAvailable())
+	require.Error(t, i.isAvailable())
 }
