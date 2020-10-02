@@ -2,15 +2,15 @@ package localstack
 
 import (
 	"fmt"
-
 	"github.com/Masterminds/semver/v3"
+	"github.com/ory/dockertest/v3"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/elgohr/go-localstack/internal"
-	"github.com/ory/dockertest/v3"
 )
 
 // Instance manages the localstack
@@ -49,8 +49,8 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 		version: "latest",
 	}
 
-	for j := range opts {
-		opts[j](&i)
+	for _, opt := range opts {
+		opt(&i)
 	}
 
 	if i.version == "latest" {
@@ -172,15 +172,9 @@ func (i Instance) isAvailable() error {
 
 func (i *Instance) startLocalstack() error {
 	var err error
-
-	tag := "latest"
-	if i.version != "" {
-		tag = i.version
-	}
-
 	i.resource, err = i.pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "localstack/localstack",
-		Tag:        tag,
+		Tag:        i.version,
 	})
 	if err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
