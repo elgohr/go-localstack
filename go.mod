@@ -9,7 +9,7 @@ require (
 	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.3
-	github.com/ory/dockertest/v3 v3.6.1
+	github.com/ory/dockertest/v3 v3.6.2
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
