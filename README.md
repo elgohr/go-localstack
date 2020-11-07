@@ -2,7 +2,7 @@
 [![Actions Status](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions)
 [![codecov](https://codecov.io/gh/elgohr/go-localstack/branch/master/graph/badge.svg)](https://codecov.io/gh/elgohr/go-localstack)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elgohr/go-localstack)](https://goreportcard.com/report/github.com/elgohr/go-localstack)
-[![PkgGoDev](https://pkg.go.dev/badge/elgohr/go-localstack)](https://pkg.go.dev/elgohr/go-localstack)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/elgohr/go-localstack)](https://pkg.go.dev/github.com/elgohr/go-localstack)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
 
 Go Wrapper for using [localstack](https://github.com/localstack/localstack) in go testing
