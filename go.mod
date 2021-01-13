@@ -11,5 +11,5 @@ require (
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.3.0
 	github.com/ory/dockertest/v3 v3.6.2
 	github.com/sirupsen/logrus v1.5.0 // indirect
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 )
