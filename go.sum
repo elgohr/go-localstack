@@ -191,6 +191,7 @@ github.com/aws/aws-sdk-go v1.38.23/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2z
 github.com/aws/aws-sdk-go v1.38.24 h1:zbKHDxFepE77ihVMZ+wZ62Ci646zkorN8rB5s4fj4kU=
 github.com/aws/aws-sdk-go v1.38.24/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.38.26/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.38.28 h1:2ZzgEupSluR18ClxUnHwXKyuADheZpMblXRAsHqF0tI=
 github.com/aws/aws-sdk-go v1.38.28/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/cenkalti/backoff/v3 v3.0.0 h1:ske+9nBpD9qZsTBoF41nW5L+AIuFBKMeze18XQ3eG1c=
 github.com/cenkalti/backoff/v3 v3.0.0/go.mod h1:cIeZDE3IrqwwJl6VUwCN6trj1oXrTS4rc0ij+ULvLYs=
@@ -286,6 +287,8 @@ github.com/ory/dockertest/v3 v3.6.2 h1:Q3Y8naCMyC1Nw91BHum1bGyEsNQc/UOIYS3ZoPoou
 github.com/ory/dockertest/v3 v3.6.2/go.mod h1:EFLcVUOl8qCwp9NyDAcCDtq/QviLtYswW/VbWzUnTNE=
 github.com/ory/dockertest/v3 v3.6.3 h1:L8JWiGgR+fnj90AEOkTFIEp4j5uWAK72P3IUsYgn2cs=
 github.com/ory/dockertest/v3 v3.6.3/go.mod h1:EFLcVUOl8qCwp9NyDAcCDtq/QviLtYswW/VbWzUnTNE=
+github.com/ory/dockertest/v3 v3.6.4 h1:AgsNQJ/VPvyBy9JL7AtLWa0/44ugxITnOpWw02znNgc=
+github.com/ory/dockertest/v3 v3.6.4/go.mod h1:R4QKzz+0NWtISmDjCgvFBUrkD52cCkXzOk5LtCjIZNg=
 github.com/pkg/errors v0.8.1-0.20171018195549-f15c970de5b7/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
