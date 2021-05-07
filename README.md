@@ -26,14 +26,14 @@ func TestWithLocalStack(t *testing.T) {
 		t.Fatalf("Could not start localstack %v", err)
 	}
 
-	session.NewSession(&aws.Config{
+	configurationForTest := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
 		DisableSSL:  aws.Bool(true),
 		Region:      aws.String(endpoints.UsWest1RegionID),
 		Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
 	})
 
-	myTest()
+	myTest(configurationForTest)
 
 	if err := l.Stop(); err != nil {
 		t.Fatalf("Could not stop localstack %v", err)
