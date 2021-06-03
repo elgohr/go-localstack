@@ -231,6 +231,8 @@ github.com/aws/aws-sdk-go v1.38.52 h1:7NKcUyTG/CyDX835kq04DDNe8vXaJhbGW8ThemHb18
 github.com/aws/aws-sdk-go v1.38.52/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.38.53 h1:Qj5OvKPrDGTiCnWj+kwQXAlBO6OaFBH/WaRzJPZPg3w=
 github.com/aws/aws-sdk-go v1.38.53/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.38.54 h1:fsiNnyso3kIWmUdCSYZt/4oodinY6O6biM1CJMsdYpc=
+github.com/aws/aws-sdk-go v1.38.54/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/cenkalti/backoff/v3 v3.0.0 h1:ske+9nBpD9qZsTBoF41nW5L+AIuFBKMeze18XQ3eG1c=
 github.com/cenkalti/backoff/v3 v3.0.0/go.mod h1:cIeZDE3IrqwwJl6VUwCN6trj1oXrTS4rc0ij+ULvLYs=
 github.com/cenkalti/backoff/v3 v3.2.2 h1:cfUAAO3yvKMYKPrvhDuHSwQnhZNk/RMHKdZqKTxfm6M=
