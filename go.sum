@@ -17,6 +17,8 @@ github.com/aws/aws-sdk-go v1.39.5 h1:yoJEE1NJxbpZ3CtPxvOSFJ9ByxiXmBTKk8J+XU5ldtg
 github.com/aws/aws-sdk-go v1.39.5/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go v1.39.6 h1:7NoOv+XsP/7A6Yaieg8r2+bnPD3ZTARa/5tHl8N8JKY=
 github.com/aws/aws-sdk-go v1.39.6/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
+github.com/aws/aws-sdk-go v1.40.0 h1:nTCSQAeahNt15SOYxuDwJ8XvMhOU3Uqe7eJUPv7+Vsk=
+github.com/aws/aws-sdk-go v1.40.0/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/cenkalti/backoff/v4 v4.1.0 h1:c8LkOFQTzuO0WBM/ae5HdGQuZPfPxp7lqBRwQRm4fSc=
 github.com/cenkalti/backoff/v4 v4.1.0/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6/go.mod h1:GL3xCUCBDV3CZiTSEKksMWbLE66hEyuu9qyDOOqM47Y=
