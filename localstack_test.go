@@ -1,15 +1,29 @@
 package localstack_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
+	"log"
 	"net"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/elgohr/go-localstack"
 )
+
+func TestMain(m *testing.M) {
+	if err := clean(); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 func TestLocalStack(t *testing.T) {
 	for _, s := range []struct {
@@ -46,8 +60,53 @@ func TestLocalStack(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			l, err := localstack.NewInstance(s.input...)
 			require.NoError(t, err)
+			defer func() {
+				require.NoError(t, l.Stop())
+			}()
 			require.NoError(t, l.Start())
-			defer l.Stop()
+			s.expect(t, l)
+		})
+	}
+}
+
+func TestLocalStackWithContext(t *testing.T) {
+	for _, s := range []struct {
+		name   string
+		input  []localstack.InstanceOption
+		expect func(t *testing.T, l *localstack.Instance)
+	}{
+		{
+			name:   "with version before breaking change",
+			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.4")},
+			expect: havingIndividualEndpoints,
+		},
+		{
+			name:   "with nil",
+			input:  nil,
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with empty",
+			input:  []localstack.InstanceOption{},
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with breaking change version",
+			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.5")},
+			expect: havingOneEndpoint,
+		},
+		{
+			name:   "with version after breaking change",
+			input:  []localstack.InstanceOption{localstack.WithVersion("latest")},
+			expect: havingOneEndpoint,
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+			defer cancel()
+			l, err := localstack.NewInstance(s.input...)
+			require.NoError(t, err)
+			require.NoError(t, l.StartWithContext(ctx))
 			s.expect(t, l)
 		})
 	}
@@ -56,10 +115,24 @@ func TestLocalStack(t *testing.T) {
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
-	defer l.Stop()
+	defer func() {
+		require.NoError(t, l.Stop())
+	}()
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)
 	require.NoError(t, l.Start())
+	_, err = net.Dial("tcp", firstInstance)
+	require.Error(t, err, "should be teared down")
+}
+
+func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
+	defer cancel()
+	l, err := localstack.NewInstance()
+	require.NoError(t, err)
+	require.NoError(t, l.Start())
+	firstInstance := l.Endpoint(localstack.S3)
+	require.NoError(t, l.StartWithContext(ctx))
 	_, err = net.Dial("tcp", firstInstance)
 	require.Error(t, err, "should be teared down")
 }
@@ -83,12 +156,14 @@ func TestInstanceWithVersions(t *testing.T) {
 
 func TestInstanceWithBadDockerEnvironment(t *testing.T) {
 	urlIfSet := os.Getenv("DOCKER_URL")
-	defer os.Setenv("DOCKER_URL", urlIfSet)
+	defer func() {
+		require.NoError(t, os.Setenv("DOCKER_URL", urlIfSet))
+	}()
 
-	os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock")
+	require.NoError(t, os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock"))
 
 	_, err := localstack.NewInstance()
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 func TestInstanceStopWithoutStarted(t *testing.T) {
@@ -105,7 +180,7 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 
 func havingOneEndpoint(t *testing.T, l *localstack.Instance) {
 	endpoints := map[string]struct{}{}
-	for _, service := range services {
+	for service := range localstack.AvailableServices {
 		endpoints[l.Endpoint(service)] = struct{}{}
 	}
 	require.Equal(t, 1, len(endpoints), endpoints)
@@ -113,7 +188,7 @@ func havingOneEndpoint(t *testing.T, l *localstack.Instance) {
 
 func havingIndividualEndpoints(t *testing.T, l *localstack.Instance) {
 	endpoints := map[string]struct{}{}
-	for _, service := range services {
+	for service := range localstack.AvailableServices {
 		endpoint := l.Endpoint(service)
 		checkAddress(t, endpoint)
 
@@ -122,7 +197,7 @@ func havingIndividualEndpoints(t *testing.T, l *localstack.Instance) {
 
 		endpoints[endpoint] = struct{}{}
 	}
-	require.Equal(t, len(services), len(endpoints))
+	require.Equal(t, len(localstack.AvailableServices), len(endpoints))
 }
 
 func checkAddress(t *testing.T, val string) {
@@ -130,27 +205,27 @@ func checkAddress(t *testing.T, val string) {
 	require.NotEmpty(t, val[10:])
 }
 
-var services = []localstack.Service{
-	localstack.CloudFormation,
-	localstack.CloudWatch,
-	localstack.CloudWatchLogs,
-	localstack.CloudWatchEvents,
-	localstack.DynamoDB,
-	localstack.DynamoDBStreams,
-	localstack.EC2,
-	localstack.ES,
-	localstack.Firehose,
-	localstack.IAM,
-	localstack.Kinesis,
-	localstack.Lambda,
-	localstack.Redshift,
-	localstack.Route53,
-	localstack.S3,
-	localstack.SecretsManager,
-	localstack.SES,
-	localstack.SNS,
-	localstack.SQS,
-	localstack.SSM,
-	localstack.STS,
-	localstack.StepFunctions,
+func clean() error {
+	cli, err := client.NewClientWithOpts()
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if _, err := cli.ContainersPrune(ctx, filters.Args{}); err != nil {
+		return err
+	}
+	if _, err := cli.NetworksPrune(ctx, filters.Args{}); err != nil {
+		return err
+	}
+	if _, err := cli.VolumesPrune(ctx, filters.Args{}); err != nil {
+		return err
+	}
+	if _, err := cli.BuildCachePrune(ctx, types.BuildCachePruneOptions{All: true}); err != nil {
+		return err
+	}
+	if _, err := cli.ImagesPrune(ctx, filters.Args{}); err != nil {
+		return err
+	}
+	return nil
 }

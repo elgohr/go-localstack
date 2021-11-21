@@ -1,24 +1,33 @@
 package localstack
 
 import (
+	"context"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
-	"github.com/ory/dockertest/v3"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
+	"io"
+	"log"
+	"os"
+	"time"
+
 	"github.com/elgohr/go-localstack/internal"
 )
 
 // Instance manages the localstack
 type Instance struct {
-	pool      internal.Pool
-	resource  *dockertest.Resource
-	version   string
-	fixedPort bool
+	cli         internal.DockerClient
+	containerId string
+	portMapping map[Service]string
+	version     string
+	fixedPort   bool
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -39,14 +48,15 @@ var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
 func NewInstance(opts ...InstanceOption) (*Instance, error) {
-	pool, err := dockertest.NewPool("")
+	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
 
 	i := Instance{
-		pool:    pool,
-		version: "latest",
+		cli:         cli,
+		version:     "latest",
+		portMapping: map[Service]string{},
 	}
 
 	for _, opt := range opts {
@@ -69,43 +79,36 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 }
 
 // Start starts the localstack
+// Deprecated: Use StartWithContext instead.
 func (i *Instance) Start() error {
-	if i.isAlreadyRunning() {
-		if err := i.tearDown(); err != nil {
-			return err
+	return i.start(context.Background())
+}
+
+// StartWithContext starts the localstack and ends it when the context is done
+func (i *Instance) StartWithContext(ctx context.Context) error {
+	go func() {
+		<-ctx.Done()
+		if err := i.stop(); err != nil {
+			log.Println(err)
 		}
-	}
-
-	if err := i.startLocalstack(); err != nil {
-		return err
-	}
-
-	if err := i.pool.Retry(func() error {
-		return i.isAvailable()
-	}); err != nil {
-		return fmt.Errorf("localstack: could not start environment: %w", err)
-	}
-
-	return nil
+	}()
+	return i.start(ctx)
 }
 
 // Stop stops the localstack
-func (i Instance) Stop() error {
-	if i.resource != nil {
-		return i.pool.Purge(i.resource)
-	}
-	return nil
+// Deprecated: Use StartWithContext instead.
+func (i *Instance) Stop() error {
+	return i.stop()
 }
 
 // Endpoint returns the endpoint for the given service
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
-func (i Instance) Endpoint(service Service) string {
-	if i.resource != nil {
+func (i *Instance) Endpoint(service Service) string {
+	if i.containerId != "" {
 		if i.fixedPort {
-			return i.resource.GetHostPort("4566/tcp")
+			return i.portMapping[FixedPort]
 		}
-
-		return i.resource.GetHostPort(string(service))
+		return i.portMapping[service]
 	}
 	return ""
 }
@@ -115,6 +118,8 @@ type Service string
 
 // Supported AWS/localstack services
 const (
+	FixedPort = Service("4566/tcp")
+
 	CloudFormation   = Service("4581/tcp")
 	CloudWatch       = Service("4582/tcp")
 	CloudWatchLogs   = Service("4586/tcp")
@@ -139,56 +144,185 @@ const (
 	StepFunctions    = Service("4585/tcp")
 )
 
-func (i Instance) isAvailable() error {
+// AvailableServices provides a map of all services for faster searches
+var AvailableServices = map[Service]struct{}{
+	FixedPort:        {},
+	CloudFormation:   {},
+	CloudWatch:       {},
+	CloudWatchLogs:   {},
+	CloudWatchEvents: {},
+	DynamoDB:         {},
+	DynamoDBStreams:  {},
+	EC2:              {},
+	ES:               {},
+	Firehose:         {},
+	IAM:              {},
+	Kinesis:          {},
+	Lambda:           {},
+	Redshift:         {},
+	Route53:          {},
+	S3:               {},
+	SecretsManager:   {},
+	SES:              {},
+	SNS:              {},
+	SQS:              {},
+	SSM:              {},
+	STS:              {},
+	StepFunctions:    {},
+}
+
+func (i *Instance) start(ctx context.Context) error {
+	if i.isAlreadyRunning() {
+		log.Println("stopping an instance that is already running")
+		if err := i.stop(); err != nil {
+			return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
+		}
+	}
+
+	if err := i.startLocalstack(ctx); err != nil {
+		return err
+	}
+
+	log.Println("waiting for localstack to start...")
+	return i.waitToBeAvailable(ctx)
+}
+
+func (i *Instance) startLocalstack(ctx context.Context) error {
+	imageName := "localstack/localstack:" + i.version
+	if !i.isDownloaded(ctx) {
+		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+		if err != nil {
+			return fmt.Errorf("localstack: could not load image: %w", err)
+		}
+		defer func() {
+			if err := reader.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+
+		// for reading the load output
+		if _, err = io.Copy(os.Stdout, reader); err != nil {
+			return fmt.Errorf("localstack: %w", err)
+		}
+	}
+
+	pm := nat.PortMap{}
+	for service := range AvailableServices {
+		pm[nat.Port(service)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
+	}
+
+	resp, err := i.cli.ContainerCreate(ctx,
+		&container.Config{
+			Image: imageName,
+		}, &container.HostConfig{
+			PortBindings: pm,
+			AutoRemove:   true,
+		}, nil, nil, "")
+	if err != nil {
+		return fmt.Errorf("localstack: could not create container: %w", err)
+	}
+	i.containerId = resp.ID
+
+	log.Println("starting localstack")
+	if err := i.cli.ContainerStart(ctx, i.containerId, types.ContainerStartOptions{}); err != nil {
+		return fmt.Errorf("localstack: could not start container: %w", err)
+	}
+
+	startedContainer, err := i.cli.ContainerInspect(ctx, i.containerId)
+	if err != nil {
+		return fmt.Errorf("localstack: could not get port from container: %w", err)
+	}
+	ports := startedContainer.NetworkSettings.Ports
+	if i.fixedPort {
+		i.portMapping[FixedPort] = "localhost:" + ports[nat.Port(FixedPort)][0].HostPort
+	} else {
+		for service := range AvailableServices {
+			i.portMapping[service] = "localhost:" + ports[nat.Port(service)][0].HostPort
+		}
+	}
+
+	return nil
+}
+
+func (i *Instance) stop() error {
+	if i.containerId == "" {
+		return nil
+	}
+	timeout := 5 * time.Second
+	if err := i.cli.ContainerStop(context.Background(), i.containerId, &timeout); err != nil {
+		return err
+	}
+	i.containerId = ""
+	i.portMapping = map[Service]string{}
+	return nil
+}
+
+func (i *Instance) isDownloaded(ctx context.Context) bool {
+	list, err := i.cli.ImageList(ctx, types.ImageListOptions{All: true})
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	for _, image := range list {
+		for _, tag := range image.RepoTags {
+			if tag == "localstack/localstack:"+i.version {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (i *Instance) waitToBeAvailable(ctx context.Context) error {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			if err := i.checkAvailable(); err == nil {
+				log.Println("localstack: finished waiting")
+				return nil
+			}
+		}
+	}
+}
+
+func (i *Instance) checkAvailable() error {
 	sess, err := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
 		DisableSSL:  aws.Bool(true),
 		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(i.Endpoint(SQS)),
+		Endpoint:    aws.String(i.Endpoint(DynamoDB)),
 	})
 	if err != nil {
-		fmt.Println("localstack: waiting on server to start...")
 		return err
 	}
 
-	s := sqs.New(sess)
-	createQueue, err := s.CreateQueue(&sqs.CreateQueueInput{
-		QueueName: aws.String("test-Resource"),
-	})
-	if err != nil {
-		fmt.Println("localstack: waiting on server to initialize...")
-		return err
-	}
-
-	if _, err := s.DeleteQueue(&sqs.DeleteQueueInput{
-		QueueUrl: createQueue.QueueUrl,
+	s := dynamodb.New(sess)
+	testTable := aws.String("bucket")
+	if _, err = s.CreateTable(&dynamodb.CreateTableInput{
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{AttributeName: aws.String("PK"), AttributeType: aws.String("S")},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{AttributeName: aws.String("PK"), KeyType: aws.String("HASH")},
+		},
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits: aws.Int64(1), WriteCapacityUnits: aws.Int64(1),
+		},
+		TableName: testTable,
 	}); err != nil {
 		return err
 	}
 
-	fmt.Println("localstack: finished waiting")
-	return nil
-}
-
-func (i *Instance) startLocalstack() error {
-	var err error
-	i.resource, err = i.pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "localstack/localstack",
-		Tag:        i.version,
+	_, err = s.DeleteTable(&dynamodb.DeleteTableInput{
+		TableName: testTable,
 	})
-	if err != nil {
-		return fmt.Errorf("localstack: could not start container: %w", err)
-	}
-	return nil
+	return err
 }
 
-func (i Instance) tearDown() error {
-	if err := i.Stop(); err != nil {
-		return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
-	}
-	return nil
-}
-
-func (i Instance) isAlreadyRunning() bool {
-	return i.pool != nil
+func (i *Instance) isAlreadyRunning() bool {
+	return i.containerId != ""
 }

@@ -1,82 +1,206 @@
 package localstack
 
 import (
+	"context"
 	"errors"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/go-connections/nat"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
-	"github.com/ory/dockertest/v3"
 	"github.com/stretchr/testify/require"
+	"io"
 	"os"
+	"strings"
 	"testing"
+	"testing/iotest"
 )
 
 func TestInstance_Start_Fails(t *testing.T) {
 	for _, tt := range [...]struct {
-		name  string
-		given func() *Instance
-		then  func(err error)
+		when  string
+		given func(f *internalfakes.FakeDockerClient) *Instance
+		then  func(t *testing.T, err error, f *internalfakes.FakeDockerClient)
 	}{
 		{
-			name: "can't restart localstack when already running",
-			given: func() *Instance {
-				fakePool := &internalfakes.FakePool{}
-				fakePool.PurgeReturns(errors.New("can't start"))
+			when: "can't restart localstack when already running",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ContainerStopReturns(errors.New("can't stop"))
 				return &Instance{
-					pool:     fakePool,
-					resource: &dockertest.Resource{},
+					cli:         f,
+					containerId: "running",
 				}
 			},
-			then: func(err error) {
-				require.EqualError(t, err, "localstack: can't stop an already running instance: can't start")
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: can't stop an already running instance: can't stop")
+				require.Equal(t, 0, f.ImageListCallCount())
+				require.Equal(t, 0, f.ImagePullCallCount())
+				require.Equal(t, 0, f.ContainerCreateCallCount())
+				require.Equal(t, 0, f.ContainerStartCallCount())
+				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
 		{
-			name: "can't start container",
-			given: func() *Instance {
-				fakePool := &internalfakes.FakePool{}
-				fakePool.RunWithOptionsReturns(nil, errors.New("can't start container"))
+			when: "can't list images and fails downloading",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImageListReturns(nil, errors.New("can't list"))
+				f.ImagePullReturns(nil, errors.New("can't pull"))
 				return &Instance{
-					pool: fakePool,
+					cli: f,
 				}
 			},
-			then: func(err error) {
-				require.EqualError(t, err, "localstack: could not start container: can't start container")
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not load image: can't pull")
+				require.Equal(t, 1, f.ImageListCallCount())
+				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 0, f.ContainerCreateCallCount())
+				require.Equal(t, 0, f.ContainerStartCallCount())
+				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
 		{
-			name: "fails during waiting on startup",
-			given: func() *Instance {
-				fakePool := &internalfakes.FakePool{}
-				fakePool.RetryReturns(errors.New("can't wait"))
+			when: "image is already present",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImageListReturns([]types.ImageSummary{{
+					RepoTags: []string{"localstack/localstack:"},
+				}}, nil)
+				f.ContainerInspectReturns(types.ContainerJSON{}, errors.New("can't inspect"))
 				return &Instance{
-					pool: fakePool,
+					cli: f,
 				}
 			},
-			then: func(err error) {
-				require.EqualError(t, err, "localstack: could not start environment: can't wait")
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not get port from container: can't inspect")
+				require.Equal(t, 1, f.ImageListCallCount())
+				require.Equal(t, 0, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ContainerCreateCallCount())
+				require.Equal(t, 1, f.ContainerStartCallCount())
+				require.Equal(t, 1, f.ContainerInspectCallCount())
+			},
+		},
+		{
+			when: "fails during pull of image",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImagePullReturns(io.NopCloser(iotest.ErrReader(errors.New("bad world"))), nil)
+				return &Instance{
+					cli: f,
+				}
+			},
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: bad world")
+			},
+		},
+		{
+			when: "can't close after pulling image",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImagePullReturns(ErrCloser(strings.NewReader(""), errors.New("can't close")), nil)
+				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
+				return &Instance{
+					cli: f,
+				}
+			},
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not create container: can't create")
+			},
+		},
+		{
+			when: "can't create container",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
+				return &Instance{
+					cli: f,
+				}
+			},
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not create container: can't create")
+				require.Equal(t, 1, f.ImageListCallCount())
+				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ContainerCreateCallCount())
+				ctx, config, hostConfig, networkingConfig, platform, containerName := f.ContainerCreateArgsForCall(0)
+				require.NotNil(t, ctx)
+				require.Equal(t, &container.Config{Image: "localstack/localstack:"}, config)
+				pm := nat.PortMap{}
+				for service := range AvailableServices {
+					pm[nat.Port(service)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
+				}
+				require.Equal(t, &container.HostConfig{
+					PortBindings: pm,
+					AutoRemove:   true,
+				}, hostConfig)
+				require.Nil(t, networkingConfig)
+				require.Nil(t, platform)
+				require.Empty(t, containerName)
+				require.Equal(t, 0, f.ContainerStartCallCount())
+				require.Equal(t, 0, f.ContainerInspectCallCount())
+			},
+		},
+		{
+			when: "can't start container",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ContainerStartReturns(errors.New("can't start"))
+				return &Instance{
+					cli: f,
+				}
+			},
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not start container: can't start")
+				require.Equal(t, 1, f.ImageListCallCount())
+				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ContainerCreateCallCount())
+				require.Equal(t, 1, f.ContainerStartCallCount())
+				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
 	} {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.then(tt.given().Start())
+		t.Run(tt.when, func(t *testing.T) {
+			f := &internalfakes.FakeDockerClient{}
+			tt.then(t, tt.given(f).Start(), f)
 		})
 	}
 }
 
+func TestInstance_StartWithContext_Fails_Stop_AfterTest(t *testing.T) {
+	f := &internalfakes.FakeDockerClient{}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	f.ContainerStopReturns(errors.New("can't stop"))
+	i := &Instance{cli: f, containerId: "something"}
+	require.EqualError(t, i.StartWithContext(ctx), "localstack: can't stop an already running instance: can't stop")
+}
+
 func TestInstance_Stop_Fails(t *testing.T) {
-	fakePool := &internalfakes.FakePool{}
-	fakePool.PurgeReturns(errors.New("can't stop"))
-	i := &Instance{
-		pool:     fakePool,
-		resource: &dockertest.Resource{},
-	}
+	f := &internalfakes.FakeDockerClient{}
+	f.ContainerStopReturns(errors.New("can't stop"))
+	i := &Instance{cli: f, containerId: "something"}
 	require.EqualError(t, i.Stop(), "can't stop")
 }
 
-func TestInstance_isAvailable_Session_Fails(t *testing.T) {
-	if err := os.Setenv("AWS_STS_REGIONAL_ENDPOINTS", "FAILURE"); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS")
+func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
+	require.NoError(t, os.Setenv("AWS_STS_REGIONAL_ENDPOINTS", "FAILURE"))
+	defer func() {
+		require.NoError(t, os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS"))
+	}()
 	i := &Instance{}
-	require.Error(t, i.isAvailable())
+	require.Error(t, i.checkAvailable())
+}
+
+func TestInstance_waitToBeAvailable_Context_Expired(t *testing.T) {
+	ctx, cancel :=context.WithCancel(context.Background())
+	cancel()
+	i := &Instance{}
+	require.Error(t, i.waitToBeAvailable(ctx))
+}
+
+func ErrCloser(r io.Reader, err error) io.ReadCloser {
+	return errCloser{Reader: r, Error: err}
+}
+
+type errCloser struct {
+	io.Reader
+	Error error
+}
+
+func (e errCloser) Close() error {
+	return e.Error
 }
