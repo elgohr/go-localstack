@@ -30,6 +30,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 //counterfeiter:generate . DockerClient
+
 // DockerClient represents a way to interact with the Docker deamon
 type DockerClient interface {
 	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
