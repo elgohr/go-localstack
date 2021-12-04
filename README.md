@@ -1,4 +1,5 @@
 # go-localstack
+
 [![Actions Status](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions)
 [![codecov](https://codecov.io/gh/elgohr/go-localstack/branch/master/graph/badge.svg)](https://codecov.io/gh/elgohr/go-localstack)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elgohr/go-localstack)](https://goreportcard.com/report/github.com/elgohr/go-localstack)
@@ -10,6 +11,7 @@ Go Wrapper for using [localstack](https://github.com/localstack/localstack) in g
 # Installation
 
 Please make sure that you have Docker installed.
+
 ```bash
 go get github.com/elgohr/go-localstack
 ```
@@ -18,25 +20,22 @@ go get github.com/elgohr/go-localstack
 
 ```go
 func TestWithLocalStack(t *testing.T) {
-	l, err := localstack.NewInstance()
-	if err != nil {
-		t.Fatalf("Could not connect to Docker %v", err)
-	}
-	if err := l.Start(); err != nil {
-		t.Fatalf("Could not start localstack %v", err)
-	}
+    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+    defer cancel()
 
-	configurationForTest := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-		DisableSSL:  aws.Bool(true),
-		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
-	})
+    l, err := localstack.NewInstance()
+    if err != nil {
+        log.Fatalf("Could not connect to Docker %v", err)
+    }
+    if err := l.StartWithContext(ctx); err != nil {
+        log.Fatalf("Could not start localstack %v", err)
+    }
 
-	myTest(configurationForTest)
-
-	if err := l.Stop(); err != nil {
-		t.Fatalf("Could not stop localstack %v", err)
-	}
+    myTestWith(&aws.Config{
+        Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+        DisableSSL:  aws.Bool(true),
+        Region:      aws.String(endpoints.UsWest1RegionID),
+        Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
+    })
 }
 ```
