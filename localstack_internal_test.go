@@ -200,7 +200,7 @@ func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
 }
 
 func TestInstance_waitToBeAvailable_Context_Expired(t *testing.T) {
-	ctx, cancel :=context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	i := &Instance{}
 	require.Error(t, i.waitToBeAvailable(ctx))
