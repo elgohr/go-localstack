@@ -18,11 +18,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	dynamo_types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -123,6 +123,18 @@ func (i *Instance) Endpoint(service Service) string {
 			return i.portMapping[FixedPort]
 		}
 		return i.portMapping[service]
+	}
+	return ""
+}
+
+// EndpointV2 returns the endpoint for the given service when used by aws-sdk-v2
+// Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
+func (i *Instance) EndpointV2(service Service) string {
+	if i.containerId != "" {
+		if i.fixedPort {
+			return "http://" + i.portMapping[FixedPort]
+		}
+		return "http://" + i.portMapping[service]
 	}
 	return ""
 }
@@ -295,7 +307,7 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			if err := i.checkAvailable(); err == nil {
+			if err := i.checkAvailable(ctx); err == nil {
 				log.Println("localstack: finished waiting")
 				return nil
 			}
@@ -303,27 +315,33 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 	}
 }
 
-func (i *Instance) checkAvailable() error {
-	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-		DisableSSL:  aws.Bool(true),
-		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(i.Endpoint(DynamoDB)),
-	})
+func (i *Instance) checkAvailable(ctx context.Context) error {
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion("us-east-1"),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
+			return aws.Endpoint{
+				PartitionID:       "aws",
+				URL:               i.EndpointV2(DynamoDB),
+				SigningRegion:     "us-east-1",
+				HostnameImmutable: true,
+			}, nil
+		})),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+	)
 	if err != nil {
 		return err
 	}
 
-	s := dynamodb.New(sess)
+	s := dynamodb.NewFromConfig(cfg)
 	testTable := aws.String("bucket")
-	if _, err = s.CreateTable(&dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{AttributeName: aws.String("PK"), AttributeType: aws.String("S")},
+	if _, err = s.CreateTable(ctx, &dynamodb.CreateTableInput{
+		AttributeDefinitions: []dynamo_types.AttributeDefinition{
+			{AttributeName: aws.String("PK"), AttributeType: dynamo_types.ScalarAttributeTypeS},
 		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{AttributeName: aws.String("PK"), KeyType: aws.String("HASH")},
+		KeySchema: []dynamo_types.KeySchemaElement{
+			{AttributeName: aws.String("PK"), KeyType: dynamo_types.KeyTypeHash},
 		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+		ProvisionedThroughput: &dynamo_types.ProvisionedThroughput{
 			ReadCapacityUnits: aws.Int64(1), WriteCapacityUnits: aws.Int64(1),
 		},
 		TableName: testTable,
@@ -331,7 +349,7 @@ func (i *Instance) checkAvailable() error {
 		return err
 	}
 
-	_, err = s.DeleteTable(&dynamodb.DeleteTableInput{
+	_, err = s.DeleteTable(ctx, &dynamodb.DeleteTableInput{
 		TableName: testTable,
 	})
 	return err

@@ -27,6 +27,7 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"time"
 )
 
 func TestInstance_Start_Fails(t *testing.T) {
@@ -191,12 +192,14 @@ func TestInstance_Stop_Fails(t *testing.T) {
 }
 
 func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
 	require.NoError(t, os.Setenv("AWS_STS_REGIONAL_ENDPOINTS", "FAILURE"))
 	defer func() {
 		require.NoError(t, os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS"))
 	}()
 	i := &Instance{}
-	require.Error(t, i.checkAvailable())
+	require.Error(t, i.checkAvailable(ctx))
 }
 
 func TestInstance_waitToBeAvailable_Context_Expired(t *testing.T) {

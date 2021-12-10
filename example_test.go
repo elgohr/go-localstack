@@ -16,12 +16,14 @@ package localstack_test
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+
 	"github.com/elgohr/go-localstack"
-	"log"
-	"time"
 )
 
 func ExampleLocalstackWithContext() {
