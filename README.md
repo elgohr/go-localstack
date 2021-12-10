@@ -18,6 +18,41 @@ go get github.com/elgohr/go-localstack
 
 # Usage
 
+With SDK V2
+```go
+func ExampleLocalstackWithContextSdkV2() {
+    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+    defer cancel()
+    
+    l, err := localstack.NewInstance()
+    if err != nil {
+        log.Fatalf("Could not connect to Docker %v", err)
+    }
+    if err := l.StartWithContext(ctx); err != nil {
+        log.Fatalf("Could not start localstack %v", err)
+    }
+    
+    cfg, err := config.LoadDefaultConfig(ctx,
+        config.WithRegion("us-east-1"),
+        config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
+            return aws.Endpoint{
+			    PartitionID:       "aws", 
+			    URL:               l.EndpointV2(localstack.SQS), 
+			    SigningRegion:     "us-east-1", 
+			    HostnameImmutable: true,
+		    }, nil
+        })),
+        config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+    )
+    if err != nil {
+        log.Fatalf("Could not get config %v", err)
+    }
+    
+    myTestWithV2(cfg)
+}
+```
+
+With SDK V1
 ```go
 func TestWithLocalStack(t *testing.T) {
     ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
