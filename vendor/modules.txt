@@ -56,7 +56,7 @@ github.com/aws/aws-sdk-go-v2/internal/configsources
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
 # github.com/aws/aws-sdk-go-v2/internal/ini v1.3.2
 github.com/aws/aws-sdk-go-v2/internal/ini
-# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.10.0
+# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.11.0
 ## explicit
 github.com/aws/aws-sdk-go-v2/service/dynamodb
 github.com/aws/aws-sdk-go-v2/service/dynamodb/internal/customizations
