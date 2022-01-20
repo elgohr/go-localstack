@@ -139,6 +139,11 @@ func (i *Instance) EndpointV2(service Service) string {
 	return ""
 }
 
+// ContainerId returns the deployed container's ID
+func (i *Instance) ContainerId() string {
+	return i.containerId
+}
+
 // Service represents an AWS service
 type Service string
 
