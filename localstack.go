@@ -40,6 +40,7 @@ type Instance struct {
 	cli         internal.DockerClient
 	containerId string
 	portMapping map[Service]string
+	env         []string
 	version     string
 	fixedPort   bool
 }
@@ -53,6 +54,14 @@ type InstanceOption func(i *Instance)
 func WithVersion(version string) InstanceOption {
 	return func(i *Instance) {
 		i.version = version
+	}
+}
+
+// WithEnvironment configures the instance to use the selected
+// environment variables that will be passed to the spawned container.
+func WithEnvironment(env []string) InstanceOption {
+	return func(i *Instance) {
+		i.env = env
 	}
 }
 
@@ -240,6 +249,7 @@ func (i *Instance) startLocalstack(ctx context.Context) error {
 	resp, err := i.cli.ContainerCreate(ctx,
 		&container.Config{
 			Image: imageName,
+			Env:   i.env,
 		}, &container.HostConfig{
 			PortBindings: pm,
 			AutoRemove:   true,
