@@ -82,20 +82,8 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 		portMapping: map[Service]string{},
 	}
 
-	for _, opt := range opts {
-		opt(&i)
-	}
-
-	if i.version == "latest" {
-		i.fixedPort = true
-	} else {
-		version, err := semver.NewVersion(i.version)
-		if err != nil {
-			return nil, fmt.Errorf("localstack: invalid version %q specified: %w", i.version, err)
-		}
-
-		i.version = version.String()
-		i.fixedPort = portChangeIntroduced.Check(version)
+	if err = i.Reconfigure(opts...); err != nil {
+		return nil, err
 	}
 
 	return &i, nil
@@ -146,6 +134,31 @@ func (i *Instance) EndpointV2(service Service) string {
 		return "http://" + i.portMapping[service]
 	}
 	return ""
+}
+
+// Reconfigure applies the passed options on the localstack instance.
+func (i *Instance) Reconfigure(opts ...InstanceOption) error {
+	if i.isAlreadyRunning() {
+		return fmt.Errorf("localstack: can't reconfigure an already running instance")
+	}
+
+	for _, opt := range opts {
+		opt(i)
+	}
+
+	if i.version == "latest" {
+		i.fixedPort = true
+	} else {
+		version, err := semver.NewVersion(i.version)
+		if err != nil {
+			return fmt.Errorf("localstack: invalid version %q specified: %w", i.version, err)
+		}
+
+		i.version = version.String()
+		i.fixedPort = portChangeIntroduced.Check(version)
+	}
+
+	return nil
 }
 
 // Service represents an AWS service
