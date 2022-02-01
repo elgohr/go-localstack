@@ -133,10 +133,13 @@ func TestInstance_Start_Fails(t *testing.T) {
 				require.Equal(t, 1, f.ContainerCreateCallCount())
 				ctx, config, hostConfig, networkingConfig, platform, containerName := f.ContainerCreateArgsForCall(0)
 				require.NotNil(t, ctx)
-				require.Equal(t, &container.Config{Image: "localstack/localstack:"}, config)
+				require.Equal(t, &container.Config{
+					Image: "localstack/localstack:",
+					Env:   []string{},
+				}, config)
 				pm := nat.PortMap{}
 				for service := range AvailableServices {
-					pm[nat.Port(service)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
+					pm[nat.Port(service.Port)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
 				}
 				require.Equal(t, &container.HostConfig{
 					PortBindings: pm,

@@ -27,9 +27,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	log "github.com/sirupsen/logrus"
 	"io"
-	"log"
-	"os"
 	"time"
 
 	"github.com/elgohr/go-localstack/internal"
@@ -99,14 +98,14 @@ func (i *Instance) Start() error {
 }
 
 // StartWithContext starts the localstack and ends it when the context is done
-func (i *Instance) StartWithContext(ctx context.Context) error {
+func (i *Instance) StartWithContext(ctx context.Context, services ...Service) error {
 	go func() {
 		<-ctx.Done()
 		if err := i.stop(); err != nil {
-			log.Println(err)
+			log.Error(err)
 		}
 	}()
-	return i.start(ctx)
+	return i.start(ctx, services...)
 }
 
 // Stop stops the localstack
@@ -140,34 +139,37 @@ func (i *Instance) EndpointV2(service Service) string {
 }
 
 // Service represents an AWS service
-type Service string
+type Service struct {
+	Name string
+	Port string
+}
 
 // Supported AWS/localstack services
-const (
-	FixedPort = Service("4566/tcp")
+var (
+	FixedPort = Service{Name: "all", Port: "4566/tcp"}
 
-	CloudFormation   = Service("4581/tcp")
-	CloudWatch       = Service("4582/tcp")
-	CloudWatchLogs   = Service("4586/tcp")
-	CloudWatchEvents = Service("4587/tcp")
-	DynamoDB         = Service("4569/tcp")
-	DynamoDBStreams  = Service("4570/tcp")
-	EC2              = Service("4597/tcp")
-	ES               = Service("4578/tcp")
-	Firehose         = Service("4573/tcp")
-	IAM              = Service("4593/tcp")
-	Kinesis          = Service("4568/tcp")
-	Lambda           = Service("4574/tcp")
-	Redshift         = Service("4577/tcp")
-	Route53          = Service("4580/tcp")
-	S3               = Service("4572/tcp")
-	SecretsManager   = Service("4584/tcp")
-	SES              = Service("4579/tcp")
-	SNS              = Service("4575/tcp")
-	SQS              = Service("4576/tcp")
-	SSM              = Service("4583/tcp")
-	STS              = Service("4592/tcp")
-	StepFunctions    = Service("4585/tcp")
+	CloudFormation   = Service{Name: "cloudformation", Port: "4581/tcp"}
+	CloudWatch       = Service{Name: "cloudwatch", Port: "4582/tcp"}
+	CloudWatchLogs   = Service{Name: "cloudwatchlogs", Port: "4586/tcp"}
+	CloudWatchEvents = Service{Name: "cloudwatchevents", Port: "4587/tcp"}
+	DynamoDB         = Service{Name: "dynamoDB", Port: "4569/tcp"}
+	DynamoDBStreams  = Service{Name: "dynamoDBStreams", Port: "4570/tcp"}
+	EC2              = Service{Name: "ec2", Port: "4597/tcp"}
+	ES               = Service{Name: "es", Port: "4578/tcp"}
+	Firehose         = Service{Name: "firehose", Port: "4573/tcp"}
+	IAM              = Service{Name: "iam", Port: "4593/tcp"}
+	Kinesis          = Service{Name: "kinesis", Port: "4568/tcp"}
+	Lambda           = Service{Name: "lambda", Port: "4574/tcp"}
+	Redshift         = Service{Name: "redshift", Port: "4577/tcp"}
+	Route53          = Service{Name: "route53", Port: "4580/tcp"}
+	S3               = Service{Name: "s3", Port: "4572/tcp"}
+	SecretsManager   = Service{Name: "secretsmanager", Port: "4584/tcp"}
+	SES              = Service{Name: "ses", Port: "4579/tcp"}
+	SNS              = Service{Name: "sns", Port: "4575/tcp"}
+	SQS              = Service{Name: "sqs", Port: "4576/tcp"}
+	SSM              = Service{Name: "ssm", Port: "4583/tcp"}
+	STS              = Service{Name: "sts", Port: "4592/tcp"}
+	StepFunctions    = Service{Name: "stepfunctions", Port: "4585/tcp"}
 )
 
 // AvailableServices provides a map of all services for faster searches
@@ -197,23 +199,23 @@ var AvailableServices = map[Service]struct{}{
 	StepFunctions:    {},
 }
 
-func (i *Instance) start(ctx context.Context) error {
+func (i *Instance) start(ctx context.Context, services ...Service) error {
 	if i.isAlreadyRunning() {
-		log.Println("stopping an instance that is already running")
+		log.Info("stopping an instance that is already running")
 		if err := i.stop(); err != nil {
 			return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
 		}
 	}
 
-	if err := i.startLocalstack(ctx); err != nil {
+	if err := i.startLocalstack(ctx, services...); err != nil {
 		return err
 	}
 
-	log.Println("waiting for localstack to start...")
+	log.Info("waiting for localstack to start...")
 	return i.waitToBeAvailable(ctx)
 }
 
-func (i *Instance) startLocalstack(ctx context.Context) error {
+func (i *Instance) startLocalstack(ctx context.Context, services ...Service) error {
 	imageName := "localstack/localstack:" + i.version
 	if !i.isDownloaded(ctx) {
 		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
@@ -222,24 +224,40 @@ func (i *Instance) startLocalstack(ctx context.Context) error {
 		}
 		defer func() {
 			if err := reader.Close(); err != nil {
-				log.Println(err)
+				log.Error(err)
 			}
 		}()
 
 		// for reading the load output
-		if _, err = io.Copy(os.Stdout, reader); err != nil {
+		if _, err = io.Copy(log.StandardLogger().Out, reader); err != nil {
 			return fmt.Errorf("localstack: %w", err)
 		}
 	}
 
 	pm := nat.PortMap{}
 	for service := range AvailableServices {
-		pm[nat.Port(service)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
+		pm[nat.Port(service.Port)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
+	}
+
+	environmentVariables := []string{}
+	if len(services) > 0 {
+		startServices := "SERVICES=dynamodb" // for waitToBeAvailable
+		addedServices := 0
+		for _, service := range services {
+			if shouldBeAdded(service) {
+				startServices += "," + service.Name
+				addedServices++
+			}
+		}
+		if addedServices > 0 {
+			environmentVariables = append(environmentVariables, startServices)
+		}
 	}
 
 	resp, err := i.cli.ContainerCreate(ctx,
 		&container.Config{
 			Image: imageName,
+			Env:   environmentVariables,
 		}, &container.HostConfig{
 			PortBindings: pm,
 			AutoRemove:   true,
@@ -249,7 +267,7 @@ func (i *Instance) startLocalstack(ctx context.Context) error {
 	}
 	i.containerId = resp.ID
 
-	log.Println("starting localstack")
+	log.Info("starting localstack")
 	if err := i.cli.ContainerStart(ctx, i.containerId, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
@@ -260,10 +278,15 @@ func (i *Instance) startLocalstack(ctx context.Context) error {
 	}
 	ports := startedContainer.NetworkSettings.Ports
 	if i.fixedPort {
-		i.portMapping[FixedPort] = "localhost:" + ports[nat.Port(FixedPort)][0].HostPort
+		i.portMapping[FixedPort] = "localhost:" + ports[nat.Port(FixedPort.Port)][0].HostPort
 	} else {
+		hasFilteredServices := len(services) > 0
 		for service := range AvailableServices {
-			i.portMapping[service] = "localhost:" + ports[nat.Port(service)][0].HostPort
+			if hasFilteredServices && containsService(services, service) {
+				i.portMapping[service] = "localhost:" + ports[nat.Port(service.Port)][0].HostPort
+			} else if !hasFilteredServices {
+				i.portMapping[service] = "localhost:" + ports[nat.Port(service.Port)][0].HostPort
+			}
 		}
 	}
 
@@ -274,7 +297,7 @@ func (i *Instance) stop() error {
 	if i.containerId == "" {
 		return nil
 	}
-	timeout := 5 * time.Second
+	timeout := time.Second
 	if err := i.cli.ContainerStop(context.Background(), i.containerId, &timeout); err != nil {
 		return err
 	}
@@ -286,7 +309,7 @@ func (i *Instance) stop() error {
 func (i *Instance) isDownloaded(ctx context.Context) bool {
 	list, err := i.cli.ImageList(ctx, types.ImageListOptions{All: true})
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return false
 	}
 	for _, image := range list {
@@ -308,8 +331,10 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 			return ctx.Err()
 		case <-ticker.C:
 			if err := i.checkAvailable(ctx); err == nil {
-				log.Println("localstack: finished waiting")
+				log.Info("localstack: finished waiting")
 				return nil
+			} else {
+				log.Debug(err)
 			}
 		}
 	}
@@ -357,4 +382,20 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 
 func (i *Instance) isAlreadyRunning() bool {
 	return i.containerId != ""
+}
+
+func shouldBeAdded(service Service) bool {
+	return service != DynamoDB && service != FixedPort && service != ES
+}
+
+func containsService(services []Service, service Service) bool {
+	if service == DynamoDB {
+		return true
+	}
+	for _, s := range services {
+		if s == service {
+			return true
+		}
+	}
+	return false
 }

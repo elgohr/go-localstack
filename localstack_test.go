@@ -20,9 +20,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -32,11 +33,15 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	log.SetLevel(log.DebugLevel)
 	if err := clean(); err != nil {
-		log.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
-	os.Exit(m.Run())
+	run := m.Run()
+	if err := clean(); err != nil {
+		log.Fatalln(err)
+	}
+	os.Exit(run)
 }
 
 func TestLocalStack(t *testing.T) {
@@ -122,6 +127,32 @@ func TestLocalStackWithContext(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx))
 			s.expect(t, l)
+		})
+	}
+}
+
+func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
+	cl := http.Client{Timeout: time.Second}
+	for service := range localstack.AvailableServices {
+		t.Run(service.Name, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			l, err := localstack.NewInstance([]localstack.InstanceOption{localstack.WithVersion("0.11.4")}...)
+			require.NoError(t, err)
+			require.NoError(t, l.StartWithContext(ctx, service))
+			for testService := range localstack.AvailableServices {
+				conn, err := net.DialTimeout("tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"), time.Second)
+				if testService == service || testService == localstack.DynamoDB {
+					require.NoError(t, err, testService)
+					require.NoError(t, conn.Close())
+				} else if testService != localstack.FixedPort {
+					require.Error(t, err, testService)
+				}
+			}
+			cancel()
+			require.Eventually(t, func() bool {
+				_, err := cl.Get(l.EndpointV2(service))
+				return err != nil
+			}, time.Minute, time.Second)
 		})
 	}
 }
@@ -220,25 +251,23 @@ func checkAddress(t *testing.T, val string) {
 }
 
 func clean() error {
+	timeout := time.Second
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return err
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	if list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true}); err == nil {
+		for _, l := range list {
+			if err := cli.ContainerStop(ctx, l.ID, &timeout); err != nil {
+				log.Println(err)
+			}
+		}
+	} else {
+		return err
+	}
 	if _, err := cli.ContainersPrune(ctx, filters.Args{}); err != nil {
-		return err
-	}
-	if _, err := cli.NetworksPrune(ctx, filters.Args{}); err != nil {
-		return err
-	}
-	if _, err := cli.VolumesPrune(ctx, filters.Args{}); err != nil {
-		return err
-	}
-	if _, err := cli.BuildCachePrune(ctx, types.BuildCachePruneOptions{All: true}); err != nil {
-		return err
-	}
-	if _, err := cli.ImagesPrune(ctx, filters.Args{}); err != nil {
 		return err
 	}
 	return nil
