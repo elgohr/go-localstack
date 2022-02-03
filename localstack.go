@@ -17,6 +17,11 @@ package localstack
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"time"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -27,10 +32,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"io"
-	"log"
-	"os"
-	"time"
 
 	"github.com/elgohr/go-localstack/internal"
 )
@@ -40,6 +41,7 @@ type Instance struct {
 	cli         internal.DockerClient
 	containerId string
 	portMapping map[Service]string
+	image       string
 	version     string
 	fixedPort   bool
 }
@@ -56,6 +58,12 @@ func WithVersion(version string) InstanceOption {
 	}
 }
 
+func WithImage(image string) InstanceOption {
+	return func(i *Instance) {
+		i.image = image
+	}
+}
+
 // Semver constraint that tests it the version is affected by the port change.
 var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 
@@ -69,6 +77,7 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 
 	i := Instance{
 		cli:         cli,
+		image:       "localstack/localstack",
 		version:     "latest",
 		portMapping: map[Service]string{},
 	}
@@ -214,7 +223,7 @@ func (i *Instance) start(ctx context.Context) error {
 }
 
 func (i *Instance) startLocalstack(ctx context.Context) error {
-	imageName := "localstack/localstack:" + i.version
+	imageName := i.image + i.version
 	if !i.isDownloaded(ctx) {
 		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 		if err != nil {
@@ -291,7 +300,7 @@ func (i *Instance) isDownloaded(ctx context.Context) bool {
 	}
 	for _, image := range list {
 		for _, tag := range image.RepoTags {
-			if tag == "localstack/localstack:"+i.version {
+			if tag == i.image+i.version {
 				return true
 			}
 		}
