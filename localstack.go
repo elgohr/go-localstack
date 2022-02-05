@@ -29,6 +29,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	log "github.com/sirupsen/logrus"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/elgohr/go-localstack/internal"
@@ -36,11 +37,12 @@ import (
 
 // Instance manages the localstack
 type Instance struct {
-	cli         internal.DockerClient
-	containerId string
-	portMapping map[Service]string
-	version     string
-	fixedPort   bool
+	cli              internal.DockerClient
+	portMapping      map[Service]string
+	containerId      string
+	containerIdMutex sync.RWMutex
+	version          string
+	fixedPort        bool
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -117,7 +119,7 @@ func (i *Instance) Stop() error {
 // Endpoint returns the endpoint for the given service
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i *Instance) Endpoint(service Service) string {
-	if i.containerId != "" {
+	if i.getContainerId() != "" {
 		if i.fixedPort {
 			return i.portMapping[FixedPort]
 		}
@@ -129,7 +131,7 @@ func (i *Instance) Endpoint(service Service) string {
 // EndpointV2 returns the endpoint for the given service when used by aws-sdk-v2
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i *Instance) EndpointV2(service Service) string {
-	if i.containerId != "" {
+	if i.getContainerId() != "" {
 		if i.fixedPort {
 			return "http://" + i.portMapping[FixedPort]
 		}
@@ -265,14 +267,18 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 	if err != nil {
 		return fmt.Errorf("localstack: could not create container: %w", err)
 	}
+
+	i.containerIdMutex.Lock()
 	i.containerId = resp.ID
+	i.containerIdMutex.Unlock()
 
 	log.Info("starting localstack")
-	if err := i.cli.ContainerStart(ctx, i.containerId, types.ContainerStartOptions{}); err != nil {
+	containerId := i.getContainerId()
+	if err := i.cli.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
 
-	startedContainer, err := i.cli.ContainerInspect(ctx, i.containerId)
+	startedContainer, err := i.cli.ContainerInspect(ctx, containerId)
 	if err != nil {
 		return fmt.Errorf("localstack: could not get port from container: %w", err)
 	}
@@ -294,14 +300,15 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 }
 
 func (i *Instance) stop() error {
-	if i.containerId == "" {
+	containerId := i.getContainerId()
+	if containerId == "" {
 		return nil
 	}
 	timeout := time.Second
-	if err := i.cli.ContainerStop(context.Background(), i.containerId, &timeout); err != nil {
+	if err := i.cli.ContainerStop(context.Background(), containerId, &timeout); err != nil {
 		return err
 	}
-	i.containerId = ""
+	i.setContainerId("")
 	i.portMapping = map[Service]string{}
 	return nil
 }
@@ -381,7 +388,19 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 }
 
 func (i *Instance) isAlreadyRunning() bool {
-	return i.containerId != ""
+	return i.getContainerId() != ""
+}
+
+func (i *Instance) getContainerId() string {
+	i.containerIdMutex.RLock()
+	defer i.containerIdMutex.RUnlock()
+	return i.containerId
+}
+
+func (i *Instance) setContainerId(v string) {
+	i.containerIdMutex.Lock()
+	defer i.containerIdMutex.Unlock()
+	i.containerId = v
 }
 
 func shouldBeAdded(service Service) bool {
