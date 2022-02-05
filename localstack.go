@@ -99,7 +99,8 @@ func (i *Instance) Start() error {
 	return i.start(context.Background())
 }
 
-// StartWithContext starts the localstack and ends it when the context is done
+// StartWithContext starts the localstack and ends it when the context is done.
+// Use it to also start individual services, by default all are started.
 func (i *Instance) StartWithContext(ctx context.Context, services ...Service) error {
 	go func() {
 		<-ctx.Done()
