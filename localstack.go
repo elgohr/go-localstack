@@ -27,13 +27,25 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/elgohr/go-localstack/internal"
 )
+
+var log = struct {
+	*logrus.Logger
+	sync.Mutex
+}{Logger: logrus.New()}
+
+// SetLogger sets the logger used by go-localstack.
+func SetLogger(logger *logrus.Logger) {
+	log.Lock()
+	log.Logger = logger
+	log.Unlock()
+}
 
 // Instance manages the localstack
 type Instance struct {
@@ -232,7 +244,7 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 		}()
 
 		// for reading the load output
-		if _, err = io.Copy(log.StandardLogger().Out, reader); err != nil {
+		if _, err = io.Copy(log.Out, reader); err != nil {
 			return fmt.Errorf("localstack: %w", err)
 		}
 	}

@@ -15,6 +15,7 @@
 package localstack_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
@@ -22,6 +23,7 @@ import (
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -42,6 +44,46 @@ func TestMain(m *testing.M) {
 		log.Fatalln(err)
 	}
 	os.Exit(run)
+}
+
+func TestSetLogger(t *testing.T) {
+	defer localstack.SetLogger(log.New())
+
+	for _, s := range []struct {
+		name   string
+		out    io.ReadWriter
+		level  log.Level
+		expect func(t require.TestingT, object interface{}, msgAndArgs ...interface{})
+	}{
+		{
+			name:   "with info log level",
+			out:    new(bytes.Buffer),
+			level:  log.DebugLevel,
+			expect: require.NotEmpty,
+		},
+		{
+			name:   "with fatal log level",
+			out:    new(bytes.Buffer),
+			level:  log.FatalLevel,
+			expect: require.Empty,
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			localstack.SetLogger(&log.Logger{
+				Out:       s.out,
+				Formatter: &log.TextFormatter{},
+				Level:     s.level,
+			})
+			l, err := localstack.NewInstance()
+			require.NoError(t, err)
+			require.NoError(t, l.Start())
+			require.NoError(t, l.Stop())
+
+			b, err := io.ReadAll(s.out)
+			require.NoError(t, err)
+			s.expect(t, b)
+		})
+	}
 }
 
 func TestLocalStack(t *testing.T) {
