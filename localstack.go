@@ -269,12 +269,10 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 		return fmt.Errorf("localstack: could not create container: %w", err)
 	}
 
-	i.containerIdMutex.Lock()
-	i.containerId = resp.ID
-	i.containerIdMutex.Unlock()
+	i.setContainerId(resp.ID)
 
 	log.Info("starting localstack")
-	containerId := i.getContainerId()
+	containerId := resp.ID
 	if err := i.cli.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
