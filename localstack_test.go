@@ -56,7 +56,7 @@ func TestSetLogger(t *testing.T) {
 		expect func(t require.TestingT, object interface{}, msgAndArgs ...interface{})
 	}{
 		{
-			name:   "with info log level",
+			name:   "with debug log level",
 			out:    new(bytes.Buffer),
 			level:  log.DebugLevel,
 			expect: require.NotEmpty,
