@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 	os.Exit(run)
 }
 
-func TestSetLogger(t *testing.T) {
+func TestWithLogger(t *testing.T) {
 	for _, s := range []struct {
 		name   string
 		out    io.ReadWriter
