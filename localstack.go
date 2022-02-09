@@ -35,21 +35,10 @@ import (
 	"github.com/elgohr/go-localstack/internal"
 )
 
-var log = struct {
-	*logrus.Logger
-	sync.Mutex
-}{Logger: logrus.New()}
-
-// SetLogger sets the logger used by go-localstack.
-func SetLogger(logger *logrus.Logger) {
-	log.Lock()
-	log.Logger = logger
-	log.Unlock()
-}
-
 // Instance manages the localstack
 type Instance struct {
 	cli              internal.DockerClient
+	log              *logrus.Logger
 	portMapping      map[Service]string
 	containerId      string
 	containerIdMutex sync.RWMutex
@@ -69,6 +58,13 @@ func WithVersion(version string) InstanceOption {
 	}
 }
 
+// WithLogger configures the instance to use the specified logger.
+func WithLogger(logger *logrus.Logger) InstanceOption {
+	return func(i *Instance) {
+		i.log = logger
+	}
+}
+
 // Semver constraint that tests it the version is affected by the port change.
 var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 
@@ -82,6 +78,7 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 
 	i := Instance{
 		cli:         cli,
+		log:         logrus.StandardLogger(),
 		version:     "latest",
 		portMapping: map[Service]string{},
 	}
@@ -117,7 +114,7 @@ func (i *Instance) StartWithContext(ctx context.Context, services ...Service) er
 	go func() {
 		<-ctx.Done()
 		if err := i.stop(); err != nil {
-			log.Error(err)
+			i.log.Error(err)
 		}
 	}()
 	return i.start(ctx, services...)
@@ -216,7 +213,7 @@ var AvailableServices = map[Service]struct{}{
 
 func (i *Instance) start(ctx context.Context, services ...Service) error {
 	if i.isAlreadyRunning() {
-		log.Info("stopping an instance that is already running")
+		i.log.Info("stopping an instance that is already running")
 		if err := i.stop(); err != nil {
 			return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
 		}
@@ -226,7 +223,7 @@ func (i *Instance) start(ctx context.Context, services ...Service) error {
 		return err
 	}
 
-	log.Info("waiting for localstack to start...")
+	i.log.Info("waiting for localstack to start...")
 	return i.waitToBeAvailable(ctx)
 }
 
@@ -239,12 +236,12 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 		}
 		defer func() {
 			if err := reader.Close(); err != nil {
-				log.Error(err)
+				i.log.Error(err)
 			}
 		}()
 
 		// for reading the load output
-		if _, err = io.Copy(log.Out, reader); err != nil {
+		if _, err = io.Copy(i.log.Out, reader); err != nil {
 			return fmt.Errorf("localstack: %w", err)
 		}
 	}
@@ -283,7 +280,7 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 
 	i.setContainerId(resp.ID)
 
-	log.Info("starting localstack")
+	i.log.Info("starting localstack")
 	containerId := resp.ID
 	if err := i.cli.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
@@ -327,7 +324,7 @@ func (i *Instance) stop() error {
 func (i *Instance) isDownloaded(ctx context.Context) bool {
 	list, err := i.cli.ImageList(ctx, types.ImageListOptions{All: true})
 	if err != nil {
-		log.Error(err)
+		i.log.Error(err)
 		return false
 	}
 	for _, image := range list {
@@ -349,10 +346,10 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 			return ctx.Err()
 		case <-ticker.C:
 			if err := i.checkAvailable(ctx); err == nil {
-				log.Info("localstack: finished waiting")
+				i.log.Info("localstack: finished waiting")
 				return nil
 			} else {
-				log.Debug(err)
+				i.log.Debug(err)
 			}
 		}
 	}

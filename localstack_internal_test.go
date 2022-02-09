@@ -21,6 +21,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
@@ -42,6 +43,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ContainerStopReturns(errors.New("can't stop"))
 				return &Instance{
 					cli:         f,
+					log:         logrus.StandardLogger(),
 					containerId: "running",
 				}
 			},
@@ -61,6 +63,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ImagePullReturns(nil, errors.New("can't pull"))
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -81,6 +84,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ContainerInspectReturns(types.ContainerJSON{}, errors.New("can't inspect"))
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -98,6 +102,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ImagePullReturns(io.NopCloser(iotest.ErrReader(errors.New("bad world"))), nil)
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -111,6 +116,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -124,6 +130,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -159,6 +166,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				f.ContainerStartReturns(errors.New("can't start"))
 				return &Instance{
 					cli: f,
+					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
@@ -183,14 +191,14 @@ func TestInstance_StartWithContext_Fails_Stop_AfterTest(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	f.ContainerStopReturns(errors.New("can't stop"))
-	i := &Instance{cli: f, containerId: "something"}
+	i := &Instance{cli: f, log: logrus.StandardLogger(), containerId: "something"}
 	require.EqualError(t, i.StartWithContext(ctx), "localstack: can't stop an already running instance: can't stop")
 }
 
 func TestInstance_Stop_Fails(t *testing.T) {
 	f := &internalfakes.FakeDockerClient{}
 	f.ContainerStopReturns(errors.New("can't stop"))
-	i := &Instance{cli: f, containerId: "something"}
+	i := &Instance{cli: f, log: logrus.StandardLogger(), containerId: "something"}
 	require.EqualError(t, i.Stop(), "can't stop")
 }
 
@@ -201,14 +209,14 @@ func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
 	defer func() {
 		require.NoError(t, os.Unsetenv("AWS_STS_REGIONAL_ENDPOINTS"))
 	}()
-	i := &Instance{}
+	i := &Instance{log: logrus.StandardLogger()}
 	require.Error(t, i.checkAvailable(ctx))
 }
 
 func TestInstance_waitToBeAvailable_Context_Expired(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	i := &Instance{}
+	i := &Instance{log: logrus.StandardLogger()}
 	require.Error(t, i.waitToBeAvailable(ctx))
 }
 

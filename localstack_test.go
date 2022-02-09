@@ -47,8 +47,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestSetLogger(t *testing.T) {
-	defer localstack.SetLogger(log.New())
-
 	for _, s := range []struct {
 		name   string
 		out    io.ReadWriter
@@ -69,12 +67,12 @@ func TestSetLogger(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			localstack.SetLogger(&log.Logger{
+			logger := &log.Logger{
 				Out:       s.out,
 				Formatter: &log.TextFormatter{},
 				Level:     s.level,
-			})
-			l, err := localstack.NewInstance()
+			}
+			l, err := localstack.NewInstance(localstack.WithLogger(logger))
 			require.NoError(t, err)
 			require.NoError(t, l.Start())
 			require.NoError(t, l.Stop())
