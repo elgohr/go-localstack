@@ -5,7 +5,7 @@ github.com/Masterminds/semver/v3
 ## explicit
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
-# github.com/aws/aws-sdk-go v1.43.4
+# github.com/aws/aws-sdk-go v1.43.5
 ## explicit
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
@@ -172,12 +172,10 @@ github.com/stretchr/testify/require
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d
-## explicit
+# golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 golang.org/x/net/internal/socks
 golang.org/x/net/proxy
 # golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
-## explicit
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
