@@ -6,10 +6,10 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/aws/aws-sdk-go v1.43.5
-	github.com/aws/aws-sdk-go-v2 v1.13.0
+	github.com/aws/aws-sdk-go-v2 v1.14.0
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.8.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.14.0
 	github.com/containerd/containerd v1.5.9 // indirect
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
