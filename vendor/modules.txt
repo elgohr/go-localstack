@@ -16,7 +16,7 @@ github.com/aws/aws-sdk-go/internal/ini
 github.com/aws/aws-sdk-go/internal/sdkio
 github.com/aws/aws-sdk-go/internal/shareddefaults
 github.com/aws/aws-sdk-go/internal/sync/singleflight
-# github.com/aws/aws-sdk-go-v2 v1.15.0
+# github.com/aws/aws-sdk-go-v2 v1.16.0
 ## explicit
 github.com/aws/aws-sdk-go-v2
 github.com/aws/aws-sdk-go-v2/aws
