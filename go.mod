@@ -7,8 +7,8 @@ require (
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/aws/aws-sdk-go v1.43.23
 	github.com/aws/aws-sdk-go-v2 v1.16.0
-	github.com/aws/aws-sdk-go-v2/config v1.15.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.10.0
+	github.com/aws/aws-sdk-go-v2/config v1.15.1
+	github.com/aws/aws-sdk-go-v2/credentials v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.1
 	github.com/containerd/containerd v1.5.9 // indirect
 	github.com/docker/docker v20.10.13+incompatible
