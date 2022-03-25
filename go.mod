@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.2
 	github.com/containerd/containerd v1.5.9 // indirect
-	github.com/docker/docker v20.10.13+incompatible
+	github.com/docker/docker v20.10.14+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.5.0
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
