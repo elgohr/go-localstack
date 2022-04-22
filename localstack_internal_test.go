@@ -178,6 +178,30 @@ func TestInstance_Start_Fails(t *testing.T) {
 				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
+		{
+			when: "container inspect doesn't contain ports",
+			given: func(f *internalfakes.FakeDockerClient) *Instance {
+				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ContainerInspectReturns(types.ContainerJSON{NetworkSettings: &types.NetworkSettings{
+					NetworkSettingsBase: types.NetworkSettingsBase{
+						Ports: map[nat.Port][]nat.PortBinding{},
+					},
+				}}, nil)
+				return &Instance{
+					cli:       f,
+					fixedPort: true,
+					log:       logrus.StandardLogger(),
+				}
+			},
+			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
+				require.EqualError(t, err, "localstack: could not get port from container")
+				require.Equal(t, 1, f.ImageListCallCount())
+				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ContainerCreateCallCount())
+				require.Equal(t, 1, f.ContainerStartCallCount())
+				require.Equal(t, 6, f.ContainerInspectCallCount())
+			},
+		},
 	} {
 		t.Run(tt.when, func(t *testing.T) {
 			f := &internalfakes.FakeDockerClient{}

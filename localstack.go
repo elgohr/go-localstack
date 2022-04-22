@@ -16,6 +16,7 @@ package localstack
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -286,13 +287,25 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
 
+	return i.mapPorts(ctx, services, containerId, 0)
+}
+
+func (i *Instance) mapPorts(ctx context.Context, services []Service, containerId string, try int) error {
+	if try > 5 {
+		return errors.New("localstack: could not get port from container")
+	}
 	startedContainer, err := i.cli.ContainerInspect(ctx, containerId)
 	if err != nil {
-		return fmt.Errorf("localstack: could not get port from container: %w", err)
+		return fmt.Errorf("localstack: could not inspect container: %w", err)
 	}
 	ports := startedContainer.NetworkSettings.Ports
 	if i.fixedPort {
-		i.portMapping[FixedPort] = "localhost:" + ports[nat.Port(FixedPort.Port)][0].HostPort
+		bindings := ports[nat.Port(FixedPort.Port)]
+		if len(bindings) == 0 {
+			time.Sleep(time.Second)
+			return i.mapPorts(ctx, services, containerId, try+1)
+		}
+		i.portMapping[FixedPort] = "localhost:" + bindings[0].HostPort
 	} else {
 		hasFilteredServices := len(services) > 0
 		for service := range AvailableServices {
@@ -303,7 +316,6 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 			}
 		}
 	}
-
 	return nil
 }
 
