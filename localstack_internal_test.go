@@ -88,7 +88,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
-				require.EqualError(t, err, "localstack: could not get port from container: can't inspect")
+				require.EqualError(t, err, "localstack: could not inspect container: can't inspect")
 				require.Equal(t, 1, f.ImageListCallCount())
 				require.Equal(t, 0, f.ImagePullCallCount())
 				require.Equal(t, 1, f.ContainerCreateCallCount())
