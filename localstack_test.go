@@ -84,6 +84,65 @@ func TestWithLogger(t *testing.T) {
 	}
 }
 
+func TestWithLabels(t *testing.T) {
+	for _, s := range []struct {
+		name   string
+		labels map[string]string
+	}{
+		{
+			name: "with multiple labels",
+			labels: map[string]string{
+				"label1": "aaa111",
+				"label2": "bbb222",
+				"label3": "ccc333",
+			},
+		},
+		{
+			name: "with nil label map",
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
+			require.NoError(t, err)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			require.NoError(t, l.StartWithContext(ctx))
+			defer func() { require.NoError(t, l.Stop()) }()
+
+			cli, err := client.NewClientWithOpts()
+			require.NoError(t, err)
+
+			resp, err := cli.ContainerInspect(ctx, l.GetContainerId())
+			require.NoError(t, err)
+
+			for k, v := range s.labels {
+				val, ok := resp.Config.Labels[k]
+				require.Equal(t, true, ok)
+				require.Equal(t, v, val)
+			}
+		})
+	}
+}
+
+func TestGetContainerId(t *testing.T) {
+	l, err := localstack.NewInstance()
+	require.NoError(t, err)
+	require.Equal(t, "", l.GetContainerId())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	require.NoError(t, l.StartWithContext(ctx))
+	defer func() {
+		require.NoError(t, l.Stop())
+		require.Equal(t, "", l.GetContainerId())
+	}()
+
+	require.NotEqual(t, "", l.GetContainerId())
+}
+
 func TestLocalStack(t *testing.T) {
 	for _, s := range []struct {
 		name   string

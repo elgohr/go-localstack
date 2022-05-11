@@ -41,6 +41,7 @@ type Instance struct {
 	cli              internal.DockerClient
 	log              *logrus.Logger
 	portMapping      map[Service]string
+	labels           map[string]string
 	containerId      string
 	containerIdMutex sync.RWMutex
 	version          string
@@ -63,6 +64,13 @@ func WithVersion(version string) InstanceOption {
 func WithLogger(logger *logrus.Logger) InstanceOption {
 	return func(i *Instance) {
 		i.log = logger
+	}
+}
+
+// WithLabels configures the labels that will be applied on the instance.
+func WithLabels(labels map[string]string) InstanceOption {
+	return func(i *Instance) {
+		i.labels = labels
 	}
 }
 
@@ -130,7 +138,7 @@ func (i *Instance) Stop() error {
 // Endpoint returns the endpoint for the given service
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i *Instance) Endpoint(service Service) string {
-	if i.getContainerId() != "" {
+	if i.GetContainerId() != "" {
 		if i.fixedPort {
 			return i.portMapping[FixedPort]
 		}
@@ -142,7 +150,7 @@ func (i *Instance) Endpoint(service Service) string {
 // EndpointV2 returns the endpoint for the given service when used by aws-sdk-v2
 // Endpoints are allocated dynamically (to avoid blocked ports), but are fix after starting the instance
 func (i *Instance) EndpointV2(service Service) string {
-	if i.getContainerId() != "" {
+	if i.GetContainerId() != "" {
 		if i.fixedPort {
 			return "http://" + i.portMapping[FixedPort]
 		}
@@ -269,8 +277,9 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 
 	resp, err := i.cli.ContainerCreate(ctx,
 		&container.Config{
-			Image: imageName,
-			Env:   environmentVariables,
+			Image:  imageName,
+			Env:    environmentVariables,
+			Labels: i.labels,
 		}, &container.HostConfig{
 			PortBindings: pm,
 			AutoRemove:   true,
@@ -320,7 +329,7 @@ func (i *Instance) mapPorts(ctx context.Context, services []Service, containerId
 }
 
 func (i *Instance) stop() error {
-	containerId := i.getContainerId()
+	containerId := i.GetContainerId()
 	if containerId == "" {
 		return nil
 	}
@@ -408,10 +417,10 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 }
 
 func (i *Instance) isAlreadyRunning() bool {
-	return i.getContainerId() != ""
+	return i.GetContainerId() != ""
 }
 
-func (i *Instance) getContainerId() string {
+func (i *Instance) GetContainerId() string {
 	i.containerIdMutex.RLock()
 	defer i.containerIdMutex.RUnlock()
 	return i.containerId
