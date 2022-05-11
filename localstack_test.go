@@ -82,6 +82,44 @@ func TestWithLogger(t *testing.T) {
 	}
 }
 
+func TestWithLabels(t *testing.T) {
+	for _, s := range []struct {
+		name   string
+		labels map[string]string
+	}{
+		{
+			name: "with multiple labels",
+			labels: map[string]string{
+				"label1": "aaa111",
+				"label2": "bbb222",
+				"label3": "ccc333",
+			},
+		},
+		{
+			name: "with nil label map",
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
+			require.NoError(t, err)
+
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			require.NoError(t, l.StartWithContext(ctx))
+			defer func() { require.NoError(t, l.Stop()) }()
+
+			cli, err := client.NewClientWithOpts()
+			require.NoError(t, err)
+
+			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Quiet: true})
+			require.NoError(t, err)
+
+			require.True(t, atLeastOneContainerMatchesLabels(s.labels, containers))
+		})
+	}
+}
+
 func TestLocalStack(t *testing.T) {
 	for _, s := range []struct {
 		name   string
@@ -338,6 +376,25 @@ func havingIndividualEndpoints(t *testing.T, l *localstack.Instance) {
 func checkAddress(t *testing.T, val string) {
 	require.True(t, strings.HasPrefix(val, "localhost:"), val)
 	require.NotEmpty(t, val[10:])
+}
+
+func atLeastOneContainerMatchesLabels(labels map[string]string, containers []types.Container) bool {
+	for _, container := range containers {
+		if matchesLabels(labels, container) {
+			return true
+		}
+	}
+	return false
+}
+
+func matchesLabels(labels map[string]string, container types.Container) bool {
+	for k, v := range labels {
+		val, exists := container.Labels[k]
+		if !exists || v != val {
+			return false
+		}
+	}
+	return true
 }
 
 func clean() error {

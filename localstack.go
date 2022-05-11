@@ -41,6 +41,7 @@ type Instance struct {
 	cli              internal.DockerClient
 	log              *logrus.Logger
 	portMapping      map[Service]string
+	labels           map[string]string
 	containerId      string
 	containerIdMutex sync.RWMutex
 	version          string
@@ -63,6 +64,13 @@ func WithVersion(version string) InstanceOption {
 func WithLogger(logger *logrus.Logger) InstanceOption {
 	return func(i *Instance) {
 		i.log = logger
+	}
+}
+
+// WithLabels configures the labels that will be applied on the instance.
+func WithLabels(labels map[string]string) InstanceOption {
+	return func(i *Instance) {
+		i.labels = labels
 	}
 }
 
@@ -280,8 +288,9 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 
 	resp, err := i.cli.ContainerCreate(ctx,
 		&container.Config{
-			Image: imageName,
-			Env:   environmentVariables,
+			Image:  imageName,
+			Env:    environmentVariables,
+			Labels: i.labels,
 		}, &container.HostConfig{
 			PortBindings: pm,
 			AutoRemove:   true,
