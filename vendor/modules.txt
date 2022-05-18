@@ -16,7 +16,7 @@ github.com/aws/aws-sdk-go/internal/ini
 github.com/aws/aws-sdk-go/internal/sdkio
 github.com/aws/aws-sdk-go/internal/shareddefaults
 github.com/aws/aws-sdk-go/internal/sync/singleflight
-# github.com/aws/aws-sdk-go-v2 v1.16.3
+# github.com/aws/aws-sdk-go-v2 v1.16.4
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2
 github.com/aws/aws-sdk-go-v2/aws
@@ -52,16 +52,16 @@ github.com/aws/aws-sdk-go-v2/credentials/stscreds
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds/internal/config
-# github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.10
+# github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.11
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/internal/configsources
-# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.4
+# github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.5
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2
 # github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/internal/ini
-# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.4
+# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.5
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/dynamodb
 github.com/aws/aws-sdk-go-v2/service/dynamodb/internal/customizations
@@ -70,7 +70,7 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb/types
 # github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.1
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding
-# github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.4
+# github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.5
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery
 # github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4
