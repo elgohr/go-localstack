@@ -1,3 +1,251 @@
+# Release (2022-05-17)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/internal/ini`: [v1.3.12](internal/ini/CHANGELOG.md#v1312-2022-05-17)
+  * **Bug Fix**: Removes the fuzz testing files from the module, as they are invalid and not used.
+* `github.com/aws/aws-sdk-go-v2/service/glue`: [v1.25.0](service/glue/CHANGELOG.md#v1250-2022-05-17)
+  * **Feature**: This release adds a new optional parameter called codeGenNodeConfiguration to CRUD job APIs that allows users to manage visual jobs via APIs. The updated CreateJob and UpdateJob will create jobs that can be viewed in Glue Studio as a visual graph. GetJob can be used to get codeGenNodeConfiguration.
+* `github.com/aws/aws-sdk-go-v2/service/iotsecuretunneling`: [v1.13.1](service/iotsecuretunneling/CHANGELOG.md#v1131-2022-05-17)
+  * **Bug Fix**: Fixes iotsecuretunneling and mobile API clients to use the correct name for signing requests, Fixes [#1686](https://github.com/aws/aws-sdk-go-v2/issues/1686).
+* `github.com/aws/aws-sdk-go-v2/service/kms`: [v1.17.2](service/kms/CHANGELOG.md#v1172-2022-05-17)
+  * **Documentation**: Add HMAC best practice tip, annual rotation of AWS managed keys.
+* `github.com/aws/aws-sdk-go-v2/service/mobile`: [v1.11.5](service/mobile/CHANGELOG.md#v1115-2022-05-17)
+  * **Bug Fix**: Fixes iotsecuretunneling and mobile API clients to use the correct name for signing requests, Fixes [#1686](https://github.com/aws/aws-sdk-go-v2/issues/1686).
+
+# Release (2022-05-16)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/applicationdiscoveryservice`: [v1.13.0](service/applicationdiscoveryservice/CHANGELOG.md#v1130-2022-05-16)
+  * **Feature**: Add Migration Evaluator Collector details to the GetDiscoverySummary API response
+* `github.com/aws/aws-sdk-go-v2/service/cloudfront`: [v1.18.0](service/cloudfront/CHANGELOG.md#v1180-2022-05-16)
+  * **Feature**: Introduced a new error (TooLongCSPInResponseHeadersPolicy) that is returned when the value of the Content-Security-Policy header in a response headers policy exceeds the maximum allowed length.
+* `github.com/aws/aws-sdk-go-v2/service/rekognition`: [v1.18.1](service/rekognition/CHANGELOG.md#v1181-2022-05-16)
+  * **Documentation**: Documentation updates for Amazon Rekognition.
+* `github.com/aws/aws-sdk-go-v2/service/resiliencehub`: [v1.6.0](service/resiliencehub/CHANGELOG.md#v160-2022-05-16)
+  * **Feature**: In this release, we are introducing support for Amazon Elastic Container Service, Amazon Route 53, AWS Elastic Disaster Recovery, AWS Backup in addition to the existing supported Services.  This release also supports Terraform file input from S3 and scheduling daily assessments
+* `github.com/aws/aws-sdk-go-v2/service/servicecatalog`: [v1.14.2](service/servicecatalog/CHANGELOG.md#v1142-2022-05-16)
+  * **Documentation**: Updated the descriptions for the ListAcceptedPortfolioShares API description and the PortfolioShareType parameters.
+* `github.com/aws/aws-sdk-go-v2/service/sts`: [v1.16.5](service/sts/CHANGELOG.md#v1165-2022-05-16)
+  * **Documentation**: Documentation updates for AWS Security Token Service.
+* `github.com/aws/aws-sdk-go-v2/service/workspacesweb`: [v1.6.0](service/workspacesweb/CHANGELOG.md#v160-2022-05-16)
+  * **Feature**: Amazon WorkSpaces Web now supports Administrator timeout control
+
+# Release (2022-05-13)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/grafana`: [v1.9.0](service/grafana/CHANGELOG.md#v190-2022-05-13)
+  * **Feature**: This release adds APIs for creating and deleting API keys in an Amazon Managed Grafana workspace.
+
+# Release (2022-05-12)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.43.0](service/ec2/CHANGELOG.md#v1430-2022-05-12)
+  * **Feature**: This release introduces a target type Gateway Load Balancer Endpoint for mirrored traffic. Customers can now specify GatewayLoadBalancerEndpoint option during the creation of a traffic mirror target.
+* `github.com/aws/aws-sdk-go-v2/service/finspacedata`: [v1.10.5](service/finspacedata/CHANGELOG.md#v1105-2022-05-12)
+  * **Documentation**: We've now deprecated CreateSnapshot permission for creating a data view, instead use CreateDataView permission.
+* `github.com/aws/aws-sdk-go-v2/service/iot`: [v1.25.1](service/iot/CHANGELOG.md#v1251-2022-05-12)
+  * **Documentation**: Documentation update for China region ListMetricValues for IoT
+* `github.com/aws/aws-sdk-go-v2/service/ivschat`: [v1.0.2](service/ivschat/CHANGELOG.md#v102-2022-05-12)
+  * **Documentation**: Documentation-only updates for IVS Chat API Reference.
+* `github.com/aws/aws-sdk-go-v2/service/kendra`: [v1.27.0](service/kendra/CHANGELOG.md#v1270-2022-05-12)
+  * **Feature**: Amazon Kendra now provides a data source connector for Jira. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/data-source-jira.html
+* `github.com/aws/aws-sdk-go-v2/service/lambda`: [v1.23.0](service/lambda/CHANGELOG.md#v1230-2022-05-12)
+  * **Feature**: Lambda releases NodeJs 16 managed runtime to be available in all commercial regions.
+* `github.com/aws/aws-sdk-go-v2/service/lightsail`: [v1.21.0](service/lightsail/CHANGELOG.md#v1210-2022-05-12)
+  * **Feature**: This release adds support to include inactive database bundles in the response of the GetRelationalDatabaseBundles request.
+* `github.com/aws/aws-sdk-go-v2/service/outposts`: [v1.19.1](service/outposts/CHANGELOG.md#v1191-2022-05-12)
+  * **Documentation**: Documentation updates for AWS Outposts.
+* `github.com/aws/aws-sdk-go-v2/service/ssmincidents`: [v1.14.0](service/ssmincidents/CHANGELOG.md#v1140-2022-05-12)
+  * **Feature**: Adding support for dynamic SSM Runbook parameter values. Updating validation pattern for engagements. Adding ConflictException to UpdateReplicationSet API contract.
+* `github.com/aws/aws-sdk-go-v2/service/transfer`: [v1.18.6](service/transfer/CHANGELOG.md#v1186-2022-05-12)
+  * **Documentation**: AWS Transfer Family now accepts ECDSA keys for server host keys
+
+# Release (2022-05-11)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.42.0](service/ec2/CHANGELOG.md#v1420-2022-05-11)
+  * **Feature**: This release updates AWS PrivateLink APIs to support IPv6 for PrivateLink Services and Endpoints of type 'Interface'.
+* `github.com/aws/aws-sdk-go-v2/service/secretsmanager`: [v1.15.7](service/secretsmanager/CHANGELOG.md#v1157-2022-05-11)
+  * **Documentation**: Doc only update for Secrets Manager that fixes several customer-reported issues.
+
+# Release (2022-05-10)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/computeoptimizer`: [v1.17.5](service/computeoptimizer/CHANGELOG.md#v1175-2022-05-10)
+  * **Documentation**: Documentation updates for Compute Optimizer
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.41.0](service/ec2/CHANGELOG.md#v1410-2022-05-10)
+  * **Feature**: Added support for using NitroTPM and UEFI Secure Boot on EC2 instances.
+* `github.com/aws/aws-sdk-go-v2/service/eks`: [v1.21.0](service/eks/CHANGELOG.md#v1210-2022-05-10)
+  * **Feature**: Adds BOTTLEROCKET_ARM_64_NVIDIA and BOTTLEROCKET_x86_64_NVIDIA AMI types to EKS managed nodegroups
+* `github.com/aws/aws-sdk-go-v2/service/emr`: [v1.18.0](service/emr/CHANGELOG.md#v1180-2022-05-10)
+  * **Feature**: This release updates the Amazon EMR ModifyInstanceGroups API to support "MERGE" type cluster reconfiguration. Also, added the ability to specify a particular Amazon Linux release for all nodes in a cluster launch request.
+* `github.com/aws/aws-sdk-go-v2/service/migrationhubrefactorspaces`: [v1.5.5](service/migrationhubrefactorspaces/CHANGELOG.md#v155-2022-05-10)
+  * **Documentation**: AWS Migration Hub Refactor Spaces documentation only update to fix a formatting issue.
+
+# Release (2022-05-09)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/config`: [v1.15.5](config/CHANGELOG.md#v1155-2022-05-09)
+  * **Bug Fix**: Fixes a bug in LoadDefaultConfig to correctly assign ConfigSources so all config resolvers have access to the config sources. This fixes the feature/ec2/imds client not having configuration applied via config.LoadOptions such as EC2IMDSClientEnableState. PR [#1682](https://github.com/aws/aws-sdk-go-v2/pull/1682)
+* `github.com/aws/aws-sdk-go-v2/service/cloudcontrol`: [v1.10.0](service/cloudcontrol/CHANGELOG.md#v1100-2022-05-09)
+  * **Feature**: SDK release for Cloud Control API to include paginators for Python SDK.
+* `github.com/aws/aws-sdk-go-v2/service/evidently`: [v1.7.0](service/evidently/CHANGELOG.md#v170-2022-05-09)
+  * **Feature**: Add detail message inside GetExperimentResults API response to indicate experiment result availability
+* `github.com/aws/aws-sdk-go-v2/service/ssmcontacts`: [v1.13.5](service/ssmcontacts/CHANGELOG.md#v1135-2022-05-09)
+  * **Documentation**: Fixed an error in the DescribeEngagement example for AWS Incident Manager.
+
+# Release (2022-05-06)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.40.0](service/ec2/CHANGELOG.md#v1400-2022-05-06)
+  * **Feature**: Add new state values for IPAMs, IPAM Scopes, and IPAM Pools.
+* `github.com/aws/aws-sdk-go-v2/service/location`: [v1.17.0](service/location/CHANGELOG.md#v1170-2022-05-06)
+  * **Feature**: Amazon Location Service now includes a MaxResults parameter for ListGeofences requests.
+* `github.com/aws/aws-sdk-go-v2/service/mediapackage`: [v1.16.0](service/mediapackage/CHANGELOG.md#v1160-2022-05-06)
+  * **Feature**: This release adds Dvb Dash 2014 as an available profile option for Dash Origin Endpoints.
+* `github.com/aws/aws-sdk-go-v2/service/rds`: [v1.21.1](service/rds/CHANGELOG.md#v1211-2022-05-06)
+  * **Documentation**: Various documentation improvements.
+* `github.com/aws/aws-sdk-go-v2/service/redshift`: [v1.24.0](service/redshift/CHANGELOG.md#v1240-2022-05-06)
+  * **Feature**: Introduces new field 'LoadSampleData' in CreateCluster operation. Customers can now specify 'LoadSampleData' option during creation of a cluster, which results in loading of sample data in the cluster that is created.
+* `github.com/aws/aws-sdk-go-v2/service/securityhub`: [v1.21.1](service/securityhub/CHANGELOG.md#v1211-2022-05-06)
+  * **Documentation**: Documentation updates for Security Hub API reference
+
+# Release (2022-05-05)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/datasync`: [v1.16.0](service/datasync/CHANGELOG.md#v1160-2022-05-05)
+  * **Feature**: AWS DataSync now supports a new ObjectTags Task API option that can be used to control whether Object Tags are transferred.
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.39.0](service/ec2/CHANGELOG.md#v1390-2022-05-05)
+  * **Feature**: Amazon EC2 I4i instances are powered by 3rd generation Intel Xeon Scalable processors and feature up to 30 TB of local AWS Nitro SSD storage
+* `github.com/aws/aws-sdk-go-v2/service/iot`: [v1.25.0](service/iot/CHANGELOG.md#v1250-2022-05-05)
+  * **Feature**: AWS IoT Jobs now allows you to create up to 100,000 active continuous and snapshot jobs by using concurrency control.
+* `github.com/aws/aws-sdk-go-v2/service/kendra`: [v1.26.0](service/kendra/CHANGELOG.md#v1260-2022-05-05)
+  * **Feature**: AWS Kendra now supports hierarchical facets for a query. For more information, see https://docs.aws.amazon.com/kendra/latest/dg/filtering.html
+
+# Release (2022-05-04)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/backup`: [v1.16.0](service/backup/CHANGELOG.md#v1160-2022-05-04)
+  * **Feature**: Adds support to 2 new filters about job complete time for 3 list jobs APIs in AWS Backup
+* `github.com/aws/aws-sdk-go-v2/service/iotsecuretunneling`: [v1.13.0](service/iotsecuretunneling/CHANGELOG.md#v1130-2022-05-04)
+  * **Feature**: This release introduces a new API RotateTunnelAccessToken that allow revoking the existing tokens and generate new tokens
+* `github.com/aws/aws-sdk-go-v2/service/lightsail`: [v1.20.1](service/lightsail/CHANGELOG.md#v1201-2022-05-04)
+  * **Documentation**: Documentation updates for Lightsail
+* `github.com/aws/aws-sdk-go-v2/service/ssm`: [v1.27.0](service/ssm/CHANGELOG.md#v1270-2022-05-04)
+  * **Feature**: This release adds the TargetMaps parameter in SSM State Manager API.
+
+# Release (2022-05-03)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.38.0](service/ec2/CHANGELOG.md#v1380-2022-05-03)
+  * **Feature**: Adds support for allocating Dedicated Hosts on AWS  Outposts. The AllocateHosts API now accepts an OutpostArn request  parameter, and the DescribeHosts API now includes an OutpostArn response parameter.
+* `github.com/aws/aws-sdk-go-v2/service/kinesisvideo`: [v1.12.0](service/kinesisvideo/CHANGELOG.md#v1120-2022-05-03)
+  * **Feature**: Add support for multiple image feature related APIs for configuring image generation and notification of a video stream. Add "GET_IMAGES" to the list of supported API names for the GetDataEndpoint API.
+* `github.com/aws/aws-sdk-go-v2/service/kinesisvideoarchivedmedia`: [v1.13.0](service/kinesisvideoarchivedmedia/CHANGELOG.md#v1130-2022-05-03)
+  * **Feature**: Add support for GetImages API  for retrieving images from a video stream
+* `github.com/aws/aws-sdk-go-v2/service/s3`: [v1.26.8](service/s3/CHANGELOG.md#v1268-2022-05-03)
+  * **Documentation**: Documentation only update for doc bug fixes for the S3 API docs.
+* `github.com/aws/aws-sdk-go-v2/service/sagemaker`: [v1.30.0](service/sagemaker/CHANGELOG.md#v1300-2022-05-03)
+  * **Feature**: SageMaker Autopilot adds new metrics for all candidate models generated by Autopilot experiments; RStudio on SageMaker now allows users to bring your own development environment in a custom image.
+
+# Release (2022-05-02)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/organizations`: [v1.16.0](service/organizations/CHANGELOG.md#v1160-2022-05-02)
+  * **Feature**: This release adds the INVALID_PAYMENT_INSTRUMENT as a fail reason and an error message.
+* `github.com/aws/aws-sdk-go-v2/service/outposts`: [v1.19.0](service/outposts/CHANGELOG.md#v1190-2022-05-02)
+  * **Feature**: This release adds a new API called ListAssets to the Outposts SDK, which lists the hardware assets in an Outpost.
+* `github.com/aws/aws-sdk-go-v2/service/synthetics`: [v1.15.0](service/synthetics/CHANGELOG.md#v1150-2022-05-02)
+  * **Feature**: CloudWatch Synthetics has introduced a new feature to provide customers with an option to delete the underlying resources that Synthetics canary creates when the user chooses to delete the canary.
+
+# Release (2022-04-29)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/codegurureviewer`: [v1.16.0](service/codegurureviewer/CHANGELOG.md#v1160-2022-04-29)
+  * **Feature**: Amazon CodeGuru Reviewer now supports suppressing recommendations from being generated on specific files and directories.
+* `github.com/aws/aws-sdk-go-v2/service/mediaconvert`: [v1.23.0](service/mediaconvert/CHANGELOG.md#v1230-2022-04-29)
+  * **Feature**: AWS Elemental MediaConvert SDK nows supports creation of Dolby Vision profile 8.1, the ability to generate black frames of video, and introduces audio-only DASH and CMAF support.
+* `github.com/aws/aws-sdk-go-v2/service/rds`: [v1.21.0](service/rds/CHANGELOG.md#v1210-2022-04-29)
+  * **Feature**: Feature - Adds support for Internet Protocol Version 6 (IPv6) on RDS database instances.
+* `github.com/aws/aws-sdk-go-v2/service/ssm`: [v1.26.0](service/ssm/CHANGELOG.md#v1260-2022-04-29)
+  * **Feature**: Update the StartChangeRequestExecution, adding TargetMaps to the Runbook parameter
+* `github.com/aws/aws-sdk-go-v2/service/wafv2`: [v1.20.0](service/wafv2/CHANGELOG.md#v1200-2022-04-29)
+  * **Feature**: You can now inspect all request headers and all cookies. You can now specify how to handle oversize body contents in your rules that inspect the body.
+
+# Release (2022-04-28)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/auditmanager`: [v1.18.5](service/auditmanager/CHANGELOG.md#v1185-2022-04-28)
+  * **Documentation**: This release adds documentation updates for Audit Manager. We provided examples of how to use the Custom_ prefix for the keywordValue attribute. We also provided more details about the DeleteAssessmentReport operation.
+* `github.com/aws/aws-sdk-go-v2/service/braket`: [v1.16.0](service/braket/CHANGELOG.md#v1160-2022-04-28)
+  * **Feature**: This release enables Braket Hybrid Jobs with Embedded Simulators to have multiple instances.
+* `github.com/aws/aws-sdk-go-v2/service/connect`: [v1.24.0](service/connect/CHANGELOG.md#v1240-2022-04-28)
+  * **Feature**: This release introduces an API for changing the current agent status of a user in Connect.
+* `github.com/aws/aws-sdk-go-v2/service/ec2`: [v1.37.0](service/ec2/CHANGELOG.md#v1370-2022-04-28)
+  * **Feature**: This release adds support to query the public key and creation date of EC2 Key Pairs. Additionally, the format (pem or ppk) of a key pair can be specified when creating a new key pair.
+* `github.com/aws/aws-sdk-go-v2/service/guardduty`: [v1.13.5](service/guardduty/CHANGELOG.md#v1135-2022-04-28)
+  * **Documentation**: Documentation update for API description.
+* `github.com/aws/aws-sdk-go-v2/service/networkfirewall`: [v1.17.0](service/networkfirewall/CHANGELOG.md#v1170-2022-04-28)
+  * **Feature**: AWS Network Firewall adds support for stateful threat signature AWS managed rule groups.
+
+# Release (2022-04-27)
+
+## General Highlights
+* **Dependency Update**: Updated to the latest SDK module versions
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/amplify`: [v1.11.5](service/amplify/CHANGELOG.md#v1115-2022-04-27)
+  * **Documentation**: Documentation only update to support the Amplify GitHub App feature launch
+* `github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines`: [v1.0.0](service/chimesdkmediapipelines/CHANGELOG.md#v100-2022-04-27)
+  * **Release**: New AWS service client module
+  * **Feature**: For Amazon Chime SDK meetings, the Amazon Chime Media Pipelines SDK allows builders to capture audio, video, and content share streams. You can also capture meeting events, live transcripts, and data messages. The pipelines save the artifacts to an Amazon S3 bucket that you designate.
+* `github.com/aws/aws-sdk-go-v2/service/cloudtrail`: [v1.16.0](service/cloudtrail/CHANGELOG.md#v1160-2022-04-27)
+  * **Feature**: Increases the retention period maximum to 2557 days. Deprecates unused fields of the ListEventDataStores API response. Updates documentation.
+* `github.com/aws/aws-sdk-go-v2/service/internal/checksum`: [v1.1.5](service/internal/checksum/CHANGELOG.md#v115-2022-04-27)
+  * **Bug Fix**: Fixes a bug that could cause the SigV4 payload hash to be incorrectly encoded, leading to signing errors.
+* `github.com/aws/aws-sdk-go-v2/service/iotwireless`: [v1.19.0](service/iotwireless/CHANGELOG.md#v1190-2022-04-27)
+  * **Feature**: Add list support for event configurations, allow to get and update event configurations by resource type, support LoRaWAN events; Make NetworkAnalyzerConfiguration as a resource, add List, Create, Delete API support; Add FCntStart attribute support for ABP WirelessDevice.
+* `github.com/aws/aws-sdk-go-v2/service/lookoutequipment`: [v1.13.0](service/lookoutequipment/CHANGELOG.md#v1130-2022-04-27)
+  * **Feature**: This release adds the following new features: 1) Introduces an option for automatic schema creation 2) Now allows for Ingestion of data containing most common errors and allows automatic data cleaning 3) Introduces new API ListSensorStatistics that gives further information about the ingested data
+* `github.com/aws/aws-sdk-go-v2/service/rekognition`: [v1.18.0](service/rekognition/CHANGELOG.md#v1180-2022-04-27)
+  * **Feature**: This release adds support to configure stream-processor resources for label detections on streaming-videos. UpateStreamProcessor API is also launched with this release, which could be used to update an existing stream-processor.
+* `github.com/aws/aws-sdk-go-v2/service/sagemaker`: [v1.29.0](service/sagemaker/CHANGELOG.md#v1290-2022-04-27)
+  * **Feature**: Amazon SageMaker Autopilot adds support for custom validation dataset and validation ratio through the CreateAutoMLJob and DescribeAutoMLJob APIs.
+
+# Release (2022-04-26)
+
+## Module Highlights
+* `github.com/aws/aws-sdk-go-v2/service/cloudfront`: [v1.17.0](service/cloudfront/CHANGELOG.md#v1170-2022-04-26)
+  * **Feature**: CloudFront now supports the Server-Timing header in HTTP responses sent from CloudFront. You can use this header to view metrics that help you gain insights about the behavior and performance of CloudFront. To use this header, enable it in a response headers policy.
+* `github.com/aws/aws-sdk-go-v2/service/glue`: [v1.24.2](service/glue/CHANGELOG.md#v1242-2022-04-26)
+  * **Documentation**: This release adds documentation for the APIs to create, read, delete, list, and batch read of AWS Glue custom patterns, and for Lake Formation configuration settings in the AWS Glue crawler.
+* `github.com/aws/aws-sdk-go-v2/service/ivschat`: [v1.0.0](service/ivschat/CHANGELOG.md#v100-2022-04-26)
+  * **Release**: New AWS service client module
+  * **Feature**: Adds new APIs for IVS Chat, a feature for building interactive chat experiences alongside an IVS broadcast.
+* `github.com/aws/aws-sdk-go-v2/service/lightsail`: [v1.20.0](service/lightsail/CHANGELOG.md#v1200-2022-04-26)
+  * **Feature**: This release adds support for Lightsail load balancer HTTP to HTTPS redirect and TLS policy configuration.
+* `github.com/aws/aws-sdk-go-v2/service/networkfirewall`: [v1.16.0](service/networkfirewall/CHANGELOG.md#v1160-2022-04-26)
+  * **Feature**: AWS Network Firewall now enables customers to use a customer managed AWS KMS key for the encryption of their firewall resources.
+* `github.com/aws/aws-sdk-go-v2/service/pricing`: [v1.14.5](service/pricing/CHANGELOG.md#v1145-2022-04-26)
+  * **Documentation**: Documentation updates for Price List API
+* `github.com/aws/aws-sdk-go-v2/service/sagemaker`: [v1.28.0](service/sagemaker/CHANGELOG.md#v1280-2022-04-26)
+  * **Feature**: SageMaker Inference Recommender now accepts customer KMS key ID for encryption of endpoints and compilation outputs created during inference recommendation.
+
 # Release (2022-04-25)
 
 ## General Highlights
