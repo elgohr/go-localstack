@@ -72,7 +72,7 @@ var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
 func NewInstance(opts ...InstanceOption) (*Instance, error) {
-	cli, err := client.NewClientWithOpts()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
