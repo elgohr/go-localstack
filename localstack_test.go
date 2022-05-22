@@ -49,26 +49,24 @@ func TestMain(m *testing.M) {
 func TestWithLogger(t *testing.T) {
 	for _, s := range []struct {
 		name   string
-		out    io.ReadWriter
 		level  log.Level
 		expect func(t require.TestingT, object interface{}, msgAndArgs ...interface{})
 	}{
 		{
 			name:   "with debug log level",
-			out:    new(bytes.Buffer),
 			level:  log.DebugLevel,
 			expect: require.NotEmpty,
 		},
 		{
 			name:   "with fatal log level",
-			out:    new(bytes.Buffer),
 			level:  log.FatalLevel,
 			expect: require.Empty,
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
+			buf := &bytes.Buffer{}
 			logger := &log.Logger{
-				Out:       s.out,
+				Out:       buf,
 				Formatter: &log.TextFormatter{},
 				Level:     s.level,
 			}
@@ -77,7 +75,7 @@ func TestWithLogger(t *testing.T) {
 			require.NoError(t, l.Start())
 			require.NoError(t, l.Stop())
 
-			b, err := io.ReadAll(s.out)
+			b, err := io.ReadAll(buf)
 			require.NoError(t, err)
 			s.expect(t, b)
 		})
@@ -261,6 +259,58 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	require.Empty(t, l.Endpoint(localstack.S3))
+}
+
+func TestWithClientFromEnv(t *testing.T) {
+	for _, s := range []struct {
+		name        string
+		given       func(t *testing.T)
+		expectOpt   func(t require.TestingT, opt localstack.InstanceOption, err error)
+		expectStart func(t require.TestingT, err error)
+	}{
+		{
+			name: "is ok with client from env",
+			given: func(t *testing.T) {
+				require.NoError(t, os.Setenv("DOCKER_API_VERSION", "0"))
+			},
+			expectOpt: func(t require.TestingT, opt localstack.InstanceOption, err error) {
+				require.NoError(t, err)
+				require.NotNil(t, opt)
+			},
+			expectStart: func(t require.TestingT, err error) {
+				require.Error(t, err)
+				require.True(t, strings.HasPrefix(err.Error(), "localstack: could not load image: Error response from daemon: client version 0 is too old."), err)
+			},
+		},
+		{
+			name: "publishes errors",
+			given: func(t *testing.T) {
+				require.NoError(t, os.Setenv("DOCKER_HOST", "localhost"))
+			},
+			expectOpt: func(t require.TestingT, opt localstack.InstanceOption, err error) {
+				require.EqualError(t, err, "localstack: could not connect to docker: unable to parse docker host `localhost`")
+				require.Nil(t, opt)
+			},
+		},
+	} {
+		t.Run(s.name, func(t *testing.T) {
+			defer func() {
+				require.NoError(t, os.Unsetenv("DOCKER_HOST"))
+				require.NoError(t, os.Unsetenv("DOCKER_API_VERSION"))
+			}()
+			s.given(t)
+			opt, err := localstack.WithClientFromEnv()
+			s.expectOpt(t, opt, err)
+			if s.expectStart != nil {
+				i, err := localstack.NewInstance(opt)
+				require.NoError(t, err)
+
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				s.expectStart(t, i.StartWithContext(ctx))
+			}
+		})
+	}
 }
 
 func havingOneEndpoint(t *testing.T, l *localstack.Instance) {

@@ -66,6 +66,17 @@ func WithLogger(logger *logrus.Logger) InstanceOption {
 	}
 }
 
+// WithClientFromEnv configures the instance to use a client that respects environment variables.
+func WithClientFromEnv() (InstanceOption, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
+	}
+	return func(i *Instance) {
+		i.cli = cli
+	}, nil
+}
+
 // Semver constraint that tests it the version is affected by the port change.
 var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 
