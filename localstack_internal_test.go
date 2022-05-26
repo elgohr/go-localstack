@@ -27,7 +27,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"testing/iotest"
 	"time"
 )
 
@@ -49,70 +48,33 @@ func TestInstance_Start_Fails(t *testing.T) {
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
 				require.EqualError(t, err, "localstack: can't stop an already running instance: can't stop")
-				require.Equal(t, 0, f.ImageListCallCount())
-				require.Equal(t, 0, f.ImagePullCallCount())
+				require.Equal(t, 0, f.ImageBuildCallCount())
 				require.Equal(t, 0, f.ContainerCreateCallCount())
 				require.Equal(t, 0, f.ContainerStartCallCount())
 				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
 		{
-			when: "can't list images and fails downloading",
+			when: "can't build image",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageListReturns(nil, errors.New("can't list"))
-				f.ImagePullReturns(nil, errors.New("can't pull"))
+				f.ImageBuildReturns(types.ImageBuildResponse{}, errors.New("can't build"))
 				return &Instance{
 					cli: f,
 					log: logrus.StandardLogger(),
 				}
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
-				require.EqualError(t, err, "localstack: could not load image: can't pull")
-				require.Equal(t, 1, f.ImageListCallCount())
-				require.Equal(t, 1, f.ImagePullCallCount())
+				require.EqualError(t, err, "localstack: could not build image: can't build")
+				require.Equal(t, 1, f.ImageBuildCallCount())
 				require.Equal(t, 0, f.ContainerCreateCallCount())
 				require.Equal(t, 0, f.ContainerStartCallCount())
 				require.Equal(t, 0, f.ContainerInspectCallCount())
 			},
 		},
 		{
-			when: "image is already present",
+			when: "can't close after building image",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageListReturns([]types.ImageSummary{{
-					RepoTags: []string{"localstack/localstack:"},
-				}}, nil)
-				f.ContainerInspectReturns(types.ContainerJSON{}, errors.New("can't inspect"))
-				return &Instance{
-					cli: f,
-					log: logrus.StandardLogger(),
-				}
-			},
-			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
-				require.EqualError(t, err, "localstack: could not inspect container: can't inspect")
-				require.Equal(t, 1, f.ImageListCallCount())
-				require.Equal(t, 0, f.ImagePullCallCount())
-				require.Equal(t, 1, f.ContainerCreateCallCount())
-				require.Equal(t, 1, f.ContainerStartCallCount())
-				require.Equal(t, 1, f.ContainerInspectCallCount())
-			},
-		},
-		{
-			when: "fails during pull of image",
-			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImagePullReturns(io.NopCloser(iotest.ErrReader(errors.New("bad world"))), nil)
-				return &Instance{
-					cli: f,
-					log: logrus.StandardLogger(),
-				}
-			},
-			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
-				require.EqualError(t, err, "localstack: bad world")
-			},
-		},
-		{
-			when: "can't close after pulling image",
-			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImagePullReturns(ErrCloser(strings.NewReader(""), errors.New("can't close")), nil)
+				f.ImageBuildReturns(types.ImageBuildResponse{Body: ErrCloser(strings.NewReader(""), errors.New("can't close"))}, nil)
 				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
@@ -126,7 +88,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't create container",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerCreateReturns(container.ContainerCreateCreatedBody{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
@@ -135,13 +97,12 @@ func TestInstance_Start_Fails(t *testing.T) {
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
 				require.EqualError(t, err, "localstack: could not create container: can't create")
-				require.Equal(t, 1, f.ImageListCallCount())
-				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ImageBuildCallCount())
 				require.Equal(t, 1, f.ContainerCreateCallCount())
 				ctx, config, hostConfig, networkingConfig, platform, containerName := f.ContainerCreateArgsForCall(0)
 				require.NotNil(t, ctx)
 				require.Equal(t, &container.Config{
-					Image: "localstack/localstack:",
+					Image: "go-localstack",
 					Env:   []string{},
 				}, config)
 				pm := nat.PortMap{}
@@ -162,7 +123,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't start container",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerStartReturns(errors.New("can't start"))
 				return &Instance{
 					cli: f,
@@ -171,8 +132,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
 				require.EqualError(t, err, "localstack: could not start container: can't start")
-				require.Equal(t, 1, f.ImageListCallCount())
-				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ImageBuildCallCount())
 				require.Equal(t, 1, f.ContainerCreateCallCount())
 				require.Equal(t, 1, f.ContainerStartCallCount())
 				require.Equal(t, 0, f.ContainerInspectCallCount())
@@ -181,7 +141,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "container inspect doesn't contain ports",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImagePullReturns(io.NopCloser(strings.NewReader("")), nil)
+				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerInspectReturns(types.ContainerJSON{NetworkSettings: &types.NetworkSettings{
 					NetworkSettingsBase: types.NetworkSettingsBase{
 						Ports: map[nat.Port][]nat.PortBinding{},
@@ -195,8 +155,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 			},
 			then: func(t *testing.T, err error, f *internalfakes.FakeDockerClient) {
 				require.EqualError(t, err, "localstack: could not get port from container")
-				require.Equal(t, 1, f.ImageListCallCount())
-				require.Equal(t, 1, f.ImagePullCallCount())
+				require.Equal(t, 1, f.ImageBuildCallCount())
 				require.Equal(t, 1, f.ContainerCreateCallCount())
 				require.Equal(t, 1, f.ContainerStartCallCount())
 				require.Equal(t, 6, f.ContainerInspectCallCount())

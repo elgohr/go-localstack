@@ -15,7 +15,10 @@
 package localstack
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
@@ -46,6 +49,7 @@ type Instance struct {
 	containerIdMutex sync.RWMutex
 	version          string
 	fixedPort        bool
+	timeout          time.Duration
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -71,6 +75,15 @@ func WithLogger(logger *logrus.Logger) InstanceOption {
 func WithLabels(labels map[string]string) InstanceOption {
 	return func(i *Instance) {
 		i.labels = labels
+	}
+}
+
+// WithTimeout configures the timeout for terminating the localstack instance.
+// This was invented to prevent orphaned containers after panics.
+// The default timeout is set to 5 minutes.
+func WithTimeout(timeout time.Duration) InstanceOption {
+	return func(i *Instance) {
+		i.timeout = timeout
 	}
 }
 
@@ -101,6 +114,7 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 		log:         logrus.StandardLogger(),
 		version:     "latest",
 		portMapping: map[Service]string{},
+		timeout:     5 * time.Minute,
 	}
 
 	for _, opt := range opts {
@@ -247,23 +261,11 @@ func (i *Instance) start(ctx context.Context, services ...Service) error {
 	return i.waitToBeAvailable(ctx)
 }
 
-func (i *Instance) startLocalstack(ctx context.Context, services ...Service) error {
-	imageName := "localstack/localstack:" + i.version
-	if !i.isDownloaded(ctx) {
-		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-		if err != nil {
-			return fmt.Errorf("localstack: could not load image: %w", err)
-		}
-		defer func() {
-			if err := reader.Close(); err != nil {
-				i.log.Error(err)
-			}
-		}()
+const imageName = "go-localstack"
 
-		// for reading the load output
-		if _, err = io.Copy(i.log.Out, reader); err != nil {
-			return fmt.Errorf("localstack: %w", err)
-		}
+func (i *Instance) startLocalstack(ctx context.Context, services ...Service) error {
+	if err := i.buildLocalImage(ctx); err != nil {
+		return fmt.Errorf("localstack: could not build image: %w", err)
 	}
 
 	pm := nat.PortMap{}
@@ -310,6 +312,51 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 	return i.mapPorts(ctx, services, containerId, 0)
 }
 
+//go:embed Dockerfile
+var dockerTemplate string
+
+func (i *Instance) buildLocalImage(ctx context.Context) error {
+	buf := &bytes.Buffer{}
+	tw := tar.NewWriter(buf)
+	defer func() {
+		if err := tw.Close(); err != nil {
+			i.log.Error(err)
+		}
+	}()
+
+	dockerFile := "Dockerfile"
+	dockerFileContent := []byte(fmt.Sprintf(dockerTemplate, i.version, int(i.timeout.Seconds())))
+	if err := tw.WriteHeader(&tar.Header{
+		Name: dockerFile,
+		Size: int64(len(dockerFileContent)),
+	}); err != nil {
+		return err
+	}
+
+	if _, err := tw.Write(dockerFileContent); err != nil {
+		return err
+	}
+
+	dockerFileTarReader := bytes.NewReader(buf.Bytes())
+	imageBuildResponse, err := i.cli.ImageBuild(ctx, dockerFileTarReader, types.ImageBuildOptions{
+		Tags:           []string{imageName},
+		Dockerfile:     dockerFile,
+		SuppressOutput: true,
+		Remove:         true,
+		ForceRemove:    true,
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := imageBuildResponse.Body.Close(); err != nil {
+			i.log.Error(err)
+		}
+	}()
+	_, err = io.Copy(io.Discard, imageBuildResponse.Body)
+	return err
+}
+
 func (i *Instance) mapPorts(ctx context.Context, services []Service, containerId string, try int) error {
 	if try > 5 {
 		return errors.New("localstack: could not get port from container")
@@ -353,22 +400,6 @@ func (i *Instance) stop() error {
 	return nil
 }
 
-func (i *Instance) isDownloaded(ctx context.Context) bool {
-	list, err := i.cli.ImageList(ctx, types.ImageListOptions{All: true})
-	if err != nil {
-		i.log.Error(err)
-		return false
-	}
-	for _, image := range list {
-		for _, tag := range image.RepoTags {
-			if tag == "localstack/localstack:"+i.version {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -377,6 +408,9 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
+			if err := i.isRunning(ctx); err != nil {
+				return err
+			}
 			if err := i.checkAvailable(ctx); err == nil {
 				i.log.Info("localstack: finished waiting")
 				return nil
@@ -385,6 +419,19 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 			}
 		}
 	}
+}
+
+func (i *Instance) isRunning(ctx context.Context) error {
+	containers, err := i.cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+	for _, c := range containers {
+		if c.Image == imageName {
+			return nil
+		}
+	}
+	return errors.New("localstack container has been stopped")
 }
 
 func (i *Instance) checkAvailable(ctx context.Context) error {

@@ -33,8 +33,8 @@ import (
 
 // DockerClient represents a way to interact with the Docker deamon
 type DockerClient interface {
-	ImageList(ctx context.Context, options types.ImageListOptions) ([]types.ImageSummary, error)
-	ImagePull(ctx context.Context, refStr string, options types.ImagePullOptions) (io.ReadCloser, error)
+	ImageBuild(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
+	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
 	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error)
 	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
