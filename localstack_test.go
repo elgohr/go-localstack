@@ -23,11 +23,11 @@ import (
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"io"
 	"net"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -64,20 +64,15 @@ func TestWithLogger(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			buf := &bytes.Buffer{}
-			logger := &log.Logger{
-				Out:       buf,
-				Formatter: &log.TextFormatter{},
-				Level:     s.level,
-			}
+			buf := &concurrentWriter{buf: &bytes.Buffer{}}
+			logger := log.New()
+			logger.SetLevel(s.level)
+			logger.SetOutput(buf)
 			l, err := localstack.NewInstance(localstack.WithLogger(logger))
 			require.NoError(t, err)
 			require.NoError(t, l.Start())
 			require.NoError(t, l.Stop())
-
-			b, err := io.ReadAll(buf)
-			require.NoError(t, err)
-			s.expect(t, b)
+			s.expect(t, buf.Bytes())
 		})
 	}
 }
@@ -457,4 +452,21 @@ func clean() error {
 		return err
 	}
 	return nil
+}
+
+type concurrentWriter struct {
+	buf *bytes.Buffer
+	mu  sync.RWMutex
+}
+
+func (c *concurrentWriter) Write(p []byte) (n int, err error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.buf.Write(p)
+}
+
+func (c *concurrentWriter) Bytes() []byte {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.buf.Bytes()
 }

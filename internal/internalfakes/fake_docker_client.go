@@ -61,6 +61,21 @@ type FakeDockerClient struct {
 		result1 []types.Container
 		result2 error
 	}
+	ContainerLogsStub        func(context.Context, string, types.ContainerLogsOptions) (io.ReadCloser, error)
+	containerLogsMutex       sync.RWMutex
+	containerLogsArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+		arg3 types.ContainerLogsOptions
+	}
+	containerLogsReturns struct {
+		result1 io.ReadCloser
+		result2 error
+	}
+	containerLogsReturnsOnCall map[int]struct {
+		result1 io.ReadCloser
+		result2 error
+	}
 	ContainerStartStub        func(context.Context, string, types.ContainerStartOptions) error
 	containerStartMutex       sync.RWMutex
 	containerStartArgsForCall []struct {
@@ -305,6 +320,72 @@ func (fake *FakeDockerClient) ContainerListReturnsOnCall(i int, result1 []types.
 	}{result1, result2}
 }
 
+func (fake *FakeDockerClient) ContainerLogs(arg1 context.Context, arg2 string, arg3 types.ContainerLogsOptions) (io.ReadCloser, error) {
+	fake.containerLogsMutex.Lock()
+	ret, specificReturn := fake.containerLogsReturnsOnCall[len(fake.containerLogsArgsForCall)]
+	fake.containerLogsArgsForCall = append(fake.containerLogsArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+		arg3 types.ContainerLogsOptions
+	}{arg1, arg2, arg3})
+	stub := fake.ContainerLogsStub
+	fakeReturns := fake.containerLogsReturns
+	fake.recordInvocation("ContainerLogs", []interface{}{arg1, arg2, arg3})
+	fake.containerLogsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeDockerClient) ContainerLogsCallCount() int {
+	fake.containerLogsMutex.RLock()
+	defer fake.containerLogsMutex.RUnlock()
+	return len(fake.containerLogsArgsForCall)
+}
+
+func (fake *FakeDockerClient) ContainerLogsCalls(stub func(context.Context, string, types.ContainerLogsOptions) (io.ReadCloser, error)) {
+	fake.containerLogsMutex.Lock()
+	defer fake.containerLogsMutex.Unlock()
+	fake.ContainerLogsStub = stub
+}
+
+func (fake *FakeDockerClient) ContainerLogsArgsForCall(i int) (context.Context, string, types.ContainerLogsOptions) {
+	fake.containerLogsMutex.RLock()
+	defer fake.containerLogsMutex.RUnlock()
+	argsForCall := fake.containerLogsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeDockerClient) ContainerLogsReturns(result1 io.ReadCloser, result2 error) {
+	fake.containerLogsMutex.Lock()
+	defer fake.containerLogsMutex.Unlock()
+	fake.ContainerLogsStub = nil
+	fake.containerLogsReturns = struct {
+		result1 io.ReadCloser
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeDockerClient) ContainerLogsReturnsOnCall(i int, result1 io.ReadCloser, result2 error) {
+	fake.containerLogsMutex.Lock()
+	defer fake.containerLogsMutex.Unlock()
+	fake.ContainerLogsStub = nil
+	if fake.containerLogsReturnsOnCall == nil {
+		fake.containerLogsReturnsOnCall = make(map[int]struct {
+			result1 io.ReadCloser
+			result2 error
+		})
+	}
+	fake.containerLogsReturnsOnCall[i] = struct {
+		result1 io.ReadCloser
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeDockerClient) ContainerStart(arg1 context.Context, arg2 string, arg3 types.ContainerStartOptions) error {
 	fake.containerStartMutex.Lock()
 	ret, specificReturn := fake.containerStartReturnsOnCall[len(fake.containerStartArgsForCall)]
@@ -506,6 +587,8 @@ func (fake *FakeDockerClient) Invocations() map[string][][]interface{} {
 	defer fake.containerInspectMutex.RUnlock()
 	fake.containerListMutex.RLock()
 	defer fake.containerListMutex.RUnlock()
+	fake.containerLogsMutex.RLock()
+	defer fake.containerLogsMutex.RUnlock()
 	fake.containerStartMutex.RLock()
 	defer fake.containerStartMutex.RUnlock()
 	fake.containerStopMutex.RLock()

@@ -102,8 +102,11 @@ func TestInstance_Start_Fails(t *testing.T) {
 				ctx, config, hostConfig, networkingConfig, platform, containerName := f.ContainerCreateArgsForCall(0)
 				require.NotNil(t, ctx)
 				require.Equal(t, &container.Config{
-					Image: "go-localstack",
-					Env:   []string{},
+					Image:        "go-localstack",
+					Env:          []string{},
+					Tty:          true,
+					AttachStdout: true,
+					AttachStderr: true,
 				}, config)
 				pm := nat.PortMap{}
 				for service := range AvailableServices {
@@ -164,6 +167,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 	} {
 		t.Run(tt.when, func(t *testing.T) {
 			f := &internalfakes.FakeDockerClient{}
+			f.ContainerLogsReturns(io.NopCloser(strings.NewReader("")), nil)
 			tt.then(t, tt.given(f).Start(), f)
 		})
 	}
