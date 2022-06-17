@@ -46,6 +46,8 @@ type Instance struct {
 	containerIdMutex sync.RWMutex
 	version          string
 	fixedPort        bool
+	registryURL      string
+	registryAuth     string
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -83,6 +85,15 @@ func WithClientFromEnv() (InstanceOption, error) {
 	return func(i *Instance) {
 		i.cli = cli
 	}, nil
+}
+
+// WithRegistry configures the instance to use docker registry for pulling images
+// auth is the base64 encoded credentials for the registry
+func WithRegistry(url string, auth string) InstanceOption {
+	return func(i *Instance) {
+		i.registryURL = url
+		i.registryAuth = auth
+	}
 }
 
 // Semver constraint that tests it the version is affected by the port change.
@@ -249,8 +260,15 @@ func (i *Instance) start(ctx context.Context, services ...Service) error {
 
 func (i *Instance) startLocalstack(ctx context.Context, services ...Service) error {
 	imageName := "localstack/localstack:" + i.version
+
+	if i.registryURL != "" {
+		imageName = fmt.Sprintf("%s/%s", i.registryURL, imageName)
+	}
+
 	if !i.isDownloaded(ctx) {
-		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+		reader, err := i.cli.ImagePull(ctx, imageName, types.ImagePullOptions{
+			RegistryAuth: i.registryAuth,
+		})
 		if err != nil {
 			return fmt.Errorf("localstack: could not load image: %w", err)
 		}
