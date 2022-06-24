@@ -100,7 +100,7 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 	defer cancel()
 	l, err := localstack.NewInstance(localstack.WithTimeout(20 * time.Second))
 	require.NoError(t, err)
-	timer := time.NewTimer(25 * time.Second)
+	timer := time.NewTimer(30 * time.Second)
 	defer timer.Stop()
 	require.NoError(t, l.StartWithContext(ctx))
 
