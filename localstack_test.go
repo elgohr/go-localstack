@@ -22,6 +22,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
@@ -100,20 +101,23 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 	defer cancel()
 	l, err := localstack.NewInstance(localstack.WithTimeout(20 * time.Second))
 	require.NoError(t, err)
-	timer := time.NewTimer(30 * time.Second)
-	defer timer.Stop()
+
 	require.NoError(t, l.StartWithContext(ctx))
 
-	<-timer.C
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	require.NoError(t, err)
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-	require.NoError(t, err)
-	for _, c := range containers {
-		if c.Image == "go-localstack" {
-			t.Fatal("image is still running but should be terminated")
+	require.Eventually(t, func() bool {
+		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+		if !assert.NoError(t, err) {
+			return false
 		}
-	}
+		for _, c := range containers {
+			if c.Image == "go-localstack" {
+				return false
+			}
+		}
+		return true
+	}, time.Minute, time.Second, "image is still running but should be terminated")
 }
 
 func TestWithLabels(t *testing.T) {
