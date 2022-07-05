@@ -76,6 +76,11 @@ github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery
 # github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.7
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url
+# github.com/aws/aws-sdk-go-v2/service/sqs v1.18.7
+## explicit; go 1.15
+github.com/aws/aws-sdk-go-v2/service/sqs
+github.com/aws/aws-sdk-go-v2/service/sqs/internal/endpoints
+github.com/aws/aws-sdk-go-v2/service/sqs/types
 # github.com/aws/aws-sdk-go-v2/service/sso v1.11.10
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/sso

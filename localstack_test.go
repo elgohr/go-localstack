@@ -18,21 +18,26 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
-	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
 	"github.com/elgohr/go-localstack"
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
@@ -387,6 +392,59 @@ func TestWithClientFromEnv(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWithMountedVolumeContainingInitScripts(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+	initScripts, err := filepath.Abs("testdata/init-scripts")
+	require.NoError(t, err)
+
+	mountOpt, err := localstack.WithVolumeMount("/docker-entrypoint-initaws.d", initScripts)
+	require.NoError(t, err)
+
+	buf := &concurrentWriter{buf: &bytes.Buffer{}}
+	logger := log.New()
+	logger.SetLevel(log.DebugLevel)
+	logger.SetOutput(buf)
+
+	l, err := localstack.NewInstance(mountOpt, localstack.WithLogger(logger))
+	require.NoError(t, err)
+	err = l.StartWithContext(ctx, localstack.SQS)
+	require.NoError(t, err)
+
+	// wait for ready
+	for i := 0; i < 10; i++ {
+		if strings.Contains(string(buf.Bytes()), "Bootstrap Complete") {
+			break
+		}
+		t.Logf("Waiting %d seconds for bootstrap to complete", i)
+		time.Sleep(time.Duration(i) * time.Second)
+		if i == 9 {
+			t.Fail()
+		}
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion("eu-west-1"),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
+			return aws.Endpoint{
+				PartitionID:       "aws",
+				URL:               l.EndpointV2(localstack.SQS),
+				SigningRegion:     "eu-west-1",
+				HostnameImmutable: true,
+			}, nil
+		})),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+	)
+	require.NoError(t, err)
+
+	sqsSvc := sqs.NewFromConfig(cfg)
+	// check we have the 2 expected queues
+	queues, err := sqsSvc.ListQueues(ctx, &sqs.ListQueuesInput{})
+	require.NoError(t, err)
+	require.Len(t, queues.QueueUrls, 2)
+	cancel()
 }
 
 func havingOneEndpoint(t *testing.T, l *localstack.Instance) {

@@ -21,6 +21,11 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -29,13 +34,10 @@ import (
 	dynamo_types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
-	"io"
-	"log"
-	"sync"
-	"time"
 
 	"github.com/elgohr/go-localstack/internal"
 )
@@ -51,6 +53,7 @@ type Instance struct {
 	version          string
 	fixedPort        bool
 	timeout          time.Duration
+	volumeMounts     map[string]string
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -96,6 +99,16 @@ func WithClientFromEnv() (InstanceOption, error) {
 	}
 	return func(i *Instance) {
 		i.cli = cli
+	}, nil
+}
+
+// WithVolumeMount configures the instance to use the specified volume mounts.
+func WithVolumeMount(mountPath, hostPath string) (InstanceOption, error) {
+	return func(i *Instance) {
+		if i.volumeMounts == nil {
+			i.volumeMounts = make(map[string]string)
+		}
+		i.volumeMounts[mountPath] = hostPath
 	}, nil
 }
 
@@ -299,6 +312,7 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 			AttachStderr: true,
 		}, &container.HostConfig{
 			PortBindings: pm,
+			Mounts:       i.getVolumeMounts(),
 			AutoRemove:   true,
 		}, nil, nil, "")
 	if err != nil {
@@ -528,6 +542,18 @@ func (i *Instance) writeContainerLogToLogger(ctx context.Context, containerId st
 			i.log.Println(err)
 		}
 	}
+}
+
+func (i *Instance) getVolumeMounts() []mount.Mount {
+	var mounts []mount.Mount
+	for mountPath, localPath := range i.volumeMounts {
+		mounts = append(mounts, mount.Mount{
+			Type:   mount.TypeBind,
+			Source: localPath,
+			Target: mountPath,
+		})
+	}
+	return mounts
 }
 
 func logClose(closer io.Closer) {
