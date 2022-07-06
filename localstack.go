@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -115,14 +116,25 @@ func WithVolumeMount(mountPath, hostPath string) (InstanceOption, error) {
 	}, nil
 }
 
-func WithInitScriptMount(initScriptDirPath string, completeLogLine string) InstanceOption {
+// WithInitScriptMount configures the instance with init scripts and waits for a specific line from
+// the script to show as ready to continue
+func WithInitScriptMount(initScriptDirPath string, completeLogLine string) (InstanceOption, error) {
+	if completeLogLine == "" {
+		return nil, fmt.Errorf("init script mount requires a line to wait for in the init script for completion")
+	}
+
+	initScriptDirPathAbs, err := filepath.Abs(initScriptDirPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return func(i *Instance) {
 		if i.volumeMounts == nil {
 			i.volumeMounts = make(map[string]string)
 		}
-		i.volumeMounts["/docker-entrypoint-initaws.d"] = initScriptDirPath
+		i.volumeMounts["/docker-entrypoint-initaws.d"] = initScriptDirPathAbs
 		i.initCompleteLogLine = completeLogLine
-	}
+	}, err
 }
 
 // Semver constraint that tests it the version is affected by the port change.

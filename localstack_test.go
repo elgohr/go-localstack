@@ -21,7 +21,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -397,10 +396,10 @@ func TestWithClientFromEnv(t *testing.T) {
 func TestWithInitScript(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
-	initScripts, err := filepath.Abs("testdata/init-scripts")
+	initScriptsOpt, err := localstack.WithInitScriptMount("testdata/init-scripts", "Bootstrap Complete")
 	require.NoError(t, err)
 
-	l, err := localstack.NewInstance(localstack.WithInitScriptMount(initScripts, "Bootstrap Complete"))
+	l, err := localstack.NewInstance(initScriptsOpt)
 	require.NoError(t, err)
 	err = l.StartWithContext(ctx, localstack.SQS)
 	require.NoError(t, err)
