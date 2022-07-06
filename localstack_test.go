@@ -394,36 +394,16 @@ func TestWithClientFromEnv(t *testing.T) {
 	}
 }
 
-func TestWithMountedVolumeContainingInitScripts(t *testing.T) {
+func TestWithInitScript(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 	initScripts, err := filepath.Abs("testdata/init-scripts")
 	require.NoError(t, err)
 
-	mountOpt, err := localstack.WithVolumeMount("/docker-entrypoint-initaws.d", initScripts)
-	require.NoError(t, err)
-
-	buf := &concurrentWriter{buf: &bytes.Buffer{}}
-	logger := log.New()
-	logger.SetLevel(log.DebugLevel)
-	logger.SetOutput(buf)
-
-	l, err := localstack.NewInstance(mountOpt, localstack.WithLogger(logger))
+	l, err := localstack.NewInstance(localstack.WithInitScriptMount(initScripts, "Bootstrap Complete"))
 	require.NoError(t, err)
 	err = l.StartWithContext(ctx, localstack.SQS)
 	require.NoError(t, err)
-
-	// wait for ready
-	for i := 0; i < 10; i++ {
-		if strings.Contains(string(buf.Bytes()), "Bootstrap Complete") {
-			break
-		}
-		t.Logf("Waiting %d seconds for bootstrap to complete", i)
-		time.Sleep(time.Duration(i) * time.Second)
-		if i == 9 {
-			t.Fail()
-		}
-	}
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion("eu-west-1"),
