@@ -39,7 +39,7 @@ github.com/aws/aws-sdk-go-v2/internal/timeconv
 # github.com/aws/aws-sdk-go-v2/config v1.17.0
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/config
-# github.com/aws/aws-sdk-go-v2/credentials v1.12.13
+# github.com/aws/aws-sdk-go-v2/credentials v1.12.14
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/credentials
 github.com/aws/aws-sdk-go-v2/credentials/ec2rolecreds
@@ -76,7 +76,7 @@ github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery
 # github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.12
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url
-# github.com/aws/aws-sdk-go-v2/service/sso v1.11.16
+# github.com/aws/aws-sdk-go-v2/service/sso v1.11.17
 ## explicit; go 1.15
 github.com/aws/aws-sdk-go-v2/service/sso
 github.com/aws/aws-sdk-go-v2/service/sso/internal/endpoints
