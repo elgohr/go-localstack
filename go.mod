@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.87
 	github.com/aws/aws-sdk-go-v2 v1.16.12
 	github.com/aws/aws-sdk-go-v2/config v1.17.2
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.15
+	github.com/aws/aws-sdk-go-v2/credentials v1.12.16
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.16.2
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -26,9 +26,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.13 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.11.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.11.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.16.14 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.16.15 // indirect
 	github.com/aws/smithy-go v1.13.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
