@@ -4,8 +4,8 @@ github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030I
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Microsoft/go-winio v0.5.2 h1:a9IhgEQBCUEk6QCdml9CiJGhAws+YwffDHEMp1VMrpA=
 github.com/Microsoft/go-winio v0.5.2/go.mod h1:WpS1mjBmmwHBEWmogvA2mj8546UReBk4v8QkMxJ6pZY=
-github.com/aws/aws-sdk-go v1.44.88 h1:9jhiZsTx9koQQsM29RTgwI0g4mfyphCdc3bkUcKrdwA=
-github.com/aws/aws-sdk-go v1.44.88/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
+github.com/aws/aws-sdk-go v1.44.89 h1:Xf5Pp9GsNSMRinAuWNiQd0vusXXb3IgYbNlxldhWS2Q=
+github.com/aws/aws-sdk-go v1.44.89/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go-v2 v1.16.12/go.mod h1:C+Ym0ag2LIghJbXhfXZ0YEEp49rBWowxKzJLUoob0ts=
 github.com/aws/aws-sdk-go-v2 v1.16.13 h1:HgF7OX2q0gSZtcXoo9DMEA8A2Qk/GCxmWyM0RI7Yz2Y=
 github.com/aws/aws-sdk-go-v2 v1.16.13/go.mod h1:xSyvSnzh0KLs5H4HJGeIEsNYemUWdNIl0b/rP6SIsLU=
