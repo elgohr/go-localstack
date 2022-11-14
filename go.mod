@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.135
 	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/config v1.17.11
-	github.com/aws/aws-sdk-go-v2/credentials v1.12.24
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.17.4
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/docker/go-connections v0.4.0
