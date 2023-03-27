@@ -1,3 +1,9 @@
+test:
+	go test -race ./...
+
+generate:
+	go generate ./...
+
 install-release-tool:
 	go install github.com/elgohr/semv@latest
 

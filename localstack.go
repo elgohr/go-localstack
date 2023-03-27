@@ -94,6 +94,7 @@ func WithClientFromEnv() (InstanceOption, error) {
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
+	cli.NegotiateAPIVersion(context.Background())
 	return func(i *Instance) {
 		i.cli = cli
 	}, nil
@@ -109,6 +110,7 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
+	cli.NegotiateAPIVersion(context.Background())
 
 	i := Instance{
 		cli:         cli,
