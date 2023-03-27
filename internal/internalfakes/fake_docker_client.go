@@ -5,7 +5,6 @@ import (
 	"context"
 	"io"
 	"sync"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -15,7 +14,7 @@ import (
 )
 
 type FakeDockerClient struct {
-	ContainerCreateStub        func(context.Context, *container.Config, *container.HostConfig, *network.NetworkingConfig, *v1.Platform, string) (container.ContainerCreateCreatedBody, error)
+	ContainerCreateStub        func(context.Context, *container.Config, *container.HostConfig, *network.NetworkingConfig, *v1.Platform, string) (container.CreateResponse, error)
 	containerCreateMutex       sync.RWMutex
 	containerCreateArgsForCall []struct {
 		arg1 context.Context
@@ -26,11 +25,11 @@ type FakeDockerClient struct {
 		arg6 string
 	}
 	containerCreateReturns struct {
-		result1 container.ContainerCreateCreatedBody
+		result1 container.CreateResponse
 		result2 error
 	}
 	containerCreateReturnsOnCall map[int]struct {
-		result1 container.ContainerCreateCreatedBody
+		result1 container.CreateResponse
 		result2 error
 	}
 	ContainerInspectStub        func(context.Context, string) (types.ContainerJSON, error)
@@ -89,12 +88,12 @@ type FakeDockerClient struct {
 	containerStartReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ContainerStopStub        func(context.Context, string, *time.Duration) error
+	ContainerStopStub        func(context.Context, string, container.StopOptions) error
 	containerStopMutex       sync.RWMutex
 	containerStopArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
-		arg3 *time.Duration
+		arg3 container.StopOptions
 	}
 	containerStopReturns struct {
 		result1 error
@@ -121,7 +120,7 @@ type FakeDockerClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeDockerClient) ContainerCreate(arg1 context.Context, arg2 *container.Config, arg3 *container.HostConfig, arg4 *network.NetworkingConfig, arg5 *v1.Platform, arg6 string) (container.ContainerCreateCreatedBody, error) {
+func (fake *FakeDockerClient) ContainerCreate(arg1 context.Context, arg2 *container.Config, arg3 *container.HostConfig, arg4 *network.NetworkingConfig, arg5 *v1.Platform, arg6 string) (container.CreateResponse, error) {
 	fake.containerCreateMutex.Lock()
 	ret, specificReturn := fake.containerCreateReturnsOnCall[len(fake.containerCreateArgsForCall)]
 	fake.containerCreateArgsForCall = append(fake.containerCreateArgsForCall, struct {
@@ -151,7 +150,7 @@ func (fake *FakeDockerClient) ContainerCreateCallCount() int {
 	return len(fake.containerCreateArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerCreateCalls(stub func(context.Context, *container.Config, *container.HostConfig, *network.NetworkingConfig, *v1.Platform, string) (container.ContainerCreateCreatedBody, error)) {
+func (fake *FakeDockerClient) ContainerCreateCalls(stub func(context.Context, *container.Config, *container.HostConfig, *network.NetworkingConfig, *v1.Platform, string) (container.CreateResponse, error)) {
 	fake.containerCreateMutex.Lock()
 	defer fake.containerCreateMutex.Unlock()
 	fake.ContainerCreateStub = stub
@@ -164,28 +163,28 @@ func (fake *FakeDockerClient) ContainerCreateArgsForCall(i int) (context.Context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
 }
 
-func (fake *FakeDockerClient) ContainerCreateReturns(result1 container.ContainerCreateCreatedBody, result2 error) {
+func (fake *FakeDockerClient) ContainerCreateReturns(result1 container.CreateResponse, result2 error) {
 	fake.containerCreateMutex.Lock()
 	defer fake.containerCreateMutex.Unlock()
 	fake.ContainerCreateStub = nil
 	fake.containerCreateReturns = struct {
-		result1 container.ContainerCreateCreatedBody
+		result1 container.CreateResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerCreateReturnsOnCall(i int, result1 container.ContainerCreateCreatedBody, result2 error) {
+func (fake *FakeDockerClient) ContainerCreateReturnsOnCall(i int, result1 container.CreateResponse, result2 error) {
 	fake.containerCreateMutex.Lock()
 	defer fake.containerCreateMutex.Unlock()
 	fake.ContainerCreateStub = nil
 	if fake.containerCreateReturnsOnCall == nil {
 		fake.containerCreateReturnsOnCall = make(map[int]struct {
-			result1 container.ContainerCreateCreatedBody
+			result1 container.CreateResponse
 			result2 error
 		})
 	}
 	fake.containerCreateReturnsOnCall[i] = struct {
-		result1 container.ContainerCreateCreatedBody
+		result1 container.CreateResponse
 		result2 error
 	}{result1, result2}
 }
@@ -449,13 +448,13 @@ func (fake *FakeDockerClient) ContainerStartReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeDockerClient) ContainerStop(arg1 context.Context, arg2 string, arg3 *time.Duration) error {
+func (fake *FakeDockerClient) ContainerStop(arg1 context.Context, arg2 string, arg3 container.StopOptions) error {
 	fake.containerStopMutex.Lock()
 	ret, specificReturn := fake.containerStopReturnsOnCall[len(fake.containerStopArgsForCall)]
 	fake.containerStopArgsForCall = append(fake.containerStopArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-		arg3 *time.Duration
+		arg3 container.StopOptions
 	}{arg1, arg2, arg3})
 	stub := fake.ContainerStopStub
 	fakeReturns := fake.containerStopReturns
@@ -476,13 +475,13 @@ func (fake *FakeDockerClient) ContainerStopCallCount() int {
 	return len(fake.containerStopArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerStopCalls(stub func(context.Context, string, *time.Duration) error) {
+func (fake *FakeDockerClient) ContainerStopCalls(stub func(context.Context, string, container.StopOptions) error) {
 	fake.containerStopMutex.Lock()
 	defer fake.containerStopMutex.Unlock()
 	fake.ContainerStopStub = stub
 }
 
-func (fake *FakeDockerClient) ContainerStopArgsForCall(i int) (context.Context, string, *time.Duration) {
+func (fake *FakeDockerClient) ContainerStopArgsForCall(i int) (context.Context, string, container.StopOptions) {
 	fake.containerStopMutex.RLock()
 	defer fake.containerStopMutex.RUnlock()
 	argsForCall := fake.containerStopArgsForCall[i]

@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
@@ -87,6 +88,8 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	require.NoError(t, err)
+	cli.NegotiateAPIVersion(ctx)
+
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	require.NoError(t, err)
 	for _, c := range containers {
@@ -106,6 +109,7 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	require.NoError(t, err)
+	cli.NegotiateAPIVersion(ctx)
 	require.Eventually(t, func() bool {
 		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 		if !assert.NoError(t, err) {
@@ -149,8 +153,9 @@ func TestWithLabels(t *testing.T) {
 
 			cli, err := client.NewClientWithOpts()
 			require.NoError(t, err)
+			cli.NegotiateAPIVersion(ctx)
 
-			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Quiet: true})
+			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 			require.NoError(t, err)
 
 			require.True(t, atLeastOneContainerMatchesLabels(s.labels, containers))
@@ -436,16 +441,19 @@ func matchesLabels(labels map[string]string, container types.Container) bool {
 }
 
 func clean() error {
-	timeout := time.Second
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	timeout := int(time.Second.Seconds())
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	cli.NegotiateAPIVersion(ctx)
+
 	if list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true}); err == nil {
 		for _, l := range list {
-			if err := cli.ContainerStop(ctx, l.ID, &timeout); err != nil {
+			if err := cli.ContainerStop(ctx, l.ID, container.StopOptions{Timeout: &timeout}); err != nil {
 				log.Println(err)
 			}
 		}
