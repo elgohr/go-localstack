@@ -90,11 +90,16 @@ func WithTimeout(timeout time.Duration) InstanceOption {
 
 // WithClientFromEnv configures the instance to use a client that respects environment variables.
 func WithClientFromEnv() (InstanceOption, error) {
+	return WithClientFromEnvCtx(context.Background())
+}
+
+// WithClientFromEnvCtx like WithClientFromEnv but with context
+func WithClientFromEnvCtx(ctx context.Context) (InstanceOption, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
-	cli.NegotiateAPIVersion(context.Background())
+	cli.NegotiateAPIVersion(ctx)
 	return func(i *Instance) {
 		i.cli = cli
 	}, nil
@@ -106,11 +111,16 @@ var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
 func NewInstance(opts ...InstanceOption) (*Instance, error) {
+	return NewInstanceCtx(context.Background(), opts...)
+}
+
+// NewInstanceCtx is NewInstance, but with Context
+func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, error) {
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
 	}
-	cli.NegotiateAPIVersion(context.Background())
+	cli.NegotiateAPIVersion(ctx)
 
 	i := Instance{
 		cli:         cli,
