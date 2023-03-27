@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
@@ -150,7 +151,7 @@ func TestWithLabels(t *testing.T) {
 			cli, err := client.NewClientWithOpts()
 			require.NoError(t, err)
 
-			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true, Quiet: true})
+			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 			require.NoError(t, err)
 
 			require.True(t, atLeastOneContainerMatchesLabels(s.labels, containers))
@@ -436,7 +437,7 @@ func matchesLabels(labels map[string]string, container types.Container) bool {
 }
 
 func clean() error {
-	timeout := time.Second
+	timeout := int(time.Second.Seconds())
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
 		return err
@@ -445,7 +446,7 @@ func clean() error {
 	defer cancel()
 	if list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true}); err == nil {
 		for _, l := range list {
-			if err := cli.ContainerStop(ctx, l.ID, &timeout); err != nil {
+			if err := cli.ContainerStop(ctx, l.ID, container.StopOptions{Timeout: &timeout}); err != nil {
 				log.Println(err)
 			}
 		}

@@ -17,14 +17,12 @@ package internal
 import (
 	"context"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
-	"time"
-
-	"github.com/Masterminds/semver/v3"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
@@ -39,7 +37,7 @@ type DockerClient interface {
 	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error)
 	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
-	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
+	ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error
 }
 
 // MustParseConstraint panics if a semver constraint is invalid

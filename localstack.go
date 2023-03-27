@@ -392,8 +392,8 @@ func (i *Instance) stop() error {
 	if containerId == "" {
 		return nil
 	}
-	timeout := time.Second
-	if err := i.cli.ContainerStop(context.Background(), containerId, &timeout); err != nil {
+	timeout := int(time.Second.Seconds())
+	if err := i.cli.ContainerStop(context.Background(), containerId, container.StopOptions{Timeout: &timeout}); err != nil {
 		return err
 	}
 	i.setContainerId("")
