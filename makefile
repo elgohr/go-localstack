@@ -1,3 +1,5 @@
+all: # nothing - to speed up advanced security scan
+
 test:
 	go test -race ./...
 
