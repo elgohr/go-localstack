@@ -4,6 +4,7 @@ test:
 	go test -race ./...
 
 generate:
+	find . -type d -name '*fakes' | xargs rm -r
 	go generate ./...
 
 install-release-tool:
