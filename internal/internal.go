@@ -15,29 +15,18 @@
 package internal
 
 import (
-	"context"
 	"fmt"
 	"github.com/Masterminds/semver/v3"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/network"
-	specs "github.com/opencontainers/image-spec/specs-go/v1"
-	"io"
+	"github.com/moby/moby/client"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 //counterfeiter:generate . DockerClient
 
-// DockerClient represents a way to interact with the Docker deamon
+// DockerClient represents a way to interact with the Docker daemon
 type DockerClient interface {
-	ImageBuild(ctx context.Context, buildContext io.Reader, options types.ImageBuildOptions) (types.ImageBuildResponse, error)
-	ContainerList(ctx context.Context, options types.ContainerListOptions) ([]types.Container, error)
-	ContainerLogs(ctx context.Context, container string, options types.ContainerLogsOptions) (io.ReadCloser, error)
-	ContainerCreate(ctx context.Context, config *container.Config, hostConfig *container.HostConfig, networkingConfig *network.NetworkingConfig, platform *specs.Platform, containerName string) (container.ContainerCreateCreatedBody, error)
-	ContainerStart(ctx context.Context, containerID string, options types.ContainerStartOptions) error
-	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
-	ContainerStop(ctx context.Context, containerID string, options container.StopOptions) error
+	client.APIClient
 }
 
 // MustParseConstraint panics if a semver constraint is invalid
