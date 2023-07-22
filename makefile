@@ -3,6 +3,11 @@ all: # nothing - to speed up advanced security scan
 test:
 	go test -race ./...
 
+update-update:
+	go get -u ./...
+	go mod tidy
+	go mod vendor
+
 generate:
 	find . -type d -name '*fakes' | xargs rm -r
 	go generate ./...
