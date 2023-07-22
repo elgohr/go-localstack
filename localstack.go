@@ -150,7 +150,6 @@ func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, err
 }
 
 // Start starts the localstack
-// Deprecated: Use StartWithContext instead.
 func (i *Instance) Start() error {
 	return i.start(context.Background())
 }
@@ -168,7 +167,6 @@ func (i *Instance) StartWithContext(ctx context.Context, services ...Service) er
 }
 
 // Stop stops the localstack
-// Deprecated: Use StartWithContext instead.
 func (i *Instance) Stop() error {
 	return i.stop()
 }
