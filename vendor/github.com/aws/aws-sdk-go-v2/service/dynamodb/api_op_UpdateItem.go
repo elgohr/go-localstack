@@ -149,6 +149,12 @@ type UpdateItemInput struct {
 	// consistent.
 	ReturnValues types.ReturnValue
 
+	// An optional parameter that returns the item attributes for an UpdateItem
+	// operation that failed a condition check. There is no additional cost associated
+	// with requesting a return value aside from the small network and processing
+	// overhead of receiving a larger response. No read capacity units are consumed.
+	ReturnValuesOnConditionCheckFailure types.ReturnValuesOnConditionCheckFailure
+
 	// An expression that defines one or more attributes to be updated, the action to
 	// be performed on them, and new values for them. The following action values are
 	// available for UpdateExpression .
@@ -279,7 +285,7 @@ func (c *Client) addOperationUpdateItemMiddlewares(stack *middleware.Stack, opti
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {

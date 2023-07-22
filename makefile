@@ -3,7 +3,7 @@ all: # nothing - to speed up advanced security scan
 test:
 	go test -race ./...
 
-update-update:
+update-dependencies:
 	go get -u ./...
 	go mod tidy
 	go mod vendor

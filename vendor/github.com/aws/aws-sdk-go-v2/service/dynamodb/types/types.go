@@ -487,6 +487,10 @@ type BatchStatementError struct {
 	// The error code associated with the failed PartiQL batch statement.
 	Code BatchStatementErrorCodeEnum
 
+	// The item which caused the condition check to fail. This will be set if
+	// ReturnValuesOnConditionCheckFailure is specified as ALL_OLD .
+	Item map[string]AttributeValue
+
 	// The error message associated with the PartiQL batch response.
 	Message *string
 
@@ -506,6 +510,13 @@ type BatchStatementRequest struct {
 
 	// The parameters associated with a PartiQL statement in the batch request.
 	Parameters []AttributeValue
+
+	// An optional parameter that returns the item attributes for a PartiQL batch
+	// request operation that failed a condition check. There is no additional cost
+	// associated with requesting a return value aside from the small network and
+	// processing overhead of receiving a larger response. No read capacity units are
+	// consumed.
+	ReturnValuesOnConditionCheckFailure ReturnValuesOnConditionCheckFailure
 
 	noSmithyDocumentSerde
 }
@@ -1853,6 +1864,13 @@ type ParameterizedStatement struct {
 	// The parameter values.
 	Parameters []AttributeValue
 
+	// An optional parameter that returns the item attributes for a PartiQL
+	// ParameterizedStatement operation that failed a condition check. There is no
+	// additional cost associated with requesting a return value aside from the small
+	// network and processing overhead of receiving a larger response. No read capacity
+	// units are consumed.
+	ReturnValuesOnConditionCheckFailure ReturnValuesOnConditionCheckFailure
+
 	noSmithyDocumentSerde
 }
 
@@ -1917,7 +1935,7 @@ type ProvisionedThroughput struct {
 
 	// The maximum number of strongly consistent reads consumed per second before
 	// DynamoDB returns a ThrottlingException . For more information, see Specifying
-	// Read and Write Requirements (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
+	// Read and Write Requirements (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ProvisionedThroughput.html)
 	// in the Amazon DynamoDB Developer Guide. If read/write capacity mode is
 	// PAY_PER_REQUEST the value is set to 0.
 	//
@@ -1926,7 +1944,7 @@ type ProvisionedThroughput struct {
 
 	// The maximum number of writes consumed per second before DynamoDB returns a
 	// ThrottlingException . For more information, see Specifying Read and Write
-	// Requirements (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithTables.html#ProvisionedThroughput)
+	// Requirements (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ProvisionedThroughput.html)
 	// in the Amazon DynamoDB Developer Guide. If read/write capacity mode is
 	// PAY_PER_REQUEST the value is set to 0.
 	//
