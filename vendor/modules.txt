@@ -137,7 +137,6 @@ github.com/docker/docker/api/types/swarm/runtime
 github.com/docker/docker/api/types/time
 github.com/docker/docker/api/types/versions
 github.com/docker/docker/api/types/volume
-github.com/docker/docker/client
 github.com/docker/docker/errdefs
 # github.com/docker/go-connections v0.4.0
 ## explicit
@@ -161,6 +160,13 @@ github.com/maxbrunsfeld/counterfeiter/v6
 github.com/maxbrunsfeld/counterfeiter/v6/arguments
 github.com/maxbrunsfeld/counterfeiter/v6/command
 github.com/maxbrunsfeld/counterfeiter/v6/generator
+# github.com/moby/moby v24.0.4+incompatible
+## explicit
+github.com/moby/moby/api/types
+github.com/moby/moby/api/types/container
+github.com/moby/moby/api/types/filters
+github.com/moby/moby/api/types/network
+github.com/moby/moby/client
 # github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 ## explicit; go 1.13
 # github.com/morikuni/aec v1.0.0
