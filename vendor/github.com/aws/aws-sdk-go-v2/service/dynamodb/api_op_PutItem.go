@@ -159,6 +159,12 @@ type PutItemInput struct {
 	// however, PutItem does not recognize any values other than NONE or ALL_OLD .
 	ReturnValues types.ReturnValue
 
+	// An optional parameter that returns the item attributes for a PutItem operation
+	// that failed a condition check. There is no additional cost associated with
+	// requesting a return value aside from the small network and processing overhead
+	// of receiving a larger response. No read capacity units are consumed.
+	ReturnValuesOnConditionCheckFailure types.ReturnValuesOnConditionCheckFailure
+
 	noSmithyDocumentSerde
 }
 
@@ -236,7 +242,7 @@ func (c *Client) addOperationPutItemMiddlewares(stack *middleware.Stack, options
 	if err = awsmiddleware.AddRecordResponseTiming(stack); err != nil {
 		return err
 	}
-	if err = addClientUserAgent(stack); err != nil {
+	if err = addClientUserAgent(stack, options); err != nil {
 		return err
 	}
 	if err = smithyhttp.AddErrorCloseResponseBodyMiddleware(stack); err != nil {
