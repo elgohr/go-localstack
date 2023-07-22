@@ -13,3 +13,7 @@ updates:
       aws-sdk:
         patterns:
           - "github.com/aws/*"
+      docker:
+        patterns:
+          - "github.com/docker/*"
+          - "github.com/moby/*"
