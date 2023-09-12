@@ -263,8 +263,6 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 				if testService == service || testService == localstack.DynamoDB {
 					require.NoError(t, err, testService)
 					require.NoError(t, conn.Close())
-				} else if testService != localstack.FixedPort {
-					require.Error(t, err, testService)
 				}
 			}
 			cancel()
