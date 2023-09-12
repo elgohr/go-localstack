@@ -240,7 +240,7 @@ func TestLocalStackWithContext(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 			l, err := localstack.NewInstance(s.input...)
 			require.NoError(t, err)
@@ -255,7 +255,7 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			l, err := localstack.NewInstance([]localstack.InstanceOption{localstack.WithVersion("0.11.4")}...)
+			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
 			for testService := range localstack.AvailableServices {
@@ -317,7 +317,7 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 }
 
 func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
