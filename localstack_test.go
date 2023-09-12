@@ -268,10 +268,37 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 				}
 			}
 			cancel()
+
+			// wait until service was shutdown
 			require.Eventually(t, func() bool {
 				_, err := cl.Get(l.EndpointV2(service))
 				return err != nil
-			}, time.Minute, time.Second)
+			}, time.Minute, 300*time.Millisecond)
+		})
+	}
+}
+
+func TestLocalStackWithIndividualServices(t *testing.T) {
+	cl := http.Client{Timeout: time.Second}
+	for service := range localstack.AvailableServices {
+		t.Run(service.Name, func(t *testing.T) {
+			l, err := localstack.NewInstance()
+			require.NoError(t, err)
+			require.NoError(t, l.Start(service))
+			for testService := range localstack.AvailableServices {
+				conn, err := net.DialTimeout("tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"), time.Second)
+				if testService == service || testService == localstack.DynamoDB {
+					require.NoError(t, err, testService)
+					require.NoError(t, conn.Close())
+				}
+			}
+			assert.NoError(t, l.Stop())
+
+			// wait until service was shutdown
+			require.Eventually(t, func() bool {
+				_, err := cl.Get(l.EndpointV2(service))
+				return err != nil
+			}, time.Minute, 300*time.Millisecond)
 		})
 	}
 }

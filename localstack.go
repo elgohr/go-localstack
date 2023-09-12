@@ -150,12 +150,12 @@ func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, err
 }
 
 // Start starts the localstack
-func (i *Instance) Start() error {
-	return i.start(context.Background())
+func (i *Instance) Start(services ...Service) error {
+	return i.start(context.Background(), services...)
 }
 
 // StartWithContext starts the localstack and ends it when the context is done.
-// Use it to also start individual services, by default all are started.
+// Deprecated: Use Start/Stop instead, as shutdown is not reliable
 func (i *Instance) StartWithContext(ctx context.Context, services ...Service) error {
 	go func() {
 		<-ctx.Done()
