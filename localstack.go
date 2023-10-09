@@ -42,15 +42,19 @@ import (
 
 // Instance manages the localstack
 type Instance struct {
-	cli              internal.DockerClient
-	log              *logrus.Logger
+	cli internal.DockerClient
+	log *logrus.Logger
+
 	portMapping      map[Service]string
-	labels           map[string]string
+	portMappingMutex sync.RWMutex
+
 	containerId      string
 	containerIdMutex sync.RWMutex
-	version          string
-	fixedPort        bool
-	timeout          time.Duration
+
+	labels    map[string]string
+	version   string
+	fixedPort bool
+	timeout   time.Duration
 }
 
 // InstanceOption is an option that controls the behaviour of
@@ -176,9 +180,9 @@ func (i *Instance) Stop() error {
 func (i *Instance) Endpoint(service Service) string {
 	if i.getContainerId() != "" {
 		if i.fixedPort {
-			return i.portMapping[FixedPort]
+			return i.getPortMapping(FixedPort)
 		}
-		return i.portMapping[service]
+		return i.getPortMapping(service)
 	}
 	return ""
 }
@@ -188,9 +192,9 @@ func (i *Instance) Endpoint(service Service) string {
 func (i *Instance) EndpointV2(service Service) string {
 	if i.getContainerId() != "" {
 		if i.fixedPort {
-			return "http://" + i.portMapping[FixedPort]
+			return "http://" + i.getPortMapping(FixedPort)
 		}
-		return "http://" + i.portMapping[service]
+		return "http://" + i.getPortMapping(service)
 	}
 	return ""
 }
@@ -383,14 +387,14 @@ func (i *Instance) mapPorts(ctx context.Context, services []Service, containerId
 			time.Sleep(time.Second)
 			return i.mapPorts(ctx, services, containerId, try+1)
 		}
-		i.portMapping[FixedPort] = "localhost:" + bindings[0].HostPort
+		i.setPortMapping(FixedPort, "localhost:"+bindings[0].HostPort)
 	} else {
 		hasFilteredServices := len(services) > 0
 		for service := range AvailableServices {
 			if hasFilteredServices && containsService(services, service) {
-				i.portMapping[service] = "localhost:" + ports[nat.Port(service.Port)][0].HostPort
+				i.setPortMapping(service, "localhost:"+ports[nat.Port(service.Port)][0].HostPort)
 			} else if !hasFilteredServices {
-				i.portMapping[service] = "localhost:" + ports[nat.Port(service.Port)][0].HostPort
+				i.setPortMapping(service, "localhost:"+ports[nat.Port(service.Port)][0].HostPort)
 			}
 		}
 	}
@@ -407,7 +411,7 @@ func (i *Instance) stop() error {
 		return err
 	}
 	i.setContainerId("")
-	i.portMapping = map[Service]string{}
+	i.resetPortMapping()
 	return nil
 }
 
@@ -499,6 +503,24 @@ func (i *Instance) setContainerId(v string) {
 	i.containerIdMutex.Lock()
 	defer i.containerIdMutex.Unlock()
 	i.containerId = v
+}
+
+func (i *Instance) setPortMapping(service Service, endpoint string) {
+	i.portMappingMutex.Lock()
+	defer i.portMappingMutex.Unlock()
+	i.portMapping[service] = endpoint
+}
+
+func (i *Instance) resetPortMapping() {
+	i.portMappingMutex.Lock()
+	defer i.portMappingMutex.Unlock()
+	i.portMapping = map[Service]string{}
+}
+
+func (i *Instance) getPortMapping(service Service) string {
+	i.portMappingMutex.RLock()
+	defer i.portMappingMutex.RUnlock()
+	return i.portMapping[service]
 }
 
 func shouldBeAdded(service Service) bool {
