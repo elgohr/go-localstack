@@ -381,17 +381,19 @@ func (i *Instance) mapPorts(ctx context.Context, services []Service, containerId
 		return fmt.Errorf("localstack: could not inspect container: %w", err)
 	}
 	ports := startedContainer.NetworkSettings.Ports
-	i.portMappingMutex.Lock()
-	defer i.portMappingMutex.Unlock()
 	if i.fixedPort {
 		bindings := ports[nat.Port(FixedPort.Port)]
 		if len(bindings) == 0 {
 			time.Sleep(time.Second)
 			return i.mapPorts(ctx, services, containerId, try+1)
 		}
+		i.portMappingMutex.Lock()
+		defer i.portMappingMutex.Unlock()
 		i.portMapping[FixedPort] = "localhost:" + bindings[0].HostPort
 	} else {
 		hasFilteredServices := len(services) > 0
+		i.portMappingMutex.Lock()
+		defer i.portMappingMutex.Unlock()
 		for service := range AvailableServices {
 			if hasFilteredServices && containsService(services, service) {
 				i.portMapping[service] = "localhost:" + ports[nat.Port(service.Port)][0].HostPort
