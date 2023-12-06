@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestWithLogger(t *testing.T) {
-	for _, s := range []struct {
+	for _, scenario := range []struct {
 		name   string
 		level  log.Level
 		expect func(t require.TestingT, object interface{}, msgAndArgs ...interface{})
@@ -65,7 +65,9 @@ func TestWithLogger(t *testing.T) {
 			expect: require.Empty,
 		},
 	} {
+		s := scenario
 		t.Run(s.name, func(t *testing.T) {
+			t.Parallel()
 			buf := &concurrentWriter{buf: &bytes.Buffer{}}
 			logger := log.New()
 			logger.SetLevel(s.level)
@@ -112,16 +114,14 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 	cli.NegotiateAPIVersion(ctx)
 	require.Eventually(t, func() bool {
 		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-		if !assert.NoError(t, err) {
-			return false
-		}
+		require.NoError(t, err)
 		for _, c := range containers {
 			if c.Image == "go-localstack" {
 				return false
 			}
 		}
 		return true
-	}, time.Minute, time.Second, "image is still running but should be terminated")
+	}, time.Minute, 200*time.Millisecond, "image is still running but should be terminated")
 }
 
 func TestWithLabels(t *testing.T) {
@@ -345,9 +345,9 @@ func TestInstanceWithVersions(t *testing.T) {
 
 func TestInstanceWithBadDockerEnvironment(t *testing.T) {
 	urlIfSet := os.Getenv("DOCKER_URL")
-	defer func() {
+	t.Cleanup(func() {
 		require.NoError(t, os.Setenv("DOCKER_URL", urlIfSet))
-	}()
+	})
 
 	require.NoError(t, os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock"))
 
@@ -400,10 +400,10 @@ func TestWithClientFromEnv(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			defer func() {
+			t.Cleanup(func() {
 				require.NoError(t, os.Unsetenv("DOCKER_HOST"))
 				require.NoError(t, os.Unsetenv("DOCKER_API_VERSION"))
-			}()
+			})
 			s.given(t)
 			opt, err := localstack.WithClientFromEnv()
 			s.expectOpt(t, opt, err)
@@ -447,8 +447,8 @@ func checkAddress(t *testing.T, val string) {
 }
 
 func atLeastOneContainerMatchesLabels(labels map[string]string, containers []types.Container) bool {
-	for _, container := range containers {
-		if matchesLabels(labels, container) {
+	for _, c := range containers {
+		if matchesLabels(labels, c) {
 			return true
 		}
 	}
@@ -476,17 +476,19 @@ func clean() error {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	if list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true}); err == nil {
-		for _, l := range list {
-			if err := cli.ContainerStop(ctx, l.ID, container.StopOptions{Timeout: &timeout}); err != nil {
-				log.Println(err)
-			}
-		}
-	} else {
+	list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
 		return err
 	}
+
+	for _, l := range list {
+		if err := cli.ContainerStop(ctx, l.ID, container.StopOptions{Timeout: &timeout}); err != nil {
+			log.Println(err)
+		}
+	}
+
 	if _, err := cli.ContainersPrune(ctx, filters.Args{}); err != nil {
-		return err
+		log.Println(err)
 	}
 	return nil
 }
