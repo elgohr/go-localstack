@@ -161,7 +161,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 				require.Equal(t, 1, f.ImageBuildCallCount())
 				require.Equal(t, 1, f.ContainerCreateCallCount())
 				require.Equal(t, 1, f.ContainerStartCallCount())
-				require.Equal(t, 6, f.ContainerInspectCallCount())
+				require.Equal(t, 11, f.ContainerInspectCallCount())
 			},
 		},
 	} {
