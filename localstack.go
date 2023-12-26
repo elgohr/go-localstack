@@ -418,8 +418,10 @@ func (i *Instance) stop() error {
 	if i.containerId == "" {
 		return nil
 	}
+	noTimeout := -1
 	if err := i.cli.ContainerStop(context.Background(), i.containerId, container.StopOptions{
-		Signal: "SIGKILL",
+		Signal:  "SIGKILL",
+		Timeout: &noTimeout,
 	}); err != nil {
 		return err
 	}
