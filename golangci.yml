@@ -1,0 +1,21 @@
+linters:
+  enable:
+    - bidichk
+    - bodyclose
+    - containedctx
+    - gosec
+    - durationcheck
+    - errchkjson
+    - exportloopref
+    - errorlint
+    - gocritic
+    - godox
+    - noctx
+
+run:
+  timeout: 10m
+  allow-parallel-runners: true
+
+linters-settings:
+  staticcheck:
+    go: "1.21"
