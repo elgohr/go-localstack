@@ -31,7 +31,8 @@ import (
 )
 
 func TestInstance_Start_Fails(t *testing.T) {
-	for _, tt := range [...]struct {
+	t.Parallel()
+	for _, scenario := range [...]struct {
 		when  string
 		given func(f *internalfakes.FakeDockerClient) *Instance
 		then  func(t *testing.T, err error, f *internalfakes.FakeDockerClient)
@@ -108,7 +109,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 					AttachStdout: true,
 					AttachStderr: true,
 				}, config)
-				pm := nat.PortMap{}
+				pm := make(nat.PortMap, len(AvailableServices))
 				for service := range AvailableServices {
 					pm[nat.Port(service.Port)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: ""}}
 				}
@@ -165,15 +166,18 @@ func TestInstance_Start_Fails(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(tt.when, func(t *testing.T) {
+		s := scenario
+		t.Run(s.when, func(t *testing.T) {
+			t.Parallel()
 			f := &internalfakes.FakeDockerClient{}
 			f.ContainerLogsReturns(io.NopCloser(strings.NewReader("")), nil)
-			tt.then(t, tt.given(f).Start(), f)
+			s.then(t, s.given(f).Start(), f)
 		})
 	}
 }
 
 func TestInstance_StartWithContext_Fails_Stop_AfterTest(t *testing.T) {
+	t.Parallel()
 	f := &internalfakes.FakeDockerClient{}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -183,6 +187,7 @@ func TestInstance_StartWithContext_Fails_Stop_AfterTest(t *testing.T) {
 }
 
 func TestInstance_Stop_Fails(t *testing.T) {
+	t.Parallel()
 	f := &internalfakes.FakeDockerClient{}
 	f.ContainerStopReturns(errors.New("can't stop"))
 	i := &Instance{cli: f, log: logrus.StandardLogger(), containerId: "something"}
@@ -190,7 +195,8 @@ func TestInstance_Stop_Fails(t *testing.T) {
 }
 
 func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	require.NoError(t, os.Setenv("AWS_STS_REGIONAL_ENDPOINTS", "FAILURE"))
 	defer func() {
@@ -201,7 +207,8 @@ func TestInstance_checkAvailable_Session_Fails(t *testing.T) {
 }
 
 func TestInstance_waitToBeAvailable_Context_Expired(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
 	cancel()
 	i := &Instance{log: logrus.StandardLogger()}
 	require.Error(t, i.waitToBeAvailable(ctx))

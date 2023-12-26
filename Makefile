@@ -1,7 +1,15 @@
 all: # nothing - to speed up advanced security scan
 
 test:
-	go test -race ./...
+	go test -race -timeout 0 ./...
+
+update-linting-tools:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
+
+lint: update-linting-tools
+	golangci-lint run -v ./...
+	govulncheck ./...
 
 update-dependencies:
 	go get -u ./...

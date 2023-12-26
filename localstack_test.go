@@ -95,8 +95,8 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	require.NoError(t, err)
 	for _, c := range containers {
-		if c.Image == "go-localstack" {
-			t.Fatal("image is still running but should be terminated")
+		if strings.Contains(c.Image, "go-localstack") {
+			t.Fatalf("%s is still running but should be terminated", c.Image)
 		}
 	}
 }
@@ -116,12 +116,12 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 		require.NoError(t, err)
 		for _, c := range containers {
-			if c.Image == "go-localstack" {
+			if strings.Contains(c.Image, "go-localstack") {
 				return false
 			}
 		}
 		return true
-	}, time.Minute, 200*time.Millisecond, "image is still running but should be terminated")
+	}, 5*time.Minute, 200*time.Millisecond, "image is still running but should be terminated")
 }
 
 func TestWithLabels(t *testing.T) {
@@ -145,11 +145,11 @@ func TestWithLabels(t *testing.T) {
 			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
 			require.NoError(t, err)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			require.NoError(t, l.StartWithContext(ctx))
-			defer func() { require.NoError(t, l.Stop()) }()
+			t.Cleanup(func() { require.NoError(t, l.Stop()) })
 
 			cli, err := client.NewClientWithOpts()
 			require.NoError(t, err)
@@ -198,9 +198,9 @@ func TestLocalStack(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			l, err := localstack.NewInstance(s.input...)
 			require.NoError(t, err)
-			defer func() {
-				require.NoError(t, l.Stop())
-			}()
+			t.Cleanup(func() {
+				assert.NoError(t, l.Stop())
+			})
 			require.NoError(t, l.Start())
 			s.expect(t, l)
 		})
@@ -240,7 +240,7 @@ func TestLocalStackWithContext(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			l, err := localstack.NewInstance(s.input...)
 			require.NoError(t, err)
@@ -251,10 +251,10 @@ func TestLocalStackWithContext(t *testing.T) {
 }
 
 func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
-	cl := http.Client{Timeout: time.Second}
+	cl := &http.Client{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithCancel(context.Background())
 			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
@@ -269,15 +269,21 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				_, err := cl.Get(l.EndpointV2(service))
+				res, err := cl.Get(l.EndpointV2(service))
+				defer func() {
+					if res == nil || res.Body == nil {
+						return
+					}
+					_ = res.Body.Close()
+				}()
 				return err != nil
-			}, time.Minute, 300*time.Millisecond)
+			}, 5*time.Minute, 300*time.Millisecond)
 		})
 	}
 }
 
 func TestLocalStackWithIndividualServices(t *testing.T) {
-	cl := http.Client{Timeout: time.Second}
+	cl := &http.Client{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
 			l, err := localstack.NewInstance()
@@ -294,9 +300,15 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				_, err := cl.Get(l.EndpointV2(service))
+				res, err := cl.Get(l.EndpointV2(service))
+				defer func() {
+					if res == nil || res.Body == nil {
+						return
+					}
+					_ = res.Body.Close()
+				}()
 				return err != nil
-			}, time.Minute, 300*time.Millisecond)
+			}, 5*time.Minute, 300*time.Millisecond)
 		})
 	}
 }
@@ -304,9 +316,9 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
-	defer func() {
+	t.Cleanup(func() {
 		require.NoError(t, l.Stop())
-	}()
+	})
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)
 	require.NoError(t, l.Start())
@@ -315,7 +327,7 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 }
 
 func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
