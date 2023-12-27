@@ -380,6 +380,9 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 }
 
 func TestWithClientFromEnv(t *testing.T) {
+	if strings.Contains(os.Getenv("DOCKER_HOST"), "podman.sock") {
+		t.Skip()
+	}
 	for _, s := range []struct {
 		name        string
 		given       func(t *testing.T)
