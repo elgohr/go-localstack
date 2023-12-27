@@ -267,21 +267,29 @@ func (i *Instance) start(ctx context.Context, services ...Service) error {
 			return fmt.Errorf("localstack: can't stop an already running instance: %w", err)
 		}
 	}
+	return i.startContainer(ctx, services, 0)
+}
 
+func (i *Instance) startContainer(ctx context.Context, services []Service, try int) error {
 	if err := i.startLocalstack(ctx, services...); err != nil {
 		return err
 	}
 
 	i.log.Info("waiting for localstack to start...")
-	return i.waitToBeAvailable(ctx)
+	err := i.waitToBeAvailable(ctx)
+	if errors.As(err, &containerMissing{}) {
+		if try > 3 {
+			return err
+		}
+		i.log.Debugln("missing container retrying")
+		return i.startContainer(ctx, services, try+1)
+	}
+	return err
 }
 
 const imageName = "go-localstack"
 
 func (i *Instance) startLocalstack(ctx context.Context, services ...Service) error {
-	i.containerIdMutex.Lock()
-	defer i.containerIdMutex.Unlock()
-
 	if err := i.buildLocalImage(ctx); err != nil {
 		return fmt.Errorf("localstack: could not build image: %w", err)
 	}
@@ -322,18 +330,19 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 		return fmt.Errorf("localstack: could not create container: %w", err)
 	}
 
-	i.containerId = resp.ID
+	containerId := resp.ID
+	i.setContainerId(containerId)
 
 	i.log.Info("starting localstack")
-	if err := i.cli.ContainerStart(ctx, i.containerId, types.ContainerStartOptions{}); err != nil {
+	if err := i.cli.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
 
 	if i.log.Level == logrus.DebugLevel {
-		go i.writeContainerLogToLogger(ctx, i.containerId)
+		go i.writeContainerLogToLogger(ctx, containerId)
 	}
 
-	return i.mapPorts(ctx, services, i.containerId, 0)
+	return i.mapPorts(ctx, services, containerId, 0)
 }
 
 //go:embed Dockerfile
@@ -437,7 +446,7 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 			return ctx.Err()
 		case <-ticker.C:
 			if err := i.isRunning(ctx); err != nil {
-				return err
+				return containerMissing{err: err}
 			}
 			if err := i.checkAvailable(ctx); err != nil {
 				i.log.Debug(err)
@@ -450,9 +459,7 @@ func (i *Instance) waitToBeAvailable(ctx context.Context) error {
 }
 
 func (i *Instance) isRunning(ctx context.Context) error {
-	i.containerIdMutex.RLock()
-	defer i.containerIdMutex.RUnlock()
-	_, err := i.cli.ContainerInspect(ctx, i.containerId)
+	_, err := i.cli.ContainerInspect(ctx, i.getContainerId())
 	if err != nil {
 		i.log.Debug(err)
 		return errors.New("localstack container has been stopped")
@@ -505,6 +512,12 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 
 func (i *Instance) isAlreadyRunning() bool {
 	return i.getContainerId() != ""
+}
+
+func (i *Instance) setContainerId(containerId string) {
+	i.containerIdMutex.Lock()
+	defer i.containerIdMutex.Unlock()
+	i.containerId = containerId
 }
 
 func (i *Instance) getContainerId() string {
@@ -572,4 +585,12 @@ func logClose(closer io.Closer) {
 	if err := closer.Close(); err != nil {
 		log.Println(err)
 	}
+}
+
+type containerMissing struct {
+	err error
+}
+
+func (c containerMissing) Error() string {
+	return c.err.Error()
 }
