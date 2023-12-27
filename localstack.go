@@ -418,10 +418,8 @@ func (i *Instance) stop() error {
 	if i.containerId == "" {
 		return nil
 	}
-	noTimeout := -1
 	if err := i.cli.ContainerStop(context.Background(), i.containerId, container.StopOptions{
-		Signal:  "SIGKILL",
-		Timeout: &noTimeout,
+		Signal: "SIGKILL",
 	}); err != nil {
 		return err
 	}
@@ -431,7 +429,7 @@ func (i *Instance) stop() error {
 }
 
 func (i *Instance) waitToBeAvailable(ctx context.Context) error {
-	ticker := time.NewTicker(300 * time.Millisecond)
+	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
@@ -474,6 +472,9 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 			}, nil
 		})),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+		config.WithRetryer(func() aws.Retryer {
+			return aws.NopRetryer{}
+		}),
 	)
 	if err != nil {
 		return err
