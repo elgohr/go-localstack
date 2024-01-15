@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.8
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/maxbrunsfeld/counterfeiter/v6 v6.7.0
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
 	github.com/moby/moby v24.0.7+incompatible
 	github.com/opencontainers/image-spec v1.0.2
 	github.com/sirupsen/logrus v1.9.3
@@ -47,7 +47,7 @@ require (
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.16.1 // indirect
+	golang.org/x/tools v0.17.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
