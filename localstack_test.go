@@ -92,7 +92,7 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 	require.NoError(t, err)
 	cli.NegotiateAPIVersion(ctx)
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := cli.ContainerList(ctx, container.ListOptions{})
 	require.NoError(t, err)
 	for _, c := range containers {
 		if strings.Contains(c.Image, "go-localstack") {
@@ -113,7 +113,7 @@ func TestWithTimeoutAfterStartup(t *testing.T) {
 	require.NoError(t, err)
 	cli.NegotiateAPIVersion(ctx)
 	require.Eventually(t, func() bool {
-		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+		containers, err := cli.ContainerList(ctx, container.ListOptions{})
 		require.NoError(t, err)
 		for _, c := range containers {
 			if strings.Contains(c.Image, "go-localstack") {
@@ -155,7 +155,7 @@ func TestWithLabels(t *testing.T) {
 			require.NoError(t, err)
 			cli.NegotiateAPIVersion(ctx)
 
-			containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+			containers, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 			require.NoError(t, err)
 
 			require.True(t, atLeastOneContainerMatchesLabels(s.labels, containers))
@@ -491,7 +491,7 @@ func clean() error {
 	}
 	cli.NegotiateAPIVersion(ctx)
 
-	list, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	list, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		return err
 	}

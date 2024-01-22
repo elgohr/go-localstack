@@ -334,7 +334,7 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 	i.setContainerId(containerId)
 
 	i.log.Info("starting localstack")
-	if err := i.cli.ContainerStart(ctx, containerId, types.ContainerStartOptions{}); err != nil {
+	if err := i.cli.ContainerStart(ctx, containerId, container.StartOptions{}); err != nil {
 		return fmt.Errorf("localstack: could not start container: %w", err)
 	}
 
@@ -559,7 +559,7 @@ func containsService(services []Service, service Service) bool {
 }
 
 func (i *Instance) writeContainerLogToLogger(ctx context.Context, containerId string) {
-	reader, err := i.cli.ContainerLogs(ctx, containerId, types.ContainerLogsOptions{
+	reader, err := i.cli.ContainerLogs(ctx, containerId, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
