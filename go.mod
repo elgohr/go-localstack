@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1
-	github.com/aws/aws-sdk-go v1.50.35
+	github.com/aws/aws-sdk-go v1.51.1
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
