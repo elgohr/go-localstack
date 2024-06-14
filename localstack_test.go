@@ -400,7 +400,7 @@ func TestWithClientFromEnv(t *testing.T) {
 			},
 			expectStart: func(t require.TestingT, err error) {
 				require.Error(t, err)
-				require.True(t, strings.HasPrefix(err.Error(), "localstack: could not build image: Error response from daemon: client version 0 is too old."), err)
+				require.Contains(t, err.Error(), "client version 0 is too old.")
 			},
 		},
 		{

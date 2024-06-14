@@ -26,7 +26,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	dynamo_types "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/smithy-go"
+	smithyauth "github.com/aws/smithy-go/auth"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
@@ -34,6 +38,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -469,15 +475,7 @@ func (i *Instance) isRunning(ctx context.Context) error {
 
 func (i *Instance) checkAvailable(ctx context.Context) error {
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion("us-east-1"),
-		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(_, _ string, _ ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				PartitionID:       "aws",
-				URL:               i.EndpointV2(DynamoDB),
-				SigningRegion:     "us-east-1",
-				HostnameImmutable: true,
-			}, nil
-		})),
+		config.WithRegion("local"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
 		config.WithRetryer(func() aws.Retryer {
 			return aws.NopRetryer{}
@@ -489,24 +487,27 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 
 	s := dynamodb.NewFromConfig(cfg)
 	testTable := aws.String("bucket")
+	endpointResolver, err := newCustomEndpointResolver(i.EndpointV2(DynamoDB))
+	if err != nil {
+		return err
+	}
 	if _, err = s.CreateTable(ctx, &dynamodb.CreateTableInput{
-		AttributeDefinitions: []dynamo_types.AttributeDefinition{
-			{AttributeName: aws.String("pk"), AttributeType: dynamo_types.ScalarAttributeTypeS},
+		AttributeDefinitions: []dynamotypes.AttributeDefinition{
+			{AttributeName: aws.String("pk"), AttributeType: dynamotypes.ScalarAttributeTypeS},
 		},
-		KeySchema: []dynamo_types.KeySchemaElement{
-			{AttributeName: aws.String("pk"), KeyType: dynamo_types.KeyTypeHash},
+		KeySchema: []dynamotypes.KeySchemaElement{
+			{AttributeName: aws.String("pk"), KeyType: dynamotypes.KeyTypeHash},
 		},
-		ProvisionedThroughput: &dynamo_types.ProvisionedThroughput{
+		ProvisionedThroughput: &dynamotypes.ProvisionedThroughput{
 			ReadCapacityUnits: aws.Int64(1), WriteCapacityUnits: aws.Int64(1),
 		},
 		TableName: testTable,
-	}); err != nil {
+	}, dynamodb.WithEndpointResolverV2(endpointResolver)); err != nil {
 		return err
 	}
-
 	_, err = s.DeleteTable(ctx, &dynamodb.DeleteTableInput{
 		TableName: testTable,
-	})
+	}, dynamodb.WithEndpointResolverV2(endpointResolver))
 	return err
 }
 
@@ -593,4 +594,41 @@ type containerMissing struct {
 
 func (c containerMissing) Error() string {
 	return c.err.Error()
+}
+
+func newCustomEndpointResolver(rawUri string) (*customEndpointResolver, error) {
+	uri, err := url.Parse(rawUri)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse uri: %s", rawUri)
+	}
+	return &customEndpointResolver{
+		uri: uri,
+	}, nil
+}
+
+type customEndpointResolver struct {
+	uri *url.URL
+}
+
+func (c *customEndpointResolver) ResolveEndpoint(_ context.Context, _ dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	return smithyendpoints.Endpoint{
+		URI:     *c.uri,
+		Headers: http.Header{},
+		Properties: func() smithy.Properties {
+			var out smithy.Properties
+			smithyauth.SetAuthOptions(&out, []*smithyauth.Option{
+				{
+					SchemeID: "aws.auth#sigv4",
+					SignerProperties: func() smithy.Properties {
+						var sp smithy.Properties
+						smithyhttp.SetSigV4SigningName(&sp, "dynamodb")
+						smithyhttp.SetSigV4ASigningName(&sp, "dynamodb")
+						smithyhttp.SetSigV4SigningRegion(&sp, "us-east-1")
+						return sp
+					}(),
+				},
+			})
+			return out
+		}(),
+	}, nil
 }
