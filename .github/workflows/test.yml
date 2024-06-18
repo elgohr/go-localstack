@@ -35,6 +35,8 @@ jobs:
         with:
           go-version: '^1.21'
       - uses: golangci/golangci-lint-action@v6
+        with:
+          args: --timeout=10m
 
   advanced-security:
     runs-on: ubuntu-latest

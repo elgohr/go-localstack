@@ -19,5 +19,3 @@ run:
 linters-settings:
   staticcheck:
     go: "1.21"
-
-args: --timeout=5m
