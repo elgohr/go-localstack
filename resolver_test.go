@@ -1,6 +1,7 @@
 package localstack_test
 
 import (
+	"context"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchevents"
@@ -35,78 +36,82 @@ import (
 )
 
 func TestEndpointResolversV2(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	t.Cleanup(func() {
 		require.NoError(t, l.Stop())
 	})
+
 	for service, resolver := range map[localstack.Service]func() (smithyendpoints.Endpoint, error){
 		localstack.CloudFormation: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewCloudformationResolverV2(l).ResolveEndpoint(nil, cloudformation.EndpointParameters{})
+			return localstack.NewCloudformationResolverV2(l).ResolveEndpoint(ctx, cloudformation.EndpointParameters{})
 		},
 		localstack.CloudWatch: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewCloudwatchResolverV2(l).ResolveEndpoint(nil, cloudwatch.EndpointParameters{})
+			return localstack.NewCloudwatchResolverV2(l).ResolveEndpoint(ctx, cloudwatch.EndpointParameters{})
 		},
 		localstack.CloudWatchLogs: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewCloudwatchLogsResolverV2(l).ResolveEndpoint(nil, cloudwatchlogs.EndpointParameters{})
+			return localstack.NewCloudwatchLogsResolverV2(l).ResolveEndpoint(ctx, cloudwatchlogs.EndpointParameters{})
 		},
 		localstack.CloudWatchEvents: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewCloudwatchEventsResolverV2(l).ResolveEndpoint(nil, cloudwatchevents.EndpointParameters{})
+			return localstack.NewCloudwatchEventsResolverV2(l).ResolveEndpoint(ctx, cloudwatchevents.EndpointParameters{})
 		},
 		localstack.DynamoDB: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewDynamoDbResolverV2(l).ResolveEndpoint(nil, dynamodb.EndpointParameters{})
+			return localstack.NewDynamoDbResolverV2(l).ResolveEndpoint(ctx, dynamodb.EndpointParameters{})
 		},
 		localstack.DynamoDBStreams: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewDynamoDbStreamsResolverV2(l).ResolveEndpoint(nil, dynamodbstreams.EndpointParameters{})
+			return localstack.NewDynamoDbStreamsResolverV2(l).ResolveEndpoint(ctx, dynamodbstreams.EndpointParameters{})
 		},
 		localstack.EC2: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewEc2ResolverV2(l).ResolveEndpoint(nil, ec2.EndpointParameters{})
+			return localstack.NewEc2ResolverV2(l).ResolveEndpoint(ctx, ec2.EndpointParameters{})
 		},
 		localstack.ES: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewElasticSearchResolverV2(l).ResolveEndpoint(nil, elasticsearchservice.EndpointParameters{})
+			return localstack.NewElasticSearchResolverV2(l).ResolveEndpoint(ctx, elasticsearchservice.EndpointParameters{})
 		},
 		localstack.Firehose: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewFirehoseResolverV2(l).ResolveEndpoint(nil, firehose.EndpointParameters{})
+			return localstack.NewFirehoseResolverV2(l).ResolveEndpoint(ctx, firehose.EndpointParameters{})
 		},
 		localstack.IAM: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewIamResolverV2(l).ResolveEndpoint(nil, iam.EndpointParameters{})
+			return localstack.NewIamResolverV2(l).ResolveEndpoint(ctx, iam.EndpointParameters{})
 		},
 		localstack.Kinesis: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewKinesisResolverV2(l).ResolveEndpoint(nil, kinesis.EndpointParameters{})
+			return localstack.NewKinesisResolverV2(l).ResolveEndpoint(ctx, kinesis.EndpointParameters{})
 		},
 		localstack.Lambda: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewLambdaResolverV2(l).ResolveEndpoint(nil, lambda.EndpointParameters{})
+			return localstack.NewLambdaResolverV2(l).ResolveEndpoint(ctx, lambda.EndpointParameters{})
 		},
 		localstack.Redshift: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewRedshiftResolverV2(l).ResolveEndpoint(nil, redshift.EndpointParameters{})
+			return localstack.NewRedshiftResolverV2(l).ResolveEndpoint(ctx, redshift.EndpointParameters{})
 		},
 		localstack.Route53: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewRoute53ResolverV2(l).ResolveEndpoint(nil, route53.EndpointParameters{})
+			return localstack.NewRoute53ResolverV2(l).ResolveEndpoint(ctx, route53.EndpointParameters{})
 		},
 		localstack.S3: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewS3ResolverV2(l).ResolveEndpoint(nil, s3.EndpointParameters{})
+			return localstack.NewS3ResolverV2(l).ResolveEndpoint(ctx, s3.EndpointParameters{})
 		},
 		localstack.SecretsManager: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewSecretsManagerResolverV2(l).ResolveEndpoint(nil, secretsmanager.EndpointParameters{})
+			return localstack.NewSecretsManagerResolverV2(l).ResolveEndpoint(ctx, secretsmanager.EndpointParameters{})
 		},
 		localstack.SES: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewSesResolverV2(l).ResolveEndpoint(nil, ses.EndpointParameters{})
+			return localstack.NewSesResolverV2(l).ResolveEndpoint(ctx, ses.EndpointParameters{})
 		},
 		localstack.SNS: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewSnsResolverV2(l).ResolveEndpoint(nil, sns.EndpointParameters{})
+			return localstack.NewSnsResolverV2(l).ResolveEndpoint(ctx, sns.EndpointParameters{})
 		},
 		localstack.SQS: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewSqsResolverV2(l).ResolveEndpoint(nil, sqs.EndpointParameters{})
+			return localstack.NewSqsResolverV2(l).ResolveEndpoint(ctx, sqs.EndpointParameters{})
 		},
 		localstack.SSM: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewSsmResolverV2(l).ResolveEndpoint(nil, ssm.EndpointParameters{})
+			return localstack.NewSsmResolverV2(l).ResolveEndpoint(ctx, ssm.EndpointParameters{})
 		},
 		localstack.STS: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewStsResolverV2(l).ResolveEndpoint(nil, sts.EndpointParameters{})
+			return localstack.NewStsResolverV2(l).ResolveEndpoint(ctx, sts.EndpointParameters{})
 		},
 		localstack.StepFunctions: func() (smithyendpoints.Endpoint, error) {
-			return localstack.NewStepFunctionsResolverV2(l).ResolveEndpoint(nil, sfn.EndpointParameters{})
+			return localstack.NewStepFunctionsResolverV2(l).ResolveEndpoint(ctx, sfn.EndpointParameters{})
 		},
 	} {
 		t.Run(service.Name, func(t *testing.T) {
