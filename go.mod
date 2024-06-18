@@ -10,10 +10,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.18
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.8
 	github.com/aws/smithy-go v1.20.2
-	github.com/docker/docker v26.1.4+incompatible
+	github.com/docker/docker v27.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.8.1
-	github.com/moby/moby v26.1.4+incompatible
+	github.com/moby/moby v27.0.0+incompatible
 	github.com/opencontainers/image-spec v1.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
