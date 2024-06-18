@@ -16,28 +16,27 @@
 package localstack_test
 
 import (
-	"context"
-	"log"
-	"time"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"log"
 
 	"github.com/elgohr/go-localstack"
 )
 
 func ExampleLocalstackWithContext() {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
 	l, err := localstack.NewInstance()
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
 	}
-	if err := l.StartWithContext(ctx); err != nil {
+	if err := l.Start(); err != nil {
 		log.Fatalf("Could not start localstack %v", err)
 	}
+	defer func() { // this should be t.Cleanup for better stability
+		if err := l.Stop(); err != nil {
+			log.Fatalf("Could not stop localstack %v", err)
+		}
+	}()
 
 	myTestWith(&aws.Config{
 		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
@@ -55,6 +54,11 @@ func ExampleLocalstack() {
 	if err := l.Start(); err != nil {
 		log.Fatalf("Could not start localstack %v", err)
 	}
+	defer func() { // this should be t.Cleanup for better stability
+		if err := l.Stop(); err != nil {
+			log.Fatalf("Could not stop localstack %v", err)
+		}
+	}()
 
 	myTestWith(&aws.Config{
 		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
@@ -62,10 +66,6 @@ func ExampleLocalstack() {
 		Region:      aws.String(endpoints.UsWest1RegionID),
 		Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
 	})
-
-	if err := l.Stop(); err != nil {
-		log.Fatalf("Could not stop localstack %v", err)
-	}
 }
 
 func myTestWith(_ *aws.Config) {}

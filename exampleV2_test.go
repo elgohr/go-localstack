@@ -17,6 +17,7 @@ package localstack_test
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"log"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 	"github.com/elgohr/go-localstack"
 )
 
-func ExampleLocalstackWithContextSdkV2() {
+func ExampleLocalstackSdkV2() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -35,9 +36,14 @@ func ExampleLocalstackWithContextSdkV2() {
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
 	}
-	if err := l.StartWithContext(ctx); err != nil {
+	if err := l.Start(); err != nil {
 		log.Fatalf("Could not start localstack %v", err)
 	}
+	defer func() { // this should be t.Cleanup for better stability
+		if err := l.Stop(); err != nil {
+			log.Fatalf("Could not stop localstack %v", err)
+		}
+	}()
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion("us-east-1"),
@@ -58,4 +64,37 @@ func ExampleLocalstackWithContextSdkV2() {
 	myTestWithV2(cfg)
 }
 
+func ExampleLocalstackSdkV2WithEndpointResolverV2() {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	l, err := localstack.NewInstance()
+	if err != nil {
+		log.Fatalf("Could not connect to Docker %v", err)
+	}
+	if err := l.Start(); err != nil {
+		log.Fatalf("Could not start localstack %v", err)
+	}
+	defer func() { // this should be t.Cleanup for better stability
+		if err := l.Stop(); err != nil {
+			log.Fatalf("Could not stop localstack %v", err)
+		}
+	}()
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+	)
+	if err != nil {
+		log.Fatalf("Could not get config %v", err)
+	}
+
+	resolver := localstack.NewDynamoDbResolverV2(l)
+	client := dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolverV2(resolver))
+
+	myTestWithV2Client(client)
+}
+
 func myTestWithV2(_ aws.Config) {}
+
+func myTestWithV2Client(_ *dynamodb.Client) {}

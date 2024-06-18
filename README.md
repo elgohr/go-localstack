@@ -22,24 +22,26 @@ go get github.com/elgohr/go-localstack
 With SDK V2 (using EndpointResolverV2).
 Please have a look at [resolvers](resolver.go) for a complete list of resolvers.
 ```go
-func ExampleLocalstackWithContextSdkV2EndpointResolverV2() {
-    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-    defer cancel()
-    
+func ExampleLocalstackSdkV2EndpointResolverV2(t *testing.T) {
     l, err := localstack.NewInstance()
     if err != nil {
-        log.Fatalf("Could not connect to Docker %v", err)
+        t.Fatalf("Could not connect to Docker %v", err)
     }
-    if err := l.StartWithContext(ctx); err != nil {
-        log.Fatalf("Could not start localstack %v", err)
+    if err := l.Start(); err != nil {
+        t.Fatalf("Could not start localstack %v", err)
     }
+    t.Cleanup(func() {
+        if err := l.Stop(); err != nil {
+            t.Fatalf("Could not stop localstack %v", err)
+        }
+    })
     
     cfg, err := config.LoadDefaultConfig(ctx,
         config.WithRegion("us-east-1"),
         config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
     )
     if err != nil {
-        log.Fatalf("Could not get config %v", err)
+        t.Fatalf("Could not get config %v", err)
     }
     resolver := localstack.NewDynamoDbResolverV2(i)
     client := dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolverV2(resolver))
@@ -50,17 +52,19 @@ func ExampleLocalstackWithContextSdkV2EndpointResolverV2() {
 
 With SDK V2 (using EndpointResolverV1)
 ```go
-func ExampleLocalstackWithContextSdkV2() {
-    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-    defer cancel()
-    
+func ExampleLocalstackSdkV2(t *testing.T) {
     l, err := localstack.NewInstance()
     if err != nil {
-        log.Fatalf("Could not connect to Docker %v", err)
+        t.Fatalf("Could not connect to Docker %v", err)
     }
-    if err := l.StartWithContext(ctx); err != nil {
-        log.Fatalf("Could not start localstack %v", err)
+    if err := l.Start(); err != nil {
+        t.Fatalf("Could not start localstack %v", err)
     }
+    t.Cleanup(func() {
+        if err := l.Stop(); err != nil {
+            t.Fatalf("Could not stop localstack %v", err)
+        }
+	})
     
     cfg, err := config.LoadDefaultConfig(ctx,
         config.WithRegion("us-east-1"),
@@ -75,7 +79,7 @@ func ExampleLocalstackWithContextSdkV2() {
         config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
     )
     if err != nil {
-        log.Fatalf("Could not get config %v", err)
+        t.Fatalf("Could not get config %v", err)
     }
     
     myTestWithV2(cfg)
@@ -85,16 +89,18 @@ func ExampleLocalstackWithContextSdkV2() {
 With SDK V1
 ```go
 func TestWithLocalStack(t *testing.T) {
-    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-    defer cancel()
-
     l, err := localstack.NewInstance()
     if err != nil {
-        log.Fatalf("Could not connect to Docker %v", err)
+        t.Fatalf("Could not connect to Docker %v", err)
     }
-    if err := l.StartWithContext(ctx); err != nil {
-        log.Fatalf("Could not start localstack %v", err)
+    if err := l.Start(); err != nil {
+        t.Fatalf("Could not start localstack %v", err)
     }
+    t.Cleanup(func() {
+        if err := l.Stop(); err != nil {
+            t.Fatalf("Could not stop localstack %v", err)
+        }
+    })
 
     myTestWith(&aws.Config{
         Credentials: credentials.NewStaticCredentials("not", "empty", ""),
