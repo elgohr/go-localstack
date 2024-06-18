@@ -19,7 +19,36 @@ go get github.com/elgohr/go-localstack
 
 # Usage
 
-With SDK V2
+With SDK V2 (using EndpointResolverV2).
+Please have a look at [resolvers](resolver.go) for a complete list of resolvers.
+```go
+func ExampleLocalstackWithContextSdkV2EndpointResolverV2() {
+    ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+    defer cancel()
+    
+    l, err := localstack.NewInstance()
+    if err != nil {
+        log.Fatalf("Could not connect to Docker %v", err)
+    }
+    if err := l.StartWithContext(ctx); err != nil {
+        log.Fatalf("Could not start localstack %v", err)
+    }
+    
+    cfg, err := config.LoadDefaultConfig(ctx,
+        config.WithRegion("us-east-1"),
+        config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("dummy", "dummy", "dummy")),
+    )
+    if err != nil {
+        log.Fatalf("Could not get config %v", err)
+    }
+    resolver := localstack.NewDynamoDbResolverV2(i)
+    client := dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolverV2(resolver))
+	
+    myTestWithV2Client(client)
+}
+```
+
+With SDK V2 (using EndpointResolverV1)
 ```go
 func ExampleLocalstackWithContextSdkV2() {
     ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)

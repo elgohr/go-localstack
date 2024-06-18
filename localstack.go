@@ -27,10 +27,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/smithy-go"
-	smithyauth "github.com/aws/smithy-go/auth"
-	smithyendpoints "github.com/aws/smithy-go/endpoints"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
@@ -38,8 +34,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"log"
-	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
@@ -485,12 +479,10 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 		return err
 	}
 
-	s := dynamodb.NewFromConfig(cfg)
+	resolver := NewDynamoDbResolverV2(i)
+	s := dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolverV2(resolver))
 	testTable := aws.String("bucket")
-	endpointResolver, err := newCustomEndpointResolver(i.EndpointV2(DynamoDB))
-	if err != nil {
-		return err
-	}
+
 	if _, err = s.CreateTable(ctx, &dynamodb.CreateTableInput{
 		AttributeDefinitions: []dynamotypes.AttributeDefinition{
 			{AttributeName: aws.String("pk"), AttributeType: dynamotypes.ScalarAttributeTypeS},
@@ -502,12 +494,12 @@ func (i *Instance) checkAvailable(ctx context.Context) error {
 			ReadCapacityUnits: aws.Int64(1), WriteCapacityUnits: aws.Int64(1),
 		},
 		TableName: testTable,
-	}, dynamodb.WithEndpointResolverV2(endpointResolver)); err != nil {
+	}); err != nil {
 		return err
 	}
 	_, err = s.DeleteTable(ctx, &dynamodb.DeleteTableInput{
 		TableName: testTable,
-	}, dynamodb.WithEndpointResolverV2(endpointResolver))
+	})
 	return err
 }
 
@@ -594,41 +586,4 @@ type containerMissing struct {
 
 func (c containerMissing) Error() string {
 	return c.err.Error()
-}
-
-func newCustomEndpointResolver(rawUri string) (*customEndpointResolver, error) {
-	uri, err := url.Parse(rawUri)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse uri: %s", rawUri)
-	}
-	return &customEndpointResolver{
-		uri: uri,
-	}, nil
-}
-
-type customEndpointResolver struct {
-	uri *url.URL
-}
-
-func (c *customEndpointResolver) ResolveEndpoint(_ context.Context, _ dynamodb.EndpointParameters) (smithyendpoints.Endpoint, error) {
-	return smithyendpoints.Endpoint{
-		URI:     *c.uri,
-		Headers: http.Header{},
-		Properties: func() smithy.Properties {
-			var out smithy.Properties
-			smithyauth.SetAuthOptions(&out, []*smithyauth.Option{
-				{
-					SchemeID: "aws.auth#sigv4",
-					SignerProperties: func() smithy.Properties {
-						var sp smithy.Properties
-						smithyhttp.SetSigV4SigningName(&sp, "dynamodb")
-						smithyhttp.SetSigV4ASigningName(&sp, "dynamodb")
-						smithyhttp.SetSigV4SigningRegion(&sp, "us-east-1")
-						return sp
-					}(),
-				},
-			})
-			return out
-		}(),
-	}, nil
 }
