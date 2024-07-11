@@ -1,3 +1,15 @@
+# v1.25.2 (2024-07-10.2)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.25.1 (2024-07-10)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.25.0 (2024-07-08)
+
+* **Feature**: Add v2 smoke tests and smithy smokeTests trait for SDK testing.
+
 # v1.24.1 (2024-06-28)
 
 * **Dependency Update**: Updated to the latest SDK module versions

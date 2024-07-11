@@ -492,7 +492,7 @@ type FakeDockerClient struct {
 		result1 container.PathStat
 		result2 error
 	}
-	ContainerStatsStub        func(context.Context, string, bool) (container.StatsResponse, error)
+	ContainerStatsStub        func(context.Context, string, bool) (container.StatsResponseReader, error)
 	containerStatsMutex       sync.RWMutex
 	containerStatsArgsForCall []struct {
 		arg1 context.Context
@@ -500,25 +500,25 @@ type FakeDockerClient struct {
 		arg3 bool
 	}
 	containerStatsReturns struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}
 	containerStatsReturnsOnCall map[int]struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}
-	ContainerStatsOneShotStub        func(context.Context, string) (container.StatsResponse, error)
+	ContainerStatsOneShotStub        func(context.Context, string) (container.StatsResponseReader, error)
 	containerStatsOneShotMutex       sync.RWMutex
 	containerStatsOneShotArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 	}
 	containerStatsOneShotReturns struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}
 	containerStatsOneShotReturnsOnCall map[int]struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}
 	ContainerStopStub        func(context.Context, string, container.StopOptions) error
@@ -3879,7 +3879,7 @@ func (fake *FakeDockerClient) ContainerStatPathReturnsOnCall(i int, result1 cont
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerStats(arg1 context.Context, arg2 string, arg3 bool) (container.StatsResponse, error) {
+func (fake *FakeDockerClient) ContainerStats(arg1 context.Context, arg2 string, arg3 bool) (container.StatsResponseReader, error) {
 	fake.containerStatsMutex.Lock()
 	ret, specificReturn := fake.containerStatsReturnsOnCall[len(fake.containerStatsArgsForCall)]
 	fake.containerStatsArgsForCall = append(fake.containerStatsArgsForCall, struct {
@@ -3906,7 +3906,7 @@ func (fake *FakeDockerClient) ContainerStatsCallCount() int {
 	return len(fake.containerStatsArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerStatsCalls(stub func(context.Context, string, bool) (container.StatsResponse, error)) {
+func (fake *FakeDockerClient) ContainerStatsCalls(stub func(context.Context, string, bool) (container.StatsResponseReader, error)) {
 	fake.containerStatsMutex.Lock()
 	defer fake.containerStatsMutex.Unlock()
 	fake.ContainerStatsStub = stub
@@ -3919,33 +3919,33 @@ func (fake *FakeDockerClient) ContainerStatsArgsForCall(i int) (context.Context,
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerStatsReturns(result1 container.StatsResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerStatsReturns(result1 container.StatsResponseReader, result2 error) {
 	fake.containerStatsMutex.Lock()
 	defer fake.containerStatsMutex.Unlock()
 	fake.ContainerStatsStub = nil
 	fake.containerStatsReturns = struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerStatsReturnsOnCall(i int, result1 container.StatsResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerStatsReturnsOnCall(i int, result1 container.StatsResponseReader, result2 error) {
 	fake.containerStatsMutex.Lock()
 	defer fake.containerStatsMutex.Unlock()
 	fake.ContainerStatsStub = nil
 	if fake.containerStatsReturnsOnCall == nil {
 		fake.containerStatsReturnsOnCall = make(map[int]struct {
-			result1 container.StatsResponse
+			result1 container.StatsResponseReader
 			result2 error
 		})
 	}
 	fake.containerStatsReturnsOnCall[i] = struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerStatsOneShot(arg1 context.Context, arg2 string) (container.StatsResponse, error) {
+func (fake *FakeDockerClient) ContainerStatsOneShot(arg1 context.Context, arg2 string) (container.StatsResponseReader, error) {
 	fake.containerStatsOneShotMutex.Lock()
 	ret, specificReturn := fake.containerStatsOneShotReturnsOnCall[len(fake.containerStatsOneShotArgsForCall)]
 	fake.containerStatsOneShotArgsForCall = append(fake.containerStatsOneShotArgsForCall, struct {
@@ -3971,7 +3971,7 @@ func (fake *FakeDockerClient) ContainerStatsOneShotCallCount() int {
 	return len(fake.containerStatsOneShotArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerStatsOneShotCalls(stub func(context.Context, string) (container.StatsResponse, error)) {
+func (fake *FakeDockerClient) ContainerStatsOneShotCalls(stub func(context.Context, string) (container.StatsResponseReader, error)) {
 	fake.containerStatsOneShotMutex.Lock()
 	defer fake.containerStatsOneShotMutex.Unlock()
 	fake.ContainerStatsOneShotStub = stub
@@ -3984,28 +3984,28 @@ func (fake *FakeDockerClient) ContainerStatsOneShotArgsForCall(i int) (context.C
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeDockerClient) ContainerStatsOneShotReturns(result1 container.StatsResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerStatsOneShotReturns(result1 container.StatsResponseReader, result2 error) {
 	fake.containerStatsOneShotMutex.Lock()
 	defer fake.containerStatsOneShotMutex.Unlock()
 	fake.ContainerStatsOneShotStub = nil
 	fake.containerStatsOneShotReturns = struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerStatsOneShotReturnsOnCall(i int, result1 container.StatsResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerStatsOneShotReturnsOnCall(i int, result1 container.StatsResponseReader, result2 error) {
 	fake.containerStatsOneShotMutex.Lock()
 	defer fake.containerStatsOneShotMutex.Unlock()
 	fake.ContainerStatsOneShotStub = nil
 	if fake.containerStatsOneShotReturnsOnCall == nil {
 		fake.containerStatsOneShotReturnsOnCall = make(map[int]struct {
-			result1 container.StatsResponse
+			result1 container.StatsResponseReader
 			result2 error
 		})
 	}
 	fake.containerStatsOneShotReturnsOnCall[i] = struct {
-		result1 container.StatsResponse
+		result1 container.StatsResponseReader
 		result2 error
 	}{result1, result2}
 }
