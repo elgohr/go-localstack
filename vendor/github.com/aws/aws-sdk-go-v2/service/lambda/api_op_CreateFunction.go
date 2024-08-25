@@ -14,8 +14,8 @@ import (
 // Creates a Lambda function. To create a function, you need a [deployment package] and an [execution role]. The
 // deployment package is a .zip file archive or container image that contains your
 // function code. The execution role grants the function permission to use Amazon
-// Web Services, such as Amazon CloudWatch Logs for log streaming and X-Ray for
-// request tracing.
+// Web Servicesservices, such as Amazon CloudWatch Logs for log streaming and X-Ray
+// for request tracing.
 //
 // If the deployment package is a [container image], then you set the package type to Image . For a
 // container image, the code property must include the URI of a container image in
@@ -54,14 +54,15 @@ import (
 // code-signing configuration includes set of signing profiles, which define the
 // trusted publishers for this function.
 //
-// If another Amazon Web Services account or an Amazon Web Service invokes your
-// function, use AddPermissionto grant permission by creating a resource-based Identity and
-// Access Management (IAM) policy. You can grant permissions at the function level,
-// on a version, or on an alias.
+// If another Amazon Web Services account or an Amazon Web Servicesservice invokes
+// your function, use AddPermissionto grant permission by creating a resource-based Identity
+// and Access Management (IAM) policy. You can grant permissions at the function
+// level, on a version, or on an alias.
 //
 // To invoke your function directly, use Invoke. To invoke your function in response to
-// events in other Amazon Web Services, create an event source mapping (CreateEventSourceMapping ), or
-// configure a function trigger in the other service. For more information, see [Invoking Lambda functions].
+// events in other Amazon Web Servicesservices, create an event source mapping (CreateEventSourceMapping ),
+// or configure a function trigger in the other service. For more information, see [Invoking Lambda functions]
+// .
 //
 // [Invoking Lambda functions]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html
 // [Lambda function states]: https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html
@@ -193,12 +194,18 @@ type CreateFunctionInput struct {
 	Publish bool
 
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
-	// package is a .zip file archive.
+	// package is a .zip file archive. Specifying a runtime results in an error if
+	// you're deploying a function using a container image.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is
+	// deprecated. For more information, see [Runtime use after deprecation].
 	//
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
 	// [runtime]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	Runtime types.Runtime
 
 	// The function's [SnapStart] setting.
@@ -331,12 +338,18 @@ type CreateFunctionOutput struct {
 	Role *string
 
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
-	// package is a .zip file archive.
+	// package is a .zip file archive. Specifying a runtime results in an error if
+	// you're deploying a function using a container image.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is
+	// deprecated. For more information, see [Runtime use after deprecation].
 	//
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
 	// [runtime]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	Runtime types.Runtime
 
 	// The ARN of the runtime and any errors that occured.

@@ -352,8 +352,17 @@ type EventSourceMappingConfiguration struct {
 	// An object that defines the filter criteria that determine whether Lambda should
 	// process an event. For more information, see [Lambda event filtering].
 	//
+	// If filter criteria is encrypted, this field shows up as null in the response of
+	// ListEventSourceMapping API calls. You can view this field in plaintext in the
+	// response of GetEventSourceMapping and DeleteEventSourceMapping calls if you have
+	// kms:Decrypt permissions for the correct KMS key.
+	//
 	// [Lambda event filtering]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html
 	FilterCriteria *FilterCriteria
+
+	// An object that contains details about an error related to filter criteria
+	// encryption.
+	FilterCriteriaError *FilterCriteriaError
 
 	// The ARN of the Lambda function.
 	FunctionArn *string
@@ -361,6 +370,12 @@ type EventSourceMappingConfiguration struct {
 	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
 	// enums applied to the event source mapping.
 	FunctionResponseTypes []FunctionResponseType
+
+	//  The ARN of the Key Management Service (KMS) customer managed key that Lambda
+	// uses to encrypt your function's [filter criteria].
+	//
+	// [filter criteria]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-basics
+	KMSKeyArn *string
 
 	// The date that the event source mapping was last updated or that its state
 	// changed.
@@ -493,6 +508,19 @@ type FilterCriteria struct {
 
 	//  A list of filters.
 	Filters []Filter
+
+	noSmithyDocumentSerde
+}
+
+// An object that contains details about an error related to filter criteria
+// encryption.
+type FilterCriteriaError struct {
+
+	// The KMS exception that resulted from filter criteria encryption or decryption.
+	ErrorCode *string
+
+	// The error message.
+	Message *string
 
 	noSmithyDocumentSerde
 }
@@ -639,12 +667,18 @@ type FunctionConfiguration struct {
 	Role *string
 
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
-	// package is a .zip file archive.
+	// package is a .zip file archive. Specifying a runtime results in an error if
+	// you're deploying a function using a container image.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is
+	// deprecated. For more information, see [Runtime use after deprecation].
 	//
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
 	// [runtime]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	Runtime Runtime
 
 	// The ARN of the runtime and any errors that occured.
@@ -972,9 +1006,12 @@ type LayerVersionsListItem struct {
 
 	// The layer's compatible runtimes.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. For more information, see [Runtime use after deprecation].
 	//
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	CompatibleRuntimes []Runtime
 
 	// The date that the version was created, in ISO 8601 format. For example,

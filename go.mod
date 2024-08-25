@@ -8,30 +8,30 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.30.4
-	github.com/aws/aws-sdk-go-v2/config v1.27.28
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.28
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.53.4
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.4
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchevents v1.25.4
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.4
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.5
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.175.1
-	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.4
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.32.1
+	github.com/aws/aws-sdk-go-v2/config v1.27.30
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.29
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.53.5
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.5
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchevents v1.25.5
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.5
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.6
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.22.5
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.176.0
+	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.5
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.4
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.4
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.5
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.4
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.5
-	github.com/aws/aws-sdk-go-v2/service/ses v1.25.3
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.1
-	github.com/aws/aws-sdk-go-v2/service/sns v1.31.4
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.4
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.5
-	github.com/aws/aws-sdk-go-v2/service/sts v1.30.4
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.5
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.58.1
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.6
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/ses v1.26.0
+	github.com/aws/aws-sdk-go-v2/service/sfn v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/sns v1.31.5
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.6
+	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5
 	github.com/aws/smithy-go v1.20.4
 	github.com/docker/docker v27.1.2+incompatible
 	github.com/docker/go-connections v0.5.0
@@ -73,18 +73,18 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
-	go.opentelemetry.io/otel v1.28.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
+	go.opentelemetry.io/otel v1.29.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0 // indirect
-	go.opentelemetry.io/otel/metric v1.28.0 // indirect
+	go.opentelemetry.io/otel/metric v1.29.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.22.0 // indirect
-	go.opentelemetry.io/otel/trace v1.28.0 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	go.opentelemetry.io/otel/trace v1.29.0 // indirect
+	golang.org/x/mod v0.20.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/text v0.17.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	golang.org/x/tools v0.24.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )

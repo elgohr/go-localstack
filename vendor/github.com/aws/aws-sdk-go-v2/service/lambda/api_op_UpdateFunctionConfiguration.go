@@ -26,7 +26,7 @@ import (
 // only the unpublished version.
 //
 // To configure function concurrency, use PutFunctionConcurrency. To grant invoke permissions to an
-// Amazon Web Services account or Amazon Web Service, use AddPermission.
+// Amazon Web Services account or Amazon Web Servicesservice, use AddPermission.
 //
 // [Lambda function states]: https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html
 func (c *Client) UpdateFunctionConfiguration(ctx context.Context, params *UpdateFunctionConfigurationInput, optFns ...func(*Options)) (*UpdateFunctionConfigurationOutput, error) {
@@ -134,12 +134,18 @@ type UpdateFunctionConfigurationInput struct {
 	Role *string
 
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
-	// package is a .zip file archive.
+	// package is a .zip file archive. Specifying a runtime results in an error if
+	// you're deploying a function using a container image.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is
+	// deprecated. For more information, see [Runtime use after deprecation].
 	//
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
 	// [runtime]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	Runtime types.Runtime
 
 	// The function's [SnapStart] setting.
@@ -267,12 +273,18 @@ type UpdateFunctionConfigurationOutput struct {
 	Role *string
 
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
-	// package is a .zip file archive.
+	// package is a .zip file archive. Specifying a runtime results in an error if
+	// you're deploying a function using a container image.
 	//
-	// The following list includes deprecated runtimes. For more information, see [Runtime deprecation policy].
+	// The following list includes deprecated runtimes. Lambda blocks creating new
+	// functions and updating existing functions shortly after each runtime is
+	// deprecated. For more information, see [Runtime use after deprecation].
 	//
+	// For a list of all currently supported runtimes, see [Supported runtimes].
+	//
+	// [Runtime use after deprecation]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-deprecation-levels
 	// [runtime]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html
-	// [Runtime deprecation policy]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy
+	// [Supported runtimes]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtimes-supported
 	Runtime types.Runtime
 
 	// The ARN of the runtime and any errors that occured.
