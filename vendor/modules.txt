@@ -53,10 +53,10 @@ github.com/aws/aws-sdk-go-v2/internal/timeconv
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream/eventstreamapi
-# github.com/aws/aws-sdk-go-v2/config v1.27.30
+# github.com/aws/aws-sdk-go-v2/config v1.27.31
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/config
-# github.com/aws/aws-sdk-go-v2/credentials v1.17.29
+# github.com/aws/aws-sdk-go-v2/credentials v1.17.30
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/credentials
 github.com/aws/aws-sdk-go-v2/credentials/ec2rolecreds
@@ -98,7 +98,7 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatch/types
 github.com/aws/aws-sdk-go-v2/service/cloudwatchevents
 github.com/aws/aws-sdk-go-v2/service/cloudwatchevents/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/cloudwatchevents/types
-# github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.37.5
+# github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.38.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/internal/endpoints
@@ -114,7 +114,7 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb/types
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types
-# github.com/aws/aws-sdk-go-v2/service/ec2 v1.176.0
+# github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/ec2
 github.com/aws/aws-sdk-go-v2/service/ec2/internal/endpoints
@@ -173,7 +173,7 @@ github.com/aws/aws-sdk-go-v2/service/route53
 github.com/aws/aws-sdk-go-v2/service/route53/internal/customizations
 github.com/aws/aws-sdk-go-v2/service/route53/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/route53/types
-# github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1
+# github.com/aws/aws-sdk-go-v2/service/s3 v1.61.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/s3
 github.com/aws/aws-sdk-go-v2/service/s3/internal/arn
@@ -190,7 +190,7 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager/types
 github.com/aws/aws-sdk-go-v2/service/ses
 github.com/aws/aws-sdk-go-v2/service/ses/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/ses/types
-# github.com/aws/aws-sdk-go-v2/service/sfn v1.30.2
+# github.com/aws/aws-sdk-go-v2/service/sfn v1.31.0
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/sfn
 github.com/aws/aws-sdk-go-v2/service/sfn/internal/endpoints
@@ -200,7 +200,7 @@ github.com/aws/aws-sdk-go-v2/service/sfn/types
 github.com/aws/aws-sdk-go-v2/service/sns
 github.com/aws/aws-sdk-go-v2/service/sns/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/sns/types
-# github.com/aws/aws-sdk-go-v2/service/sqs v1.34.5
+# github.com/aws/aws-sdk-go-v2/service/sqs v1.34.6
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/sqs
 github.com/aws/aws-sdk-go-v2/service/sqs/internal/endpoints
