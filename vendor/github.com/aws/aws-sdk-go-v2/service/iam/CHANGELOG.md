@@ -1,3 +1,11 @@
+# v1.35.2 (2024-09-04)
+
+* No change notes available for this release.
+
+# v1.35.1 (2024-09-03)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
 # v1.35.0 (2024-08-15)
 
 * **Feature**: Make the LastUsedDate field in the GetAccessKeyLastUsed response optional. This may break customers who only call the API for access keys with a valid LastUsedDate. This fixes a deserialization issue for access keys without a LastUsedDate, because the field was marked as required but could be null.
