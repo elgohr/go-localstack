@@ -103,7 +103,7 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchevents/types
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types
-# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.8
+# github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/dynamodb
 github.com/aws/aws-sdk-go-v2/service/dynamodb/internal/customizations
@@ -114,7 +114,7 @@ github.com/aws/aws-sdk-go-v2/service/dynamodb/types
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/internal/endpoints
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types
-# github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.2
+# github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3
 ## explicit; go 1.21
 github.com/aws/aws-sdk-go-v2/service/ec2
 github.com/aws/aws-sdk-go-v2/service/ec2/internal/endpoints

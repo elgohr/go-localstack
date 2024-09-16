@@ -14,9 +14,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchevents v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.8
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.35.2

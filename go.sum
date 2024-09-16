@@ -32,12 +32,12 @@ github.com/aws/aws-sdk-go-v2/service/cloudwatchevents v1.25.7 h1:stI+nb5ujwmxc/e
 github.com/aws/aws-sdk-go-v2/service/cloudwatchevents v1.25.7/go.mod h1:WpRJHsSWWjBTAa8rXeF5kal4xRgFXwyeJzmlnjAzM+8=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.39.0 h1:FL5Gfgg2Cp669y7egTKUH6lVHOwFbNdm2VbCZvmzeho=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.39.0/go.mod h1:bDqBjrjbgWKyis9R6mf3NcjoIrgnrBA9L4W724mg7pA=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.8 h1:XTz8pSCsPiM9FpT+gTPIL6ryiu/T4Z3dpR/FBtPaBXA=
-github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.8/go.mod h1:N3YdUYxyxhiuAelUgCpSVBuBI1klobJxZrDtL+olu10=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9 h1:jbqgtdKfAXebx2/l2UhDEe/jmmCIhaCO3HFK71M7VzM=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9/go.mod h1:N3YdUYxyxhiuAelUgCpSVBuBI1klobJxZrDtL+olu10=
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.22.7 h1:VTBHXWkSeFgT3sfYB4U92qMgzHl0nz9H1tYNHHutLg0=
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.22.7/go.mod h1:F/ybU7YfgFcktSp+biKgiHjyscGhlZxOz4QFFQqHXGw=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.2 h1:QUUvxEs9q1DsYCaWaRrV8i7n82Adm34jrHb6OPjXPqc=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.2/go.mod h1:TFSALWR7Xs7+KyMM87ZAYxncKFBvzEt2rpK/BJCH2ps=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3 h1:dqdCh1M8h+j8OGNUpxTs7eBPFr6lOdLpdlE6IPLLSq4=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.177.3/go.mod h1:TFSALWR7Xs7+KyMM87ZAYxncKFBvzEt2rpK/BJCH2ps=
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.7 h1:hCBbSh3KzOK2q/rBZtoe3L0n8er5m5QgrKfVWA5hQ3g=
 github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.30.7/go.mod h1:HLDGgfqy/Wi1zjCOnoWKuZth3M4uSP2a0XT+zEmTiNw=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.32.4 h1:OLlyxsGz3TdqZZlkeFdZmWg+BW+tzuwXBVO0NZ5ExaE=
