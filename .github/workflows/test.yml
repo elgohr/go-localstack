@@ -20,7 +20,7 @@ jobs:
           echo "Using ${DOCKER_HOST}"
           go test -race -timeout 0 -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: coverage.txt
 
