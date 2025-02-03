@@ -18,6 +18,10 @@ jobs:
         run: |
           export DOCKER_HOST="unix://${{ matrix.runtime }}"
           echo "Using ${DOCKER_HOST}"
+          if [[ ${{ matrix.runtime }} =~ "podman" ]]; then
+            echo 'Starting podman socket'
+            systemctl --user enable --now podman.socket
+          fi
           go test -race -timeout 0 -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Coverage
         uses: codecov/codecov-action@v5
