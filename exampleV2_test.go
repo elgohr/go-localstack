@@ -28,7 +28,7 @@ import (
 	"github.com/elgohr/go-localstack"
 )
 
-func ExampleLocalstackSdkV2() {
+func ExampleInstance_EndpointV2() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -64,7 +64,7 @@ func ExampleLocalstackSdkV2() {
 	myTestWithV2(cfg)
 }
 
-func ExampleLocalstackSdkV2WithEndpointResolverV2() {
+func ExampleInstance_withEndpointResolverV2() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
