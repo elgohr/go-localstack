@@ -24,29 +24,7 @@ import (
 	"github.com/elgohr/go-localstack"
 )
 
-func ExampleLocalstackWithContext() {
-	l, err := localstack.NewInstance()
-	if err != nil {
-		log.Fatalf("Could not connect to Docker %v", err)
-	}
-	if err := l.Start(); err != nil {
-		log.Fatalf("Could not start localstack %v", err)
-	}
-	defer func() { // this should be t.Cleanup for better stability
-		if err := l.Stop(); err != nil {
-			log.Fatalf("Could not stop localstack %v", err)
-		}
-	}()
-
-	myTestWith(&aws.Config{
-		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
-		DisableSSL:  aws.Bool(true),
-		Region:      aws.String(endpoints.UsWest1RegionID),
-		Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
-	})
-}
-
-func ExampleLocalstack() {
+func ExampleNewInstance() {
 	l, err := localstack.NewInstance()
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
