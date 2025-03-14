@@ -1,8 +1,6 @@
 module github.com/elgohr/go-localstack
 
 go 1.21
-toolchain go1.23.2
-
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/aws/aws-sdk-go v1.55.5
@@ -32,10 +30,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.7
 	github.com/aws/smithy-go v1.20.4
-	github.com/docker/docker v27.5.1+incompatible
+	github.com/docker/docker v28.0.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.11.2
-	github.com/moby/moby v27.5.1+incompatible
+	github.com/moby/moby v28.0.1+incompatible
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
