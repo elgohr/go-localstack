@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
@@ -461,7 +460,7 @@ func checkAddress(t *testing.T, val string) {
 	require.NotEmpty(t, val[10:])
 }
 
-func atLeastOneContainerMatchesLabels(labels map[string]string, containers []types.Container) bool {
+func atLeastOneContainerMatchesLabels(labels map[string]string, containers []container.Summary) bool {
 	for _, c := range containers {
 		if matchesLabels(labels, c) {
 			return true
@@ -470,7 +469,7 @@ func atLeastOneContainerMatchesLabels(labels map[string]string, containers []typ
 	return false
 }
 
-func matchesLabels(labels map[string]string, container types.Container) bool {
+func matchesLabels(labels map[string]string, container container.Summary) bool {
 	for k, v := range labels {
 		val, exists := container.Labels[k]
 		if !exists || v != val {

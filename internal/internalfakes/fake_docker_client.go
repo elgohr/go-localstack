@@ -19,6 +19,7 @@ import (
 	"github.com/docker/docker/api/types/swarm"
 	"github.com/docker/docker/api/types/system"
 	"github.com/docker/docker/api/types/volume"
+	"github.com/docker/docker/client"
 	"github.com/elgohr/go-localstack/internal"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
@@ -196,7 +197,7 @@ type FakeDockerClient struct {
 		result1 types.HijackedResponse
 		result2 error
 	}
-	ContainerCommitStub        func(context.Context, string, container.CommitOptions) (types.IDResponse, error)
+	ContainerCommitStub        func(context.Context, string, container.CommitOptions) (container.CommitResponse, error)
 	containerCommitMutex       sync.RWMutex
 	containerCommitArgsForCall []struct {
 		arg1 context.Context
@@ -204,11 +205,11 @@ type FakeDockerClient struct {
 		arg3 container.CommitOptions
 	}
 	containerCommitReturns struct {
-		result1 types.IDResponse
+		result1 container.CommitResponse
 		result2 error
 	}
 	containerCommitReturnsOnCall map[int]struct {
-		result1 types.IDResponse
+		result1 container.CommitResponse
 		result2 error
 	}
 	ContainerCreateStub        func(context.Context, *container.Config, *container.HostConfig, *network.NetworkingConfig, *v1.Platform, string) (container.CreateResponse, error)
@@ -243,12 +244,12 @@ type FakeDockerClient struct {
 		result1 []container.FilesystemChange
 		result2 error
 	}
-	ContainerExecAttachStub        func(context.Context, string, container.ExecStartOptions) (types.HijackedResponse, error)
+	ContainerExecAttachStub        func(context.Context, string, container.ExecAttachOptions) (types.HijackedResponse, error)
 	containerExecAttachMutex       sync.RWMutex
 	containerExecAttachArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
-		arg3 container.ExecStartOptions
+		arg3 container.ExecAttachOptions
 	}
 	containerExecAttachReturns struct {
 		result1 types.HijackedResponse
@@ -258,7 +259,7 @@ type FakeDockerClient struct {
 		result1 types.HijackedResponse
 		result2 error
 	}
-	ContainerExecCreateStub        func(context.Context, string, container.ExecOptions) (types.IDResponse, error)
+	ContainerExecCreateStub        func(context.Context, string, container.ExecOptions) (container.ExecCreateResponse, error)
 	containerExecCreateMutex       sync.RWMutex
 	containerExecCreateArgsForCall []struct {
 		arg1 context.Context
@@ -266,11 +267,11 @@ type FakeDockerClient struct {
 		arg3 container.ExecOptions
 	}
 	containerExecCreateReturns struct {
-		result1 types.IDResponse
+		result1 container.ExecCreateResponse
 		result2 error
 	}
 	containerExecCreateReturnsOnCall map[int]struct {
-		result1 types.IDResponse
+		result1 container.ExecCreateResponse
 		result2 error
 	}
 	ContainerExecInspectStub        func(context.Context, string) (container.ExecInspect, error)
@@ -327,21 +328,21 @@ type FakeDockerClient struct {
 		result1 io.ReadCloser
 		result2 error
 	}
-	ContainerInspectStub        func(context.Context, string) (types.ContainerJSON, error)
+	ContainerInspectStub        func(context.Context, string) (container.InspectResponse, error)
 	containerInspectMutex       sync.RWMutex
 	containerInspectArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 	}
 	containerInspectReturns struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 error
 	}
 	containerInspectReturnsOnCall map[int]struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 error
 	}
-	ContainerInspectWithRawStub        func(context.Context, string, bool) (types.ContainerJSON, []byte, error)
+	ContainerInspectWithRawStub        func(context.Context, string, bool) (container.InspectResponse, []byte, error)
 	containerInspectWithRawMutex       sync.RWMutex
 	containerInspectWithRawArgsForCall []struct {
 		arg1 context.Context
@@ -349,12 +350,12 @@ type FakeDockerClient struct {
 		arg3 bool
 	}
 	containerInspectWithRawReturns struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 []byte
 		result3 error
 	}
 	containerInspectWithRawReturnsOnCall map[int]struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 []byte
 		result3 error
 	}
@@ -371,18 +372,18 @@ type FakeDockerClient struct {
 	containerKillReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ContainerListStub        func(context.Context, container.ListOptions) ([]types.Container, error)
+	ContainerListStub        func(context.Context, container.ListOptions) ([]container.Summary, error)
 	containerListMutex       sync.RWMutex
 	containerListArgsForCall []struct {
 		arg1 context.Context
 		arg2 container.ListOptions
 	}
 	containerListReturns struct {
-		result1 []types.Container
+		result1 []container.Summary
 		result2 error
 	}
 	containerListReturnsOnCall map[int]struct {
-		result1 []types.Container
+		result1 []container.Summary
 		result2 error
 	}
 	ContainerLogsStub        func(context.Context, string, container.LogsOptions) (io.ReadCloser, error)
@@ -534,7 +535,7 @@ type FakeDockerClient struct {
 	containerStopReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ContainerTopStub        func(context.Context, string, []string) (container.ContainerTopOKBody, error)
+	ContainerTopStub        func(context.Context, string, []string) (container.TopResponse, error)
 	containerTopMutex       sync.RWMutex
 	containerTopArgsForCall []struct {
 		arg1 context.Context
@@ -542,11 +543,11 @@ type FakeDockerClient struct {
 		arg3 []string
 	}
 	containerTopReturns struct {
-		result1 container.ContainerTopOKBody
+		result1 container.TopResponse
 		result2 error
 	}
 	containerTopReturnsOnCall map[int]struct {
-		result1 container.ContainerTopOKBody
+		result1 container.TopResponse
 		result2 error
 	}
 	ContainerUnpauseStub        func(context.Context, string) error
@@ -561,7 +562,7 @@ type FakeDockerClient struct {
 	containerUnpauseReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ContainerUpdateStub        func(context.Context, string, container.UpdateConfig) (container.ContainerUpdateOKBody, error)
+	ContainerUpdateStub        func(context.Context, string, container.UpdateConfig) (container.UpdateResponse, error)
 	containerUpdateMutex       sync.RWMutex
 	containerUpdateArgsForCall []struct {
 		arg1 context.Context
@@ -569,11 +570,11 @@ type FakeDockerClient struct {
 		arg3 container.UpdateConfig
 	}
 	containerUpdateReturns struct {
-		result1 container.ContainerUpdateOKBody
+		result1 container.UpdateResponse
 		result2 error
 	}
 	containerUpdateReturnsOnCall map[int]struct {
-		result1 container.ContainerUpdateOKBody
+		result1 container.UpdateResponse
 		result2 error
 	}
 	ContainerWaitStub        func(context.Context, string, container.WaitCondition) (<-chan container.WaitResponse, <-chan error)
@@ -756,11 +757,12 @@ type FakeDockerClient struct {
 		result1 io.ReadCloser
 		result2 error
 	}
-	ImageHistoryStub        func(context.Context, string) ([]image.HistoryResponseItem, error)
+	ImageHistoryStub        func(context.Context, string, ...client.ImageHistoryOption) ([]image.HistoryResponseItem, error)
 	imageHistoryMutex       sync.RWMutex
 	imageHistoryArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
+		arg3 []client.ImageHistoryOption
 	}
 	imageHistoryReturns struct {
 		result1 []image.HistoryResponseItem
@@ -786,19 +788,34 @@ type FakeDockerClient struct {
 		result1 io.ReadCloser
 		result2 error
 	}
-	ImageInspectWithRawStub        func(context.Context, string) (types.ImageInspect, []byte, error)
+	ImageInspectStub        func(context.Context, string, ...client.ImageInspectOption) (image.InspectResponse, error)
+	imageInspectMutex       sync.RWMutex
+	imageInspectArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+		arg3 []client.ImageInspectOption
+	}
+	imageInspectReturns struct {
+		result1 image.InspectResponse
+		result2 error
+	}
+	imageInspectReturnsOnCall map[int]struct {
+		result1 image.InspectResponse
+		result2 error
+	}
+	ImageInspectWithRawStub        func(context.Context, string) (image.InspectResponse, []byte, error)
 	imageInspectWithRawMutex       sync.RWMutex
 	imageInspectWithRawArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 	}
 	imageInspectWithRawReturns struct {
-		result1 types.ImageInspect
+		result1 image.InspectResponse
 		result2 []byte
 		result3 error
 	}
 	imageInspectWithRawReturnsOnCall map[int]struct {
-		result1 types.ImageInspect
+		result1 image.InspectResponse
 		result2 []byte
 		result3 error
 	}
@@ -816,12 +833,12 @@ type FakeDockerClient struct {
 		result1 []image.Summary
 		result2 error
 	}
-	ImageLoadStub        func(context.Context, io.Reader, bool) (image.LoadResponse, error)
+	ImageLoadStub        func(context.Context, io.Reader, ...client.ImageLoadOption) (image.LoadResponse, error)
 	imageLoadMutex       sync.RWMutex
 	imageLoadArgsForCall []struct {
 		arg1 context.Context
 		arg2 io.Reader
-		arg3 bool
+		arg3 []client.ImageLoadOption
 	}
 	imageLoadReturns struct {
 		result1 image.LoadResponse
@@ -876,11 +893,12 @@ type FakeDockerClient struct {
 		result1 []image.DeleteResponse
 		result2 error
 	}
-	ImageSaveStub        func(context.Context, []string) (io.ReadCloser, error)
+	ImageSaveStub        func(context.Context, []string, ...client.ImageSaveOption) (io.ReadCloser, error)
 	imageSaveMutex       sync.RWMutex
 	imageSaveArgsForCall []struct {
 		arg1 context.Context
 		arg2 []string
+		arg3 []client.ImageSaveOption
 	}
 	imageSaveReturns struct {
 		result1 io.ReadCloser
@@ -1030,18 +1048,18 @@ type FakeDockerClient struct {
 		result2 []byte
 		result3 error
 	}
-	NetworkListStub        func(context.Context, network.ListOptions) ([]network.Inspect, error)
+	NetworkListStub        func(context.Context, network.ListOptions) ([]network.Summary, error)
 	networkListMutex       sync.RWMutex
 	networkListArgsForCall []struct {
 		arg1 context.Context
 		arg2 network.ListOptions
 	}
 	networkListReturns struct {
-		result1 []network.Inspect
+		result1 []network.Summary
 		result2 error
 	}
 	networkListReturnsOnCall map[int]struct {
-		result1 []network.Inspect
+		result1 []network.Summary
 		result2 error
 	}
 	NetworkRemoveStub        func(context.Context, string) error
@@ -2520,7 +2538,7 @@ func (fake *FakeDockerClient) ContainerAttachReturnsOnCall(i int, result1 types.
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerCommit(arg1 context.Context, arg2 string, arg3 container.CommitOptions) (types.IDResponse, error) {
+func (fake *FakeDockerClient) ContainerCommit(arg1 context.Context, arg2 string, arg3 container.CommitOptions) (container.CommitResponse, error) {
 	fake.containerCommitMutex.Lock()
 	ret, specificReturn := fake.containerCommitReturnsOnCall[len(fake.containerCommitArgsForCall)]
 	fake.containerCommitArgsForCall = append(fake.containerCommitArgsForCall, struct {
@@ -2547,7 +2565,7 @@ func (fake *FakeDockerClient) ContainerCommitCallCount() int {
 	return len(fake.containerCommitArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerCommitCalls(stub func(context.Context, string, container.CommitOptions) (types.IDResponse, error)) {
+func (fake *FakeDockerClient) ContainerCommitCalls(stub func(context.Context, string, container.CommitOptions) (container.CommitResponse, error)) {
 	fake.containerCommitMutex.Lock()
 	defer fake.containerCommitMutex.Unlock()
 	fake.ContainerCommitStub = stub
@@ -2560,28 +2578,28 @@ func (fake *FakeDockerClient) ContainerCommitArgsForCall(i int) (context.Context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerCommitReturns(result1 types.IDResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerCommitReturns(result1 container.CommitResponse, result2 error) {
 	fake.containerCommitMutex.Lock()
 	defer fake.containerCommitMutex.Unlock()
 	fake.ContainerCommitStub = nil
 	fake.containerCommitReturns = struct {
-		result1 types.IDResponse
+		result1 container.CommitResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerCommitReturnsOnCall(i int, result1 types.IDResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerCommitReturnsOnCall(i int, result1 container.CommitResponse, result2 error) {
 	fake.containerCommitMutex.Lock()
 	defer fake.containerCommitMutex.Unlock()
 	fake.ContainerCommitStub = nil
 	if fake.containerCommitReturnsOnCall == nil {
 		fake.containerCommitReturnsOnCall = make(map[int]struct {
-			result1 types.IDResponse
+			result1 container.CommitResponse
 			result2 error
 		})
 	}
 	fake.containerCommitReturnsOnCall[i] = struct {
-		result1 types.IDResponse
+		result1 container.CommitResponse
 		result2 error
 	}{result1, result2}
 }
@@ -2720,13 +2738,13 @@ func (fake *FakeDockerClient) ContainerDiffReturnsOnCall(i int, result1 []contai
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerExecAttach(arg1 context.Context, arg2 string, arg3 container.ExecStartOptions) (types.HijackedResponse, error) {
+func (fake *FakeDockerClient) ContainerExecAttach(arg1 context.Context, arg2 string, arg3 container.ExecAttachOptions) (types.HijackedResponse, error) {
 	fake.containerExecAttachMutex.Lock()
 	ret, specificReturn := fake.containerExecAttachReturnsOnCall[len(fake.containerExecAttachArgsForCall)]
 	fake.containerExecAttachArgsForCall = append(fake.containerExecAttachArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-		arg3 container.ExecStartOptions
+		arg3 container.ExecAttachOptions
 	}{arg1, arg2, arg3})
 	stub := fake.ContainerExecAttachStub
 	fakeReturns := fake.containerExecAttachReturns
@@ -2747,13 +2765,13 @@ func (fake *FakeDockerClient) ContainerExecAttachCallCount() int {
 	return len(fake.containerExecAttachArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerExecAttachCalls(stub func(context.Context, string, container.ExecStartOptions) (types.HijackedResponse, error)) {
+func (fake *FakeDockerClient) ContainerExecAttachCalls(stub func(context.Context, string, container.ExecAttachOptions) (types.HijackedResponse, error)) {
 	fake.containerExecAttachMutex.Lock()
 	defer fake.containerExecAttachMutex.Unlock()
 	fake.ContainerExecAttachStub = stub
 }
 
-func (fake *FakeDockerClient) ContainerExecAttachArgsForCall(i int) (context.Context, string, container.ExecStartOptions) {
+func (fake *FakeDockerClient) ContainerExecAttachArgsForCall(i int) (context.Context, string, container.ExecAttachOptions) {
 	fake.containerExecAttachMutex.RLock()
 	defer fake.containerExecAttachMutex.RUnlock()
 	argsForCall := fake.containerExecAttachArgsForCall[i]
@@ -2786,7 +2804,7 @@ func (fake *FakeDockerClient) ContainerExecAttachReturnsOnCall(i int, result1 ty
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerExecCreate(arg1 context.Context, arg2 string, arg3 container.ExecOptions) (types.IDResponse, error) {
+func (fake *FakeDockerClient) ContainerExecCreate(arg1 context.Context, arg2 string, arg3 container.ExecOptions) (container.ExecCreateResponse, error) {
 	fake.containerExecCreateMutex.Lock()
 	ret, specificReturn := fake.containerExecCreateReturnsOnCall[len(fake.containerExecCreateArgsForCall)]
 	fake.containerExecCreateArgsForCall = append(fake.containerExecCreateArgsForCall, struct {
@@ -2813,7 +2831,7 @@ func (fake *FakeDockerClient) ContainerExecCreateCallCount() int {
 	return len(fake.containerExecCreateArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerExecCreateCalls(stub func(context.Context, string, container.ExecOptions) (types.IDResponse, error)) {
+func (fake *FakeDockerClient) ContainerExecCreateCalls(stub func(context.Context, string, container.ExecOptions) (container.ExecCreateResponse, error)) {
 	fake.containerExecCreateMutex.Lock()
 	defer fake.containerExecCreateMutex.Unlock()
 	fake.ContainerExecCreateStub = stub
@@ -2826,28 +2844,28 @@ func (fake *FakeDockerClient) ContainerExecCreateArgsForCall(i int) (context.Con
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerExecCreateReturns(result1 types.IDResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerExecCreateReturns(result1 container.ExecCreateResponse, result2 error) {
 	fake.containerExecCreateMutex.Lock()
 	defer fake.containerExecCreateMutex.Unlock()
 	fake.ContainerExecCreateStub = nil
 	fake.containerExecCreateReturns = struct {
-		result1 types.IDResponse
+		result1 container.ExecCreateResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerExecCreateReturnsOnCall(i int, result1 types.IDResponse, result2 error) {
+func (fake *FakeDockerClient) ContainerExecCreateReturnsOnCall(i int, result1 container.ExecCreateResponse, result2 error) {
 	fake.containerExecCreateMutex.Lock()
 	defer fake.containerExecCreateMutex.Unlock()
 	fake.ContainerExecCreateStub = nil
 	if fake.containerExecCreateReturnsOnCall == nil {
 		fake.containerExecCreateReturnsOnCall = make(map[int]struct {
-			result1 types.IDResponse
+			result1 container.ExecCreateResponse
 			result2 error
 		})
 	}
 	fake.containerExecCreateReturnsOnCall[i] = struct {
-		result1 types.IDResponse
+		result1 container.ExecCreateResponse
 		result2 error
 	}{result1, result2}
 }
@@ -3108,7 +3126,7 @@ func (fake *FakeDockerClient) ContainerExportReturnsOnCall(i int, result1 io.Rea
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerInspect(arg1 context.Context, arg2 string) (types.ContainerJSON, error) {
+func (fake *FakeDockerClient) ContainerInspect(arg1 context.Context, arg2 string) (container.InspectResponse, error) {
 	fake.containerInspectMutex.Lock()
 	ret, specificReturn := fake.containerInspectReturnsOnCall[len(fake.containerInspectArgsForCall)]
 	fake.containerInspectArgsForCall = append(fake.containerInspectArgsForCall, struct {
@@ -3134,7 +3152,7 @@ func (fake *FakeDockerClient) ContainerInspectCallCount() int {
 	return len(fake.containerInspectArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerInspectCalls(stub func(context.Context, string) (types.ContainerJSON, error)) {
+func (fake *FakeDockerClient) ContainerInspectCalls(stub func(context.Context, string) (container.InspectResponse, error)) {
 	fake.containerInspectMutex.Lock()
 	defer fake.containerInspectMutex.Unlock()
 	fake.ContainerInspectStub = stub
@@ -3147,33 +3165,33 @@ func (fake *FakeDockerClient) ContainerInspectArgsForCall(i int) (context.Contex
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeDockerClient) ContainerInspectReturns(result1 types.ContainerJSON, result2 error) {
+func (fake *FakeDockerClient) ContainerInspectReturns(result1 container.InspectResponse, result2 error) {
 	fake.containerInspectMutex.Lock()
 	defer fake.containerInspectMutex.Unlock()
 	fake.ContainerInspectStub = nil
 	fake.containerInspectReturns = struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerInspectReturnsOnCall(i int, result1 types.ContainerJSON, result2 error) {
+func (fake *FakeDockerClient) ContainerInspectReturnsOnCall(i int, result1 container.InspectResponse, result2 error) {
 	fake.containerInspectMutex.Lock()
 	defer fake.containerInspectMutex.Unlock()
 	fake.ContainerInspectStub = nil
 	if fake.containerInspectReturnsOnCall == nil {
 		fake.containerInspectReturnsOnCall = make(map[int]struct {
-			result1 types.ContainerJSON
+			result1 container.InspectResponse
 			result2 error
 		})
 	}
 	fake.containerInspectReturnsOnCall[i] = struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerInspectWithRaw(arg1 context.Context, arg2 string, arg3 bool) (types.ContainerJSON, []byte, error) {
+func (fake *FakeDockerClient) ContainerInspectWithRaw(arg1 context.Context, arg2 string, arg3 bool) (container.InspectResponse, []byte, error) {
 	fake.containerInspectWithRawMutex.Lock()
 	ret, specificReturn := fake.containerInspectWithRawReturnsOnCall[len(fake.containerInspectWithRawArgsForCall)]
 	fake.containerInspectWithRawArgsForCall = append(fake.containerInspectWithRawArgsForCall, struct {
@@ -3200,7 +3218,7 @@ func (fake *FakeDockerClient) ContainerInspectWithRawCallCount() int {
 	return len(fake.containerInspectWithRawArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerInspectWithRawCalls(stub func(context.Context, string, bool) (types.ContainerJSON, []byte, error)) {
+func (fake *FakeDockerClient) ContainerInspectWithRawCalls(stub func(context.Context, string, bool) (container.InspectResponse, []byte, error)) {
 	fake.containerInspectWithRawMutex.Lock()
 	defer fake.containerInspectWithRawMutex.Unlock()
 	fake.ContainerInspectWithRawStub = stub
@@ -3213,30 +3231,30 @@ func (fake *FakeDockerClient) ContainerInspectWithRawArgsForCall(i int) (context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerInspectWithRawReturns(result1 types.ContainerJSON, result2 []byte, result3 error) {
+func (fake *FakeDockerClient) ContainerInspectWithRawReturns(result1 container.InspectResponse, result2 []byte, result3 error) {
 	fake.containerInspectWithRawMutex.Lock()
 	defer fake.containerInspectWithRawMutex.Unlock()
 	fake.ContainerInspectWithRawStub = nil
 	fake.containerInspectWithRawReturns = struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 []byte
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeDockerClient) ContainerInspectWithRawReturnsOnCall(i int, result1 types.ContainerJSON, result2 []byte, result3 error) {
+func (fake *FakeDockerClient) ContainerInspectWithRawReturnsOnCall(i int, result1 container.InspectResponse, result2 []byte, result3 error) {
 	fake.containerInspectWithRawMutex.Lock()
 	defer fake.containerInspectWithRawMutex.Unlock()
 	fake.ContainerInspectWithRawStub = nil
 	if fake.containerInspectWithRawReturnsOnCall == nil {
 		fake.containerInspectWithRawReturnsOnCall = make(map[int]struct {
-			result1 types.ContainerJSON
+			result1 container.InspectResponse
 			result2 []byte
 			result3 error
 		})
 	}
 	fake.containerInspectWithRawReturnsOnCall[i] = struct {
-		result1 types.ContainerJSON
+		result1 container.InspectResponse
 		result2 []byte
 		result3 error
 	}{result1, result2, result3}
@@ -3305,7 +3323,7 @@ func (fake *FakeDockerClient) ContainerKillReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDockerClient) ContainerList(arg1 context.Context, arg2 container.ListOptions) ([]types.Container, error) {
+func (fake *FakeDockerClient) ContainerList(arg1 context.Context, arg2 container.ListOptions) ([]container.Summary, error) {
 	fake.containerListMutex.Lock()
 	ret, specificReturn := fake.containerListReturnsOnCall[len(fake.containerListArgsForCall)]
 	fake.containerListArgsForCall = append(fake.containerListArgsForCall, struct {
@@ -3331,7 +3349,7 @@ func (fake *FakeDockerClient) ContainerListCallCount() int {
 	return len(fake.containerListArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerListCalls(stub func(context.Context, container.ListOptions) ([]types.Container, error)) {
+func (fake *FakeDockerClient) ContainerListCalls(stub func(context.Context, container.ListOptions) ([]container.Summary, error)) {
 	fake.containerListMutex.Lock()
 	defer fake.containerListMutex.Unlock()
 	fake.ContainerListStub = stub
@@ -3344,28 +3362,28 @@ func (fake *FakeDockerClient) ContainerListArgsForCall(i int) (context.Context, 
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeDockerClient) ContainerListReturns(result1 []types.Container, result2 error) {
+func (fake *FakeDockerClient) ContainerListReturns(result1 []container.Summary, result2 error) {
 	fake.containerListMutex.Lock()
 	defer fake.containerListMutex.Unlock()
 	fake.ContainerListStub = nil
 	fake.containerListReturns = struct {
-		result1 []types.Container
+		result1 []container.Summary
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerListReturnsOnCall(i int, result1 []types.Container, result2 error) {
+func (fake *FakeDockerClient) ContainerListReturnsOnCall(i int, result1 []container.Summary, result2 error) {
 	fake.containerListMutex.Lock()
 	defer fake.containerListMutex.Unlock()
 	fake.ContainerListStub = nil
 	if fake.containerListReturnsOnCall == nil {
 		fake.containerListReturnsOnCall = make(map[int]struct {
-			result1 []types.Container
+			result1 []container.Summary
 			result2 error
 		})
 	}
 	fake.containerListReturnsOnCall[i] = struct {
-		result1 []types.Container
+		result1 []container.Summary
 		result2 error
 	}{result1, result2}
 }
@@ -4073,7 +4091,7 @@ func (fake *FakeDockerClient) ContainerStopReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeDockerClient) ContainerTop(arg1 context.Context, arg2 string, arg3 []string) (container.ContainerTopOKBody, error) {
+func (fake *FakeDockerClient) ContainerTop(arg1 context.Context, arg2 string, arg3 []string) (container.TopResponse, error) {
 	var arg3Copy []string
 	if arg3 != nil {
 		arg3Copy = make([]string, len(arg3))
@@ -4105,7 +4123,7 @@ func (fake *FakeDockerClient) ContainerTopCallCount() int {
 	return len(fake.containerTopArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerTopCalls(stub func(context.Context, string, []string) (container.ContainerTopOKBody, error)) {
+func (fake *FakeDockerClient) ContainerTopCalls(stub func(context.Context, string, []string) (container.TopResponse, error)) {
 	fake.containerTopMutex.Lock()
 	defer fake.containerTopMutex.Unlock()
 	fake.ContainerTopStub = stub
@@ -4118,28 +4136,28 @@ func (fake *FakeDockerClient) ContainerTopArgsForCall(i int) (context.Context, s
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerTopReturns(result1 container.ContainerTopOKBody, result2 error) {
+func (fake *FakeDockerClient) ContainerTopReturns(result1 container.TopResponse, result2 error) {
 	fake.containerTopMutex.Lock()
 	defer fake.containerTopMutex.Unlock()
 	fake.ContainerTopStub = nil
 	fake.containerTopReturns = struct {
-		result1 container.ContainerTopOKBody
+		result1 container.TopResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerTopReturnsOnCall(i int, result1 container.ContainerTopOKBody, result2 error) {
+func (fake *FakeDockerClient) ContainerTopReturnsOnCall(i int, result1 container.TopResponse, result2 error) {
 	fake.containerTopMutex.Lock()
 	defer fake.containerTopMutex.Unlock()
 	fake.ContainerTopStub = nil
 	if fake.containerTopReturnsOnCall == nil {
 		fake.containerTopReturnsOnCall = make(map[int]struct {
-			result1 container.ContainerTopOKBody
+			result1 container.TopResponse
 			result2 error
 		})
 	}
 	fake.containerTopReturnsOnCall[i] = struct {
-		result1 container.ContainerTopOKBody
+		result1 container.TopResponse
 		result2 error
 	}{result1, result2}
 }
@@ -4206,7 +4224,7 @@ func (fake *FakeDockerClient) ContainerUnpauseReturnsOnCall(i int, result1 error
 	}{result1}
 }
 
-func (fake *FakeDockerClient) ContainerUpdate(arg1 context.Context, arg2 string, arg3 container.UpdateConfig) (container.ContainerUpdateOKBody, error) {
+func (fake *FakeDockerClient) ContainerUpdate(arg1 context.Context, arg2 string, arg3 container.UpdateConfig) (container.UpdateResponse, error) {
 	fake.containerUpdateMutex.Lock()
 	ret, specificReturn := fake.containerUpdateReturnsOnCall[len(fake.containerUpdateArgsForCall)]
 	fake.containerUpdateArgsForCall = append(fake.containerUpdateArgsForCall, struct {
@@ -4233,7 +4251,7 @@ func (fake *FakeDockerClient) ContainerUpdateCallCount() int {
 	return len(fake.containerUpdateArgsForCall)
 }
 
-func (fake *FakeDockerClient) ContainerUpdateCalls(stub func(context.Context, string, container.UpdateConfig) (container.ContainerUpdateOKBody, error)) {
+func (fake *FakeDockerClient) ContainerUpdateCalls(stub func(context.Context, string, container.UpdateConfig) (container.UpdateResponse, error)) {
 	fake.containerUpdateMutex.Lock()
 	defer fake.containerUpdateMutex.Unlock()
 	fake.ContainerUpdateStub = stub
@@ -4246,28 +4264,28 @@ func (fake *FakeDockerClient) ContainerUpdateArgsForCall(i int) (context.Context
 	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
-func (fake *FakeDockerClient) ContainerUpdateReturns(result1 container.ContainerUpdateOKBody, result2 error) {
+func (fake *FakeDockerClient) ContainerUpdateReturns(result1 container.UpdateResponse, result2 error) {
 	fake.containerUpdateMutex.Lock()
 	defer fake.containerUpdateMutex.Unlock()
 	fake.ContainerUpdateStub = nil
 	fake.containerUpdateReturns = struct {
-		result1 container.ContainerUpdateOKBody
+		result1 container.UpdateResponse
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ContainerUpdateReturnsOnCall(i int, result1 container.ContainerUpdateOKBody, result2 error) {
+func (fake *FakeDockerClient) ContainerUpdateReturnsOnCall(i int, result1 container.UpdateResponse, result2 error) {
 	fake.containerUpdateMutex.Lock()
 	defer fake.containerUpdateMutex.Unlock()
 	fake.ContainerUpdateStub = nil
 	if fake.containerUpdateReturnsOnCall == nil {
 		fake.containerUpdateReturnsOnCall = make(map[int]struct {
-			result1 container.ContainerUpdateOKBody
+			result1 container.UpdateResponse
 			result2 error
 		})
 	}
 	fake.containerUpdateReturnsOnCall[i] = struct {
-		result1 container.ContainerUpdateOKBody
+		result1 container.UpdateResponse
 		result2 error
 	}{result1, result2}
 }
@@ -5091,19 +5109,20 @@ func (fake *FakeDockerClient) ImageCreateReturnsOnCall(i int, result1 io.ReadClo
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ImageHistory(arg1 context.Context, arg2 string) ([]image.HistoryResponseItem, error) {
+func (fake *FakeDockerClient) ImageHistory(arg1 context.Context, arg2 string, arg3 ...client.ImageHistoryOption) ([]image.HistoryResponseItem, error) {
 	fake.imageHistoryMutex.Lock()
 	ret, specificReturn := fake.imageHistoryReturnsOnCall[len(fake.imageHistoryArgsForCall)]
 	fake.imageHistoryArgsForCall = append(fake.imageHistoryArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-	}{arg1, arg2})
+		arg3 []client.ImageHistoryOption
+	}{arg1, arg2, arg3})
 	stub := fake.ImageHistoryStub
 	fakeReturns := fake.imageHistoryReturns
-	fake.recordInvocation("ImageHistory", []interface{}{arg1, arg2})
+	fake.recordInvocation("ImageHistory", []interface{}{arg1, arg2, arg3})
 	fake.imageHistoryMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -5117,17 +5136,17 @@ func (fake *FakeDockerClient) ImageHistoryCallCount() int {
 	return len(fake.imageHistoryArgsForCall)
 }
 
-func (fake *FakeDockerClient) ImageHistoryCalls(stub func(context.Context, string) ([]image.HistoryResponseItem, error)) {
+func (fake *FakeDockerClient) ImageHistoryCalls(stub func(context.Context, string, ...client.ImageHistoryOption) ([]image.HistoryResponseItem, error)) {
 	fake.imageHistoryMutex.Lock()
 	defer fake.imageHistoryMutex.Unlock()
 	fake.ImageHistoryStub = stub
 }
 
-func (fake *FakeDockerClient) ImageHistoryArgsForCall(i int) (context.Context, string) {
+func (fake *FakeDockerClient) ImageHistoryArgsForCall(i int) (context.Context, string, []client.ImageHistoryOption) {
 	fake.imageHistoryMutex.RLock()
 	defer fake.imageHistoryMutex.RUnlock()
 	argsForCall := fake.imageHistoryArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeDockerClient) ImageHistoryReturns(result1 []image.HistoryResponseItem, result2 error) {
@@ -5223,7 +5242,73 @@ func (fake *FakeDockerClient) ImageImportReturnsOnCall(i int, result1 io.ReadClo
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ImageInspectWithRaw(arg1 context.Context, arg2 string) (types.ImageInspect, []byte, error) {
+func (fake *FakeDockerClient) ImageInspect(arg1 context.Context, arg2 string, arg3 ...client.ImageInspectOption) (image.InspectResponse, error) {
+	fake.imageInspectMutex.Lock()
+	ret, specificReturn := fake.imageInspectReturnsOnCall[len(fake.imageInspectArgsForCall)]
+	fake.imageInspectArgsForCall = append(fake.imageInspectArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+		arg3 []client.ImageInspectOption
+	}{arg1, arg2, arg3})
+	stub := fake.ImageInspectStub
+	fakeReturns := fake.imageInspectReturns
+	fake.recordInvocation("ImageInspect", []interface{}{arg1, arg2, arg3})
+	fake.imageInspectMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeDockerClient) ImageInspectCallCount() int {
+	fake.imageInspectMutex.RLock()
+	defer fake.imageInspectMutex.RUnlock()
+	return len(fake.imageInspectArgsForCall)
+}
+
+func (fake *FakeDockerClient) ImageInspectCalls(stub func(context.Context, string, ...client.ImageInspectOption) (image.InspectResponse, error)) {
+	fake.imageInspectMutex.Lock()
+	defer fake.imageInspectMutex.Unlock()
+	fake.ImageInspectStub = stub
+}
+
+func (fake *FakeDockerClient) ImageInspectArgsForCall(i int) (context.Context, string, []client.ImageInspectOption) {
+	fake.imageInspectMutex.RLock()
+	defer fake.imageInspectMutex.RUnlock()
+	argsForCall := fake.imageInspectArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeDockerClient) ImageInspectReturns(result1 image.InspectResponse, result2 error) {
+	fake.imageInspectMutex.Lock()
+	defer fake.imageInspectMutex.Unlock()
+	fake.ImageInspectStub = nil
+	fake.imageInspectReturns = struct {
+		result1 image.InspectResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeDockerClient) ImageInspectReturnsOnCall(i int, result1 image.InspectResponse, result2 error) {
+	fake.imageInspectMutex.Lock()
+	defer fake.imageInspectMutex.Unlock()
+	fake.ImageInspectStub = nil
+	if fake.imageInspectReturnsOnCall == nil {
+		fake.imageInspectReturnsOnCall = make(map[int]struct {
+			result1 image.InspectResponse
+			result2 error
+		})
+	}
+	fake.imageInspectReturnsOnCall[i] = struct {
+		result1 image.InspectResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeDockerClient) ImageInspectWithRaw(arg1 context.Context, arg2 string) (image.InspectResponse, []byte, error) {
 	fake.imageInspectWithRawMutex.Lock()
 	ret, specificReturn := fake.imageInspectWithRawReturnsOnCall[len(fake.imageInspectWithRawArgsForCall)]
 	fake.imageInspectWithRawArgsForCall = append(fake.imageInspectWithRawArgsForCall, struct {
@@ -5249,7 +5334,7 @@ func (fake *FakeDockerClient) ImageInspectWithRawCallCount() int {
 	return len(fake.imageInspectWithRawArgsForCall)
 }
 
-func (fake *FakeDockerClient) ImageInspectWithRawCalls(stub func(context.Context, string) (types.ImageInspect, []byte, error)) {
+func (fake *FakeDockerClient) ImageInspectWithRawCalls(stub func(context.Context, string) (image.InspectResponse, []byte, error)) {
 	fake.imageInspectWithRawMutex.Lock()
 	defer fake.imageInspectWithRawMutex.Unlock()
 	fake.ImageInspectWithRawStub = stub
@@ -5262,30 +5347,30 @@ func (fake *FakeDockerClient) ImageInspectWithRawArgsForCall(i int) (context.Con
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeDockerClient) ImageInspectWithRawReturns(result1 types.ImageInspect, result2 []byte, result3 error) {
+func (fake *FakeDockerClient) ImageInspectWithRawReturns(result1 image.InspectResponse, result2 []byte, result3 error) {
 	fake.imageInspectWithRawMutex.Lock()
 	defer fake.imageInspectWithRawMutex.Unlock()
 	fake.ImageInspectWithRawStub = nil
 	fake.imageInspectWithRawReturns = struct {
-		result1 types.ImageInspect
+		result1 image.InspectResponse
 		result2 []byte
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeDockerClient) ImageInspectWithRawReturnsOnCall(i int, result1 types.ImageInspect, result2 []byte, result3 error) {
+func (fake *FakeDockerClient) ImageInspectWithRawReturnsOnCall(i int, result1 image.InspectResponse, result2 []byte, result3 error) {
 	fake.imageInspectWithRawMutex.Lock()
 	defer fake.imageInspectWithRawMutex.Unlock()
 	fake.ImageInspectWithRawStub = nil
 	if fake.imageInspectWithRawReturnsOnCall == nil {
 		fake.imageInspectWithRawReturnsOnCall = make(map[int]struct {
-			result1 types.ImageInspect
+			result1 image.InspectResponse
 			result2 []byte
 			result3 error
 		})
 	}
 	fake.imageInspectWithRawReturnsOnCall[i] = struct {
-		result1 types.ImageInspect
+		result1 image.InspectResponse
 		result2 []byte
 		result3 error
 	}{result1, result2, result3}
@@ -5356,20 +5441,20 @@ func (fake *FakeDockerClient) ImageListReturnsOnCall(i int, result1 []image.Summ
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ImageLoad(arg1 context.Context, arg2 io.Reader, arg3 bool) (image.LoadResponse, error) {
+func (fake *FakeDockerClient) ImageLoad(arg1 context.Context, arg2 io.Reader, arg3 ...client.ImageLoadOption) (image.LoadResponse, error) {
 	fake.imageLoadMutex.Lock()
 	ret, specificReturn := fake.imageLoadReturnsOnCall[len(fake.imageLoadArgsForCall)]
 	fake.imageLoadArgsForCall = append(fake.imageLoadArgsForCall, struct {
 		arg1 context.Context
 		arg2 io.Reader
-		arg3 bool
+		arg3 []client.ImageLoadOption
 	}{arg1, arg2, arg3})
 	stub := fake.ImageLoadStub
 	fakeReturns := fake.imageLoadReturns
 	fake.recordInvocation("ImageLoad", []interface{}{arg1, arg2, arg3})
 	fake.imageLoadMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2, arg3)
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -5383,13 +5468,13 @@ func (fake *FakeDockerClient) ImageLoadCallCount() int {
 	return len(fake.imageLoadArgsForCall)
 }
 
-func (fake *FakeDockerClient) ImageLoadCalls(stub func(context.Context, io.Reader, bool) (image.LoadResponse, error)) {
+func (fake *FakeDockerClient) ImageLoadCalls(stub func(context.Context, io.Reader, ...client.ImageLoadOption) (image.LoadResponse, error)) {
 	fake.imageLoadMutex.Lock()
 	defer fake.imageLoadMutex.Unlock()
 	fake.ImageLoadStub = stub
 }
 
-func (fake *FakeDockerClient) ImageLoadArgsForCall(i int) (context.Context, io.Reader, bool) {
+func (fake *FakeDockerClient) ImageLoadArgsForCall(i int) (context.Context, io.Reader, []client.ImageLoadOption) {
 	fake.imageLoadMutex.RLock()
 	defer fake.imageLoadMutex.RUnlock()
 	argsForCall := fake.imageLoadArgsForCall[i]
@@ -5620,7 +5705,7 @@ func (fake *FakeDockerClient) ImageRemoveReturnsOnCall(i int, result1 []image.De
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) ImageSave(arg1 context.Context, arg2 []string) (io.ReadCloser, error) {
+func (fake *FakeDockerClient) ImageSave(arg1 context.Context, arg2 []string, arg3 ...client.ImageSaveOption) (io.ReadCloser, error) {
 	var arg2Copy []string
 	if arg2 != nil {
 		arg2Copy = make([]string, len(arg2))
@@ -5631,13 +5716,14 @@ func (fake *FakeDockerClient) ImageSave(arg1 context.Context, arg2 []string) (io
 	fake.imageSaveArgsForCall = append(fake.imageSaveArgsForCall, struct {
 		arg1 context.Context
 		arg2 []string
-	}{arg1, arg2Copy})
+		arg3 []client.ImageSaveOption
+	}{arg1, arg2Copy, arg3})
 	stub := fake.ImageSaveStub
 	fakeReturns := fake.imageSaveReturns
-	fake.recordInvocation("ImageSave", []interface{}{arg1, arg2Copy})
+	fake.recordInvocation("ImageSave", []interface{}{arg1, arg2Copy, arg3})
 	fake.imageSaveMutex.Unlock()
 	if stub != nil {
-		return stub(arg1, arg2)
+		return stub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -5651,17 +5737,17 @@ func (fake *FakeDockerClient) ImageSaveCallCount() int {
 	return len(fake.imageSaveArgsForCall)
 }
 
-func (fake *FakeDockerClient) ImageSaveCalls(stub func(context.Context, []string) (io.ReadCloser, error)) {
+func (fake *FakeDockerClient) ImageSaveCalls(stub func(context.Context, []string, ...client.ImageSaveOption) (io.ReadCloser, error)) {
 	fake.imageSaveMutex.Lock()
 	defer fake.imageSaveMutex.Unlock()
 	fake.ImageSaveStub = stub
 }
 
-func (fake *FakeDockerClient) ImageSaveArgsForCall(i int) (context.Context, []string) {
+func (fake *FakeDockerClient) ImageSaveArgsForCall(i int) (context.Context, []string, []client.ImageSaveOption) {
 	fake.imageSaveMutex.RLock()
 	defer fake.imageSaveMutex.RUnlock()
 	argsForCall := fake.imageSaveArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeDockerClient) ImageSaveReturns(result1 io.ReadCloser, result2 error) {
@@ -6341,7 +6427,7 @@ func (fake *FakeDockerClient) NetworkInspectWithRawReturnsOnCall(i int, result1 
 	}{result1, result2, result3}
 }
 
-func (fake *FakeDockerClient) NetworkList(arg1 context.Context, arg2 network.ListOptions) ([]network.Inspect, error) {
+func (fake *FakeDockerClient) NetworkList(arg1 context.Context, arg2 network.ListOptions) ([]network.Summary, error) {
 	fake.networkListMutex.Lock()
 	ret, specificReturn := fake.networkListReturnsOnCall[len(fake.networkListArgsForCall)]
 	fake.networkListArgsForCall = append(fake.networkListArgsForCall, struct {
@@ -6367,7 +6453,7 @@ func (fake *FakeDockerClient) NetworkListCallCount() int {
 	return len(fake.networkListArgsForCall)
 }
 
-func (fake *FakeDockerClient) NetworkListCalls(stub func(context.Context, network.ListOptions) ([]network.Inspect, error)) {
+func (fake *FakeDockerClient) NetworkListCalls(stub func(context.Context, network.ListOptions) ([]network.Summary, error)) {
 	fake.networkListMutex.Lock()
 	defer fake.networkListMutex.Unlock()
 	fake.NetworkListStub = stub
@@ -6380,28 +6466,28 @@ func (fake *FakeDockerClient) NetworkListArgsForCall(i int) (context.Context, ne
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeDockerClient) NetworkListReturns(result1 []network.Inspect, result2 error) {
+func (fake *FakeDockerClient) NetworkListReturns(result1 []network.Summary, result2 error) {
 	fake.networkListMutex.Lock()
 	defer fake.networkListMutex.Unlock()
 	fake.NetworkListStub = nil
 	fake.networkListReturns = struct {
-		result1 []network.Inspect
+		result1 []network.Summary
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeDockerClient) NetworkListReturnsOnCall(i int, result1 []network.Inspect, result2 error) {
+func (fake *FakeDockerClient) NetworkListReturnsOnCall(i int, result1 []network.Summary, result2 error) {
 	fake.networkListMutex.Lock()
 	defer fake.networkListMutex.Unlock()
 	fake.NetworkListStub = nil
 	if fake.networkListReturnsOnCall == nil {
 		fake.networkListReturnsOnCall = make(map[int]struct {
-			result1 []network.Inspect
+			result1 []network.Summary
 			result2 error
 		})
 	}
 	fake.networkListReturnsOnCall[i] = struct {
-		result1 []network.Inspect
+		result1 []network.Summary
 		result2 error
 	}{result1, result2}
 }
@@ -9567,6 +9653,8 @@ func (fake *FakeDockerClient) Invocations() map[string][][]interface{} {
 	defer fake.imageHistoryMutex.RUnlock()
 	fake.imageImportMutex.RLock()
 	defer fake.imageImportMutex.RUnlock()
+	fake.imageInspectMutex.RLock()
+	defer fake.imageInspectMutex.RUnlock()
 	fake.imageInspectWithRawMutex.RLock()
 	defer fake.imageInspectWithRawMutex.RUnlock()
 	fake.imageListMutex.RLock()

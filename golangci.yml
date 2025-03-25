@@ -15,7 +15,3 @@ linters:
 run:
   timeout: 10m
   allow-parallel-runners: true
-
-linters-settings:
-  staticcheck:
-    go: "1.21"

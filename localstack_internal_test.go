@@ -146,8 +146,8 @@ func TestInstance_Start_Fails(t *testing.T) {
 			when: "container inspect doesn't contain ports",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
 				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
-				f.ContainerInspectReturns(types.ContainerJSON{NetworkSettings: &types.NetworkSettings{
-					NetworkSettingsBase: types.NetworkSettingsBase{
+				f.ContainerInspectReturns(container.InspectResponse{NetworkSettings: &container.NetworkSettings{
+					NetworkSettingsBase: container.NetworkSettingsBase{
 						Ports: map[nat.Port][]nat.PortBinding{},
 					},
 				}}, nil)
