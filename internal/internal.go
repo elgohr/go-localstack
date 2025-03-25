@@ -17,7 +17,7 @@ package internal
 import (
 	"fmt"
 	"github.com/Masterminds/semver/v3"
-	"github.com/moby/moby/client"
+	"github.com/docker/docker/client"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
