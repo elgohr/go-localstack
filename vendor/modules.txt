@@ -260,7 +260,7 @@ github.com/davecgh/go-spew/spew
 # github.com/distribution/reference v0.6.0
 ## explicit; go 1.20
 github.com/distribution/reference
-# github.com/docker/docker v28.0.4+incompatible
+# github.com/docker/docker v28.1.1+incompatible
 ## explicit
 github.com/docker/docker/api
 github.com/docker/docker/api/types
@@ -321,6 +321,8 @@ github.com/maxbrunsfeld/counterfeiter/v6/generator
 # github.com/moby/docker-image-spec v1.3.1
 ## explicit; go 1.18
 github.com/moby/docker-image-spec/specs-go/v1
+# github.com/moby/sys/atomicwriter v0.1.0
+## explicit; go 1.18
 # github.com/moby/term v0.0.0-20201216013528-df9cb8a40635
 ## explicit; go 1.13
 # github.com/morikuni/aec v1.0.0
