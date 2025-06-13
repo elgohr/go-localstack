@@ -17,7 +17,7 @@ package localstack
 import (
 	"context"
 	"errors"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
@@ -58,7 +58,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't build image",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageBuildReturns(types.ImageBuildResponse{}, errors.New("can't build"))
+				f.ImageBuildReturns(build.ImageBuildResponse{}, errors.New("can't build"))
 				return &Instance{
 					cli: f,
 					log: logrus.StandardLogger(),
@@ -75,7 +75,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't close after building image",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageBuildReturns(types.ImageBuildResponse{Body: ErrCloser(strings.NewReader(""), errors.New("can't close"))}, nil)
+				f.ImageBuildReturns(build.ImageBuildResponse{Body: ErrCloser(strings.NewReader(""), errors.New("can't close"))}, nil)
 				f.ContainerCreateReturns(container.CreateResponse{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
@@ -89,7 +89,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't create container",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
+				f.ImageBuildReturns(build.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerCreateReturns(container.CreateResponse{}, errors.New("can't create"))
 				return &Instance{
 					cli: f,
@@ -127,7 +127,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "can't start container",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
+				f.ImageBuildReturns(build.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerStartReturns(errors.New("can't start"))
 				return &Instance{
 					cli: f,
@@ -145,7 +145,7 @@ func TestInstance_Start_Fails(t *testing.T) {
 		{
 			when: "container inspect doesn't contain ports",
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
-				f.ImageBuildReturns(types.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
+				f.ImageBuildReturns(build.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerInspectReturns(container.InspectResponse{NetworkSettings: &container.NetworkSettings{
 					NetworkSettingsBase: container.NetworkSettingsBase{
 						Ports: map[nat.Port][]nat.PortBinding{},
