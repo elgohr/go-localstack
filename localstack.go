@@ -27,7 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -367,7 +367,7 @@ func (i *Instance) buildLocalImage(ctx context.Context) error {
 	}
 
 	dockerFileTarReader := bytes.NewReader(buf.Bytes())
-	imageBuildResponse, err := i.cli.ImageBuild(ctx, dockerFileTarReader, types.ImageBuildOptions{
+	imageBuildResponse, err := i.cli.ImageBuild(ctx, dockerFileTarReader, build.ImageBuildOptions{
 		Tags:           []string{imageName},
 		Dockerfile:     dockerFile,
 		SuppressOutput: true,
