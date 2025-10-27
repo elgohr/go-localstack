@@ -21,7 +21,6 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -52,6 +51,7 @@ type Instance struct {
 	containerIdMutex sync.RWMutex
 
 	labels    map[string]string
+	image     string
 	version   string
 	fixedPort bool
 	timeout   time.Duration
@@ -60,6 +60,13 @@ type Instance struct {
 // InstanceOption is an option that controls the behaviour of
 // localstack.
 type InstanceOption func(i *Instance)
+
+// WithImage configures the image to use as the base for localstack
+func WithImage(image string) InstanceOption {
+	return func(i *Instance) {
+		i.image = image
+	}
+}
 
 // WithVersion configures the instance to use a specific version of
 // localstack. Must be a valid version string or "latest".
@@ -129,6 +136,7 @@ func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, err
 	i := Instance{
 		cli:         cli,
 		log:         logrus.StandardLogger(),
+		image:       "localstack/localstack",
 		version:     "latest",
 		portMapping: map[Service]string{},
 		timeout:     5 * time.Minute,
@@ -354,7 +362,7 @@ func (i *Instance) buildLocalImage(ctx context.Context) error {
 	defer logClose(tw)
 
 	dockerFile := "Dockerfile"
-	dockerFileContent := []byte(fmt.Sprintf(dockerTemplate, i.version, int(i.timeout.Seconds())))
+	dockerFileContent := []byte(fmt.Sprintf(dockerTemplate, i.image, i.version, int(i.timeout.Seconds())))
 	if err := tw.WriteHeader(&tar.Header{
 		Name: dockerFile,
 		Size: int64(len(dockerFileContent)),
