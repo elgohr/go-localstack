@@ -337,6 +337,13 @@ func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	require.Error(t, err, "should be teared down")
 }
 
+func TestInstanceWithImage(t *testing.T) {
+	l, err := localstack.NewInstance(localstack.WithImage("public.ecr.aws/localstack/localstack"))
+	require.NoError(t, err)
+	require.NoError(t, l.Start())
+	t.Cleanup(func() { require.NoError(t, l.Stop()) })
+}
+
 func TestInstanceWithVersions(t *testing.T) {
 	for _, s := range []struct {
 		version string
