@@ -61,7 +61,7 @@ type Instance struct {
 // localstack.
 type InstanceOption func(i *Instance)
 
-// WithImage configures the image to use as the base for localstack
+// WithImage configures the image to use as the base for go-localstack
 func WithImage(image string) InstanceOption {
 	return func(i *Instance) {
 		i.image = image
