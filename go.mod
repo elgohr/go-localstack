@@ -87,3 +87,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
+
+tool github.com/maxbrunsfeld/counterfeiter/v6
