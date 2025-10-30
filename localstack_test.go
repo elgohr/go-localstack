@@ -252,7 +252,7 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(t.Context())
 			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
@@ -267,7 +267,11 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, l.EndpointV2(service), nil)
+				address := l.EndpointV2(service)
+				if address == "" {
+					return true
+				}
+				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, address, nil)
 				res, err := cl.Do(req)
 				defer func() {
 					if res == nil || res.Body == nil {
@@ -300,7 +304,11 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, l.EndpointV2(service), nil)
+				address := l.EndpointV2(service)
+				if address == "" {
+					return true
+				}
+				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, address, nil)
 				res, err := cl.Do(req)
 				defer func() {
 					if res == nil || res.Body == nil {
