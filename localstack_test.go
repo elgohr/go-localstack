@@ -18,19 +18,21 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net"
-	"net/http"
-	"os"
-	"strings"
-	"sync"
-	"testing"
-	"time"
 
 	"github.com/elgohr/go-localstack"
 )
@@ -81,8 +83,7 @@ func TestWithLogger(t *testing.T) {
 }
 
 func TestWithTimeoutOnStartup(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	l, err := localstack.NewInstance(localstack.WithTimeout(time.Second))
 	require.NoError(t, err)
 	require.EqualError(t, l.StartWithContext(ctx), "localstack container has been stopped")
@@ -101,8 +102,7 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 }
 
 func TestWithTimeoutAfterStartup(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	l, err := localstack.NewInstance(localstack.WithTimeout(20 * time.Second))
 	require.NoError(t, err)
 
@@ -144,8 +144,7 @@ func TestWithLabels(t *testing.T) {
 			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
 			require.NoError(t, err)
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			require.NoError(t, l.StartWithContext(ctx))
 			t.Cleanup(func() { require.NoError(t, l.Stop()) })
@@ -239,8 +238,7 @@ func TestLocalStackWithContext(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 			l, err := localstack.NewInstance(s.input...)
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx))
@@ -251,14 +249,15 @@ func TestLocalStackWithContext(t *testing.T) {
 
 func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 	cl := &http.Client{Timeout: time.Second}
+	dialer := &net.Dialer{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(t.Context())
 			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
 			for testService := range localstack.AvailableServices {
-				conn, err := net.DialTimeout("tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"), time.Second)
+				conn, err := dialer.DialContext(t.Context(), "tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"))
 				if testService == service || testService == localstack.DynamoDB {
 					require.NoError(t, err, testService)
 					require.NoError(t, conn.Close())
@@ -268,7 +267,12 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				res, err := cl.Get(l.EndpointV2(service))
+				address := l.EndpointV2(service)
+				if address == "" {
+					return true
+				}
+				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, address, nil)
+				res, err := cl.Do(req)
 				defer func() {
 					if res == nil || res.Body == nil {
 						return
@@ -283,13 +287,14 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 
 func TestLocalStackWithIndividualServices(t *testing.T) {
 	cl := &http.Client{Timeout: time.Second}
+	dialer := &net.Dialer{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
 			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.Start(service))
 			for testService := range localstack.AvailableServices {
-				conn, err := net.DialTimeout("tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"), time.Second)
+				conn, err := dialer.DialContext(t.Context(), "tcp", strings.TrimPrefix(l.EndpointV2(testService), "http://"))
 				if testService == service || testService == localstack.DynamoDB {
 					require.NoError(t, err, testService)
 					require.NoError(t, conn.Close())
@@ -299,7 +304,12 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 
 			// wait until service was shutdown
 			require.Eventually(t, func() bool {
-				res, err := cl.Get(l.EndpointV2(service))
+				address := l.EndpointV2(service)
+				if address == "" {
+					return true
+				}
+				req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, address, nil)
+				res, err := cl.Do(req)
 				defer func() {
 					if res == nil || res.Body == nil {
 						return
@@ -313,6 +323,7 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 }
 
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
+	dialer := &net.Dialer{Timeout: time.Second}
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -321,19 +332,18 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)
 	require.NoError(t, l.Start())
-	_, err = net.Dial("tcp", firstInstance)
+	_, err = dialer.DialContext(t.Context(), "tcp", firstInstance)
 	require.Error(t, err, "should be teared down")
 }
 
 func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	dialer := &net.Dialer{Timeout: time.Second}
 	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)
-	require.NoError(t, l.StartWithContext(ctx))
-	_, err = net.Dial("tcp", firstInstance)
+	require.NoError(t, l.StartWithContext(t.Context()))
+	_, err = dialer.DialContext(t.Context(), "tcp", firstInstance)
 	require.Error(t, err, "should be teared down")
 }
 
@@ -424,10 +434,7 @@ func TestWithClientFromEnv(t *testing.T) {
 			if s.expectStart != nil {
 				i, err := localstack.NewInstance(opt)
 				require.NoError(t, err)
-
-				ctx, cancel := context.WithCancel(context.Background())
-				defer cancel()
-				s.expectStart(t, i.StartWithContext(ctx))
+				s.expectStart(t, i.StartWithContext(t.Context()))
 			}
 		})
 	}

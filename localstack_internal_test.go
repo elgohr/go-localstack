@@ -17,17 +17,18 @@ package localstack
 import (
 	"context"
 	"errors"
+	"io"
+	"os"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/docker/docker/api/types/build"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/elgohr/go-localstack/internal/internalfakes"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"io"
-	"os"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestInstance_Start_Fails(t *testing.T) {
@@ -147,7 +148,8 @@ func TestInstance_Start_Fails(t *testing.T) {
 			given: func(f *internalfakes.FakeDockerClient) *Instance {
 				f.ImageBuildReturns(build.ImageBuildResponse{Body: io.NopCloser(strings.NewReader(""))}, nil)
 				f.ContainerInspectReturns(container.InspectResponse{NetworkSettings: &container.NetworkSettings{
-					NetworkSettingsBase: container.NetworkSettingsBase{
+					// will remove when removed
+					NetworkSettingsBase: container.NetworkSettingsBase{ //nolint:staticcheck
 						Ports: map[nat.Port][]nat.PortBinding{},
 					},
 				}}, nil)

@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.52.8
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.7
 	github.com/aws/smithy-go v1.20.4
-	github.com/docker/docker v28.3.3+incompatible
+	github.com/docker/docker v28.5.1+incompatible
 	github.com/docker/go-connections v0.6.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.12.0
 	github.com/opencontainers/image-spec v1.1.1
@@ -63,7 +63,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
@@ -88,3 +87,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
+
+tool github.com/maxbrunsfeld/counterfeiter/v6

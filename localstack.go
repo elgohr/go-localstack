@@ -21,6 +21,11 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -32,10 +37,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/sirupsen/logrus"
-	"io"
-	"log"
-	"sync"
-	"time"
 
 	"github.com/elgohr/go-localstack/internal"
 )
@@ -159,6 +160,7 @@ func (i *Instance) Start(services ...Service) error {
 }
 
 // StartWithContext starts the localstack and ends it when the context is done.
+//
 // Deprecated: Use Start/Stop instead, as shutdown is not reliable
 func (i *Instance) StartWithContext(ctx context.Context, services ...Service) error {
 	go func() {
