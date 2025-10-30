@@ -365,13 +365,7 @@ func TestInstanceWithVersions(t *testing.T) {
 }
 
 func TestInstanceWithBadDockerEnvironment(t *testing.T) {
-	urlIfSet := os.Getenv("DOCKER_URL")
-	t.Cleanup(func() {
-		require.NoError(t, os.Setenv("DOCKER_URL", urlIfSet))
-	})
-
-	require.NoError(t, os.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock"))
-
+	t.Setenv("DOCKER_URL", "what-is-this-thing:///var/run/not-a-valid-docker.sock")
 	_, err := localstack.NewInstance()
 	require.NoError(t, err)
 }
@@ -389,7 +383,8 @@ func TestInstanceEndpointWithoutStarted(t *testing.T) {
 }
 
 func TestWithClientFromEnv(t *testing.T) {
-	if strings.Contains(os.Getenv("DOCKER_HOST"), "podman.sock") {
+	host := os.Getenv("DOCKER_HOST")
+	if host == "" || strings.Contains(host, "podman.sock") {
 		t.Skip()
 	}
 	for _, s := range []struct {
@@ -401,7 +396,7 @@ func TestWithClientFromEnv(t *testing.T) {
 		{
 			name: "is ok with client from env",
 			given: func(t *testing.T) {
-				require.NoError(t, os.Setenv("DOCKER_API_VERSION", "0"))
+				t.Setenv("DOCKER_API_VERSION", "0")
 			},
 			expectOpt: func(t require.TestingT, opt localstack.InstanceOption, err error) {
 				require.NoError(t, err)
@@ -415,7 +410,7 @@ func TestWithClientFromEnv(t *testing.T) {
 		{
 			name: "publishes errors",
 			given: func(t *testing.T) {
-				require.NoError(t, os.Setenv("DOCKER_HOST", "localhost"))
+				t.Setenv("DOCKER_HOST", "localhost")
 			},
 			expectOpt: func(t require.TestingT, opt localstack.InstanceOption, err error) {
 				require.EqualError(t, err, "localstack: could not connect to docker: unable to parse docker host `localhost`")
@@ -424,10 +419,6 @@ func TestWithClientFromEnv(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			t.Cleanup(func() {
-				require.NoError(t, os.Unsetenv("DOCKER_HOST"))
-				require.NoError(t, os.Unsetenv("DOCKER_API_VERSION"))
-			})
 			s.given(t)
 			opt, err := localstack.WithClientFromEnv()
 			s.expectOpt(t, opt, err)
