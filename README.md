@@ -1,8 +1,7 @@
 # go-localstack
 
-[![Test](https://github.com/elgohr/go-localstack/workflows/Test/badge.svg)](https://github.com/elgohr/go-localstack/actions/workflows/test.yml)
+[![Test](https://github.com/elgohr/go-localstack/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/elgohr/go-localstack/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/elgohr/go-localstack/branch/main/graph/badge.svg)](https://codecov.io/gh/elgohr/go-localstack)
-[![CodeQL](https://github.com/elgohr/go-localstack/workflows/CodeQL/badge.svg)](https://github.com/elgohr/go-localstack/actions/workflows/codeql-analysis.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/elgohr/go-localstack)](https://goreportcard.com/report/github.com/elgohr/go-localstack)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/elgohr/go-localstack)](https://pkg.go.dev/github.com/elgohr/go-localstack)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
