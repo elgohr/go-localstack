@@ -220,6 +220,8 @@ var (
 	EC2              = Service{Name: "ec2", Port: "4597/tcp"}
 	ES               = Service{Name: "es", Port: "4578/tcp"}
 	Firehose         = Service{Name: "firehose", Port: "4573/tcp"}
+        // The port for batch is not correct
+	Batch            = Service{Name: "batch", Port: "4593/tcp"}
 	IAM              = Service{Name: "iam", Port: "4593/tcp"}
 	Kinesis          = Service{Name: "kinesis", Port: "4568/tcp"}
 	Lambda           = Service{Name: "lambda", Port: "4574/tcp"}
