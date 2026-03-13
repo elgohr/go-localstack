@@ -17,9 +17,10 @@ package localstack_test
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"log"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -32,7 +33,7 @@ func ExampleInstance_EndpointV2() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
 	}
@@ -68,7 +69,7 @@ func ExampleInstance_withEndpointResolverV2() {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
 	}

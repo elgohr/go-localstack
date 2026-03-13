@@ -16,16 +16,39 @@
 package localstack_test
 
 import (
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"log"
 
 	"github.com/elgohr/go-localstack"
 )
 
+func ExampleNewAuthenticatedInstance() {
+	l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
+	if err != nil {
+		log.Fatalf("Could not connect to Docker %v", err)
+	}
+	if err := l.Start(); err != nil {
+		log.Fatalf("Could not start localstack %v", err)
+	}
+	defer func() { // this should be t.Cleanup for better stability
+		if err := l.Stop(); err != nil {
+			log.Fatalf("Could not stop localstack %v", err)
+		}
+	}()
+
+	myTestWith(&aws.Config{
+		Credentials: credentials.NewStaticCredentials("not", "empty", ""),
+		DisableSSL:  aws.Bool(true),
+		Region:      aws.String(endpoints.UsWest1RegionID),
+		Endpoint:    aws.String(l.Endpoint(localstack.SQS)),
+	})
+}
+
 func ExampleNewInstance() {
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 	if err != nil {
 		log.Fatalf("Could not connect to Docker %v", err)
 	}

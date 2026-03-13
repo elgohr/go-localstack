@@ -49,6 +49,11 @@ func TestMain(m *testing.M) {
 	os.Exit(run)
 }
 
+const (
+	LastVersionBeforeBreakingChange = "0.11.4"
+	BreakingChangeVersion           = "0.11.5"
+)
+
 func TestWithLogger(t *testing.T) {
 	for _, scenario := range []struct {
 		name   string
@@ -73,7 +78,10 @@ func TestWithLogger(t *testing.T) {
 			logger := log.New()
 			logger.SetLevel(s.level)
 			logger.SetOutput(buf)
-			l, err := localstack.NewInstance(localstack.WithLogger(logger))
+			l, err := localstack.NewInstance(
+				localstack.WithLogger(logger),
+				localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
+			)
 			require.NoError(t, err)
 			require.NoError(t, l.Start())
 			require.NoError(t, l.Stop())
@@ -84,7 +92,10 @@ func TestWithLogger(t *testing.T) {
 
 func TestWithTimeoutOnStartup(t *testing.T) {
 	ctx := t.Context()
-	l, err := localstack.NewInstance(localstack.WithTimeout(time.Second))
+	l, err := localstack.NewInstance(
+		localstack.WithTimeout(time.Second),
+		localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
+	)
 	require.NoError(t, err)
 	require.EqualError(t, l.StartWithContext(ctx), "localstack container has been stopped")
 
@@ -103,7 +114,10 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 
 func TestWithTimeoutAfterStartup(t *testing.T) {
 	ctx := t.Context()
-	l, err := localstack.NewInstance(localstack.WithTimeout(20 * time.Second))
+	l, err := localstack.NewInstance(
+		localstack.WithTimeout(20*time.Second),
+		localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
+	)
 	require.NoError(t, err)
 
 	require.NoError(t, l.StartWithContext(ctx))
@@ -141,7 +155,10 @@ func TestWithLabels(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
+			l, err := localstack.NewInstance(
+				localstack.WithLabels(s.labels),
+				localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
+			)
 			require.NoError(t, err)
 
 			ctx := t.Context()
@@ -169,7 +186,7 @@ func TestLocalStack(t *testing.T) {
 	}{
 		{
 			name:   "with version before breaking change",
-			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.4")},
+			input:  []localstack.InstanceOption{localstack.WithVersion(LastVersionBeforeBreakingChange)},
 			expect: havingIndividualEndpoints,
 		},
 		{
@@ -184,12 +201,12 @@ func TestLocalStack(t *testing.T) {
 		},
 		{
 			name:   "with breaking change version",
-			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.5")},
+			input:  []localstack.InstanceOption{localstack.WithVersion(BreakingChangeVersion)},
 			expect: havingOneEndpoint,
 		},
 		{
-			name:   "with version after breaking change",
-			input:  []localstack.InstanceOption{localstack.WithVersion("latest")},
+			name:   "with last version before auth token enforcement",
+			input:  []localstack.InstanceOption{localstack.WithVersion(localstack.LastVersionBeforeAuthToken)},
 			expect: havingOneEndpoint,
 		},
 	} {
@@ -205,6 +222,34 @@ func TestLocalStack(t *testing.T) {
 	}
 }
 
+func TestAuthenticatedLocalStack(t *testing.T) {
+	token := os.Getenv("LOCALSTACK_AUTH_TOKEN")
+	if token == "" {
+		t.Skip("LOCALSTACK_AUTH_TOKEN not configured")
+	}
+	l, err := localstack.NewAuthenticatedInstance(token)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		assert.NoError(t, l.Stop())
+	})
+	require.NoError(t, l.Start())
+	havingOneEndpoint(t, l)
+}
+
+func TestAuthenticatedLocalStackWithContext(t *testing.T) {
+	token := os.Getenv("LOCALSTACK_AUTH_TOKEN")
+	if token == "" {
+		t.Skip("LOCALSTACK_AUTH_TOKEN not configured")
+	}
+	l, err := localstack.NewAuthenticatedInstanceWithContext(t.Context(), token)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		assert.NoError(t, l.Stop())
+	})
+	require.NoError(t, l.Start())
+	havingOneEndpoint(t, l)
+}
+
 func TestLocalStackWithContext(t *testing.T) {
 	for _, s := range []struct {
 		name   string
@@ -213,7 +258,7 @@ func TestLocalStackWithContext(t *testing.T) {
 	}{
 		{
 			name:   "with version before breaking change",
-			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.4")},
+			input:  []localstack.InstanceOption{localstack.WithVersion(LastVersionBeforeBreakingChange)},
 			expect: havingIndividualEndpoints,
 		},
 		{
@@ -228,12 +273,12 @@ func TestLocalStackWithContext(t *testing.T) {
 		},
 		{
 			name:   "with breaking change version",
-			input:  []localstack.InstanceOption{localstack.WithVersion("0.11.5")},
+			input:  []localstack.InstanceOption{localstack.WithVersion(BreakingChangeVersion)},
 			expect: havingOneEndpoint,
 		},
 		{
-			name:   "with version after breaking change",
-			input:  []localstack.InstanceOption{localstack.WithVersion("latest")},
+			name:   "with last version before auth token enforcement",
+			input:  []localstack.InstanceOption{localstack.WithVersion(localstack.LastVersionBeforeAuthToken)},
 			expect: havingOneEndpoint,
 		},
 	} {
@@ -253,7 +298,7 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(t.Context())
-			l, err := localstack.NewInstance()
+			l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
 			for testService := range localstack.AvailableServices {
@@ -290,7 +335,7 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
-			l, err := localstack.NewInstance()
+			l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 			require.NoError(t, err)
 			require.NoError(t, l.Start(service))
 			for testService := range localstack.AvailableServices {
@@ -324,7 +369,7 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, l.Stop())
@@ -338,7 +383,7 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 
 func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)

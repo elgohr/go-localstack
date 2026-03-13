@@ -18,11 +18,23 @@ go get github.com/elgohr/go-localstack
 
 # Usage
 
+## Authentication
+
+[Starting March 23, 2026, localstack requires a token](https://github.com/elgohr/go-localstack/issues/1021).  
+In this way users must   
+1. Sign up for a free LocalStack account at [localstack.cloud](localstack.cloud)
+2. Generate an auth token from the LocalStack Web App
+3. Use `localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")` for passing the token
+
+Old images can still be used without token via `localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))`.
+
+## Examples
+
 With SDK V2 (using EndpointResolverV2).
 Please have a look at [resolvers](resolver.go) for a complete list of resolvers.
 ```go
 func ExampleLocalstackSdkV2EndpointResolverV2(t *testing.T) {
-    l, err := localstack.NewInstance()
+    l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
     if err != nil {
         t.Fatalf("Could not connect to Docker %v", err)
     }
@@ -52,7 +64,7 @@ func ExampleLocalstackSdkV2EndpointResolverV2(t *testing.T) {
 With SDK V2 (using EndpointResolverV1)
 ```go
 func ExampleLocalstackSdkV2(t *testing.T) {
-    l, err := localstack.NewInstance()
+    l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
     if err != nil {
         t.Fatalf("Could not connect to Docker %v", err)
     }
@@ -88,7 +100,7 @@ func ExampleLocalstackSdkV2(t *testing.T) {
 With SDK V1
 ```go
 func TestWithLocalStack(t *testing.T) {
-    l, err := localstack.NewInstance()
+    l, err := localstack.NewAuthenticatedInstance("LOCALSTACK_AUTH_TOKEN")
     if err != nil {
         t.Fatalf("Could not connect to Docker %v", err)
     }

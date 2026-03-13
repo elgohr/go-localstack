@@ -53,6 +53,7 @@ type Instance struct {
 	containerIdMutex sync.RWMutex
 
 	labels    map[string]string
+	authToken string
 	version   string
 	fixedPort bool
 	timeout   time.Duration
@@ -113,13 +114,39 @@ func WithClientFromEnvCtx(ctx context.Context) (InstanceOption, error) {
 // Semver constraint that tests it the version is affected by the port change.
 var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
 
+// NewAuthenticatedInstance creates a new Instance using a localstack auth token
+func NewAuthenticatedInstance(authToken string, opts ...InstanceOption) (*Instance, error) {
+	return NewAuthenticatedInstanceWithContext(context.Background(), authToken, opts...)
+}
+
+// NewAuthenticatedInstanceWithContext is NewAuthenticatedInstance, but with Context
+func NewAuthenticatedInstanceWithContext(ctx context.Context, authToken string, opts ...InstanceOption) (*Instance, error) {
+	i, err := NewInstanceCtx(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	i.authToken = authToken
+	return i, nil
+}
+
+// Last Version before NewAuthenticatedInstance or NewAuthenticatedInstanceWithContext must be used
+const LastVersionBeforeAuthToken = "4.14.0"
+
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
+//
+// Deprecated: NewInstance exists for historical compatibility, when using
+// Localstack images not requiring an authentication token (<=4.14.0).
+// Use NewAuthenticatedInstance for passing tokens to newer images.
 func NewInstance(opts ...InstanceOption) (*Instance, error) {
 	return NewInstanceCtx(context.Background(), opts...)
 }
 
 // NewInstanceCtx is NewInstance, but with Context
+//
+// Deprecated: NewInstanceCtx exists for historical compatibility, when using
+// Localstack images not requiring an authentication token (<=4.14.0).
+// Use NewAuthenticatedInstanceWithContext for passing tokens to newer images.
 func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, error) {
 	cli, err := client.NewClientWithOpts()
 	if err != nil {
@@ -302,6 +329,9 @@ func (i *Instance) startLocalstack(ctx context.Context, services ...Service) err
 	}
 
 	environmentVariables := []string{}
+	if i.authToken != "" {
+		environmentVariables = append(environmentVariables, "LOCALSTACK_AUTH_TOKEN="+i.authToken)
+	}
 	if len(services) > 0 {
 		startServices := "SERVICES=dynamodb" // for waitToBeAvailable
 		addedServices := 0
