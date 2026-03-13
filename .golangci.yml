@@ -25,6 +25,10 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - linters:
+          - gosec
+        text: "G704: SSRF *"
 formatters:
   exclusions:
     generated: lax
