@@ -28,7 +28,7 @@ jobs:
       - name: Coverage
         uses: codecov/codecov-action@v6
         with:
-          file: coverage.txt
+          files: coverage.txt
 
   linter:
     runs-on: ubuntu-latest
