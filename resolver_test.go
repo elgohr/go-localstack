@@ -1,7 +1,10 @@
 package localstack_test
 
 import (
-	"context"
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchevents"
@@ -30,16 +33,11 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/elgohr/go-localstack"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 func TestEndpointResolversV2(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	l, err := localstack.NewInstance()
+	ctx := t.Context()
+	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	t.Cleanup(func() {
