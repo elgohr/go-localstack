@@ -111,8 +111,15 @@ func WithClientFromEnvCtx(ctx context.Context) (InstanceOption, error) {
 	}, nil
 }
 
+// Versions that made history
+const (
+	BreakingChangeVersion      = "0.11.5" // breaking from multiple to one port
+	LastVersionBeforeAuthToken = "4.14.0" // Last Version before NewAuthenticatedInstance or NewAuthenticatedInstanceWithContext must be used
+	LatestVersion              = "latest" // still making history
+)
+
 // Semver constraint that tests it the version is affected by the port change.
-var portChangeIntroduced = internal.MustParseConstraint(">= 0.11.5")
+var portChangeIntroduced = internal.MustParseConstraint(">= " + BreakingChangeVersion)
 
 // NewAuthenticatedInstance creates a new Instance using a localstack auth token
 func NewAuthenticatedInstance(authToken string, opts ...InstanceOption) (*Instance, error) {
@@ -121,16 +128,13 @@ func NewAuthenticatedInstance(authToken string, opts ...InstanceOption) (*Instan
 
 // NewAuthenticatedInstanceWithContext is NewAuthenticatedInstance, but with Context
 func NewAuthenticatedInstanceWithContext(ctx context.Context, authToken string, opts ...InstanceOption) (*Instance, error) {
-	i, err := NewInstanceCtx(ctx, opts...)
+	i, err := newInstanceCtx(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
 	i.authToken = authToken
 	return i, nil
 }
-
-// Last Version before NewAuthenticatedInstance or NewAuthenticatedInstanceWithContext must be used
-const LastVersionBeforeAuthToken = "4.14.0"
 
 // NewInstance creates a new Instance
 // Fails when Docker is not reachable
@@ -148,37 +152,14 @@ func NewInstance(opts ...InstanceOption) (*Instance, error) {
 // Localstack images not requiring an authentication token (<=4.14.0).
 // Use NewAuthenticatedInstanceWithContext for passing tokens to newer images.
 func NewInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, error) {
-	cli, err := client.NewClientWithOpts()
+	i, err := newInstanceCtx(ctx, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
+		return nil, err
 	}
-	cli.NegotiateAPIVersion(ctx)
-
-	i := Instance{
-		cli:         cli,
-		log:         logrus.StandardLogger(),
-		version:     "latest",
-		portMapping: map[Service]string{},
-		timeout:     5 * time.Minute,
+	if i.version == LatestVersion {
+		i.version = LastVersionBeforeAuthToken // for backward compatibility
 	}
-
-	for _, opt := range opts {
-		opt(&i)
-	}
-
-	if i.version == "latest" {
-		i.fixedPort = true
-	} else {
-		version, err := semver.NewVersion(i.version)
-		if err != nil {
-			return nil, fmt.Errorf("localstack: invalid version %q specified: %w", i.version, err)
-		}
-
-		i.version = version.String()
-		i.fixedPort = portChangeIntroduced.Check(version)
-	}
-
-	return &i, nil
+	return i, nil
 }
 
 // Start starts the localstack
@@ -287,6 +268,40 @@ var AvailableServices = map[Service]struct{}{
 	SSM:              {},
 	STS:              {},
 	StepFunctions:    {},
+}
+
+func newInstanceCtx(ctx context.Context, opts ...InstanceOption) (*Instance, error) {
+	cli, err := client.NewClientWithOpts()
+	if err != nil {
+		return nil, fmt.Errorf("localstack: could not connect to docker: %w", err)
+	}
+	cli.NegotiateAPIVersion(ctx)
+
+	i := Instance{
+		cli:         cli,
+		log:         logrus.StandardLogger(),
+		version:     LatestVersion,
+		portMapping: map[Service]string{},
+		timeout:     5 * time.Minute,
+	}
+
+	for _, opt := range opts {
+		opt(&i)
+	}
+
+	if i.version == LatestVersion {
+		i.fixedPort = true
+	} else {
+		version, err := semver.NewVersion(i.version)
+		if err != nil {
+			return nil, fmt.Errorf("localstack: invalid version %q specified: %w", i.version, err)
+		}
+
+		i.version = version.String()
+		i.fixedPort = portChangeIntroduced.Check(version)
+	}
+
+	return &i, nil
 }
 
 func (i *Instance) start(ctx context.Context, services ...Service) error {

@@ -78,10 +78,7 @@ func TestWithLogger(t *testing.T) {
 			logger := log.New()
 			logger.SetLevel(s.level)
 			logger.SetOutput(buf)
-			l, err := localstack.NewInstance(
-				localstack.WithLogger(logger),
-				localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
-			)
+			l, err := localstack.NewInstance(localstack.WithLogger(logger))
 			require.NoError(t, err)
 			require.NoError(t, l.Start())
 			require.NoError(t, l.Stop())
@@ -92,10 +89,7 @@ func TestWithLogger(t *testing.T) {
 
 func TestWithTimeoutOnStartup(t *testing.T) {
 	ctx := t.Context()
-	l, err := localstack.NewInstance(
-		localstack.WithTimeout(time.Second),
-		localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
-	)
+	l, err := localstack.NewInstance(localstack.WithTimeout(time.Second))
 	require.NoError(t, err)
 	require.EqualError(t, l.StartWithContext(ctx), "localstack container has been stopped")
 
@@ -114,10 +108,7 @@ func TestWithTimeoutOnStartup(t *testing.T) {
 
 func TestWithTimeoutAfterStartup(t *testing.T) {
 	ctx := t.Context()
-	l, err := localstack.NewInstance(
-		localstack.WithTimeout(20*time.Second),
-		localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
-	)
+	l, err := localstack.NewInstance(localstack.WithTimeout(20 * time.Second))
 	require.NoError(t, err)
 
 	require.NoError(t, l.StartWithContext(ctx))
@@ -155,10 +146,7 @@ func TestWithLabels(t *testing.T) {
 		},
 	} {
 		t.Run(s.name, func(t *testing.T) {
-			l, err := localstack.NewInstance(
-				localstack.WithLabels(s.labels),
-				localstack.WithVersion(localstack.LastVersionBeforeAuthToken),
-			)
+			l, err := localstack.NewInstance(localstack.WithLabels(s.labels))
 			require.NoError(t, err)
 
 			ctx := t.Context()
@@ -298,7 +286,7 @@ func TestLocalStackWithIndividualServicesOnContext(t *testing.T) {
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(t.Context())
-			l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
+			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.StartWithContext(ctx, service))
 			for testService := range localstack.AvailableServices {
@@ -335,7 +323,7 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
 	for service := range localstack.AvailableServices {
 		t.Run(service.Name, func(t *testing.T) {
-			l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
+			l, err := localstack.NewInstance()
 			require.NoError(t, err)
 			require.NoError(t, l.Start(service))
 			for testService := range localstack.AvailableServices {
@@ -369,7 +357,7 @@ func TestLocalStackWithIndividualServices(t *testing.T) {
 
 func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
-	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
+	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	t.Cleanup(func() {
 		require.NoError(t, l.Stop())
@@ -383,7 +371,7 @@ func TestInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 
 func TestContextInstanceStartedTwiceWithoutLeaking(t *testing.T) {
 	dialer := &net.Dialer{Timeout: time.Second}
-	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
+	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	firstInstance := l.Endpoint(localstack.S3)

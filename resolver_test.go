@@ -37,7 +37,7 @@ import (
 
 func TestEndpointResolversV2(t *testing.T) {
 	ctx := t.Context()
-	l, err := localstack.NewInstance(localstack.WithVersion(localstack.LastVersionBeforeAuthToken))
+	l, err := localstack.NewInstance()
 	require.NoError(t, err)
 	require.NoError(t, l.Start())
 	t.Cleanup(func() {
