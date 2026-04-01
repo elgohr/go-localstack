@@ -477,6 +477,7 @@ func TestWithClientFromEnv(t *testing.T) {
 }
 
 func havingOneEndpoint(t *testing.T, l *localstack.Instance) {
+	t.Helper()
 	endpoints := map[string]struct{}{}
 	for service := range localstack.AvailableServices {
 		endpoints[l.Endpoint(service)] = struct{}{}
@@ -485,6 +486,7 @@ func havingOneEndpoint(t *testing.T, l *localstack.Instance) {
 }
 
 func havingIndividualEndpoints(t *testing.T, l *localstack.Instance) {
+	t.Helper()
 	endpoints := map[string]struct{}{}
 	for service := range localstack.AvailableServices {
 		endpoint := l.Endpoint(service)
