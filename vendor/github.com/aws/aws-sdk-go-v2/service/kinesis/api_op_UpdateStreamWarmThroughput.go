@@ -12,48 +12,34 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Updates the shard count of the specified stream to the specified number of
-// shards. This API is only supported for the data streams with the provisioned
-// capacity mode.
+// Updates the warm throughput configuration for the specified Amazon Kinesis Data
+// Streams on-demand data stream. This operation allows you to proactively scale
+// your on-demand data stream to a specified throughput level, enabling better
+// performance for sudden traffic spikes.
 //
 // When invoking this API, you must use either the StreamARN or the StreamName
 // parameter, or both. It is recommended that you use the StreamARN input
 // parameter when you invoke this API.
 //
-// Updating the shard count is an asynchronous operation. Upon receiving the
+// Updating the warm throughput is an asynchronous operation. Upon receiving the
 // request, Kinesis Data Streams returns immediately and sets the status of the
 // stream to UPDATING . After the update is complete, Kinesis Data Streams sets the
 // status of the stream back to ACTIVE . Depending on the size of the stream, the
 // scaling action could take a few minutes to complete. You can continue to read
 // and write data to your stream while its status is UPDATING .
 //
-// To update the shard count, Kinesis Data Streams performs splits or merges on
-// individual shards. This can cause short-lived shards to be created, in addition
-// to the final shards. These short-lived shards count towards your total shard
-// limit for your account in the Region.
-//
-// When using this operation, we recommend that you specify a target shard count
-// that is a multiple of 25% (25%, 50%, 75%, 100%). You can specify any target
-// value within your shard limit. However, if you specify a target that isn't a
-// multiple of 25%, the scaling action might take longer to complete.
+// This operation is only supported for data streams with the on-demand capacity
+// mode in accounts that have MinimumThroughputBillingCommitment enabled.
+// Provisioned capacity mode streams do not support warm throughput configuration.
 //
 // This operation has the following default limits. By default, you cannot do the
 // following:
 //
-//   - Scale more than ten times per rolling 24-hour period per stream
+//   - Scale to more than 10 GiBps for an on-demand stream.
 //
-//   - Scale up to more than double your current shard count for a stream
-//
-//   - Scale down below half your current shard count for a stream
-//
-//   - Scale up to more than 10000 shards in a stream
-//
-//   - Scale a stream with more than 10000 shards down unless the result is less
-//     than 10000 shards
-//
-//   - Scale up to more than the shard limit for your account
-//
-//   - Make over 10 TPS. TPS over 10 will trigger the LimitExceededException
+//   - This API has a call limit of 5 transactions per second (TPS) for each
+//     Amazon Web Services account. TPS over 5 will initiate the
+//     LimitExceededException .
 //
 // For the default limits for an Amazon Web Services account, see [Streams Limits] in the Amazon
 // Kinesis Data Streams Developer Guide. To request an increase in the call rate
@@ -61,77 +47,59 @@ import (
 //
 // [limits form]: https://console.aws.amazon.com/support/v1#/case/create?issueType=service-limit-increase&limitType=service-code-kinesis
 // [Streams Limits]: https://docs.aws.amazon.com/kinesis/latest/dev/service-sizes-and-limits.html
-func (c *Client) UpdateShardCount(ctx context.Context, params *UpdateShardCountInput, optFns ...func(*Options)) (*UpdateShardCountOutput, error) {
+func (c *Client) UpdateStreamWarmThroughput(ctx context.Context, params *UpdateStreamWarmThroughputInput, optFns ...func(*Options)) (*UpdateStreamWarmThroughputOutput, error) {
 	if params == nil {
-		params = &UpdateShardCountInput{}
+		params = &UpdateStreamWarmThroughputInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "UpdateShardCount", params, optFns, c.addOperationUpdateShardCountMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "UpdateStreamWarmThroughput", params, optFns, c.addOperationUpdateStreamWarmThroughputMiddlewares)
 	if err != nil {
 		return nil, err
 	}
 
-	out := result.(*UpdateShardCountOutput)
+	out := result.(*UpdateStreamWarmThroughputOutput)
 	out.ResultMetadata = metadata
 	return out, nil
 }
 
-type UpdateShardCountInput struct {
+type UpdateStreamWarmThroughputInput struct {
 
-	// The scaling type. Uniform scaling creates shards of equal size.
+	// The target warm throughput in MB/s that the stream should be scaled to handle.
+	// This represents the throughput capacity that will be immediately available for
+	// write operations.
 	//
 	// This member is required.
-	ScalingType types.ScalingType
+	WarmThroughputMiBps *int32
 
-	// The new number of shards. This value has the following default limits. By
-	// default, you cannot do the following:
-	//
-	//   - Set this value to more than double your current shard count for a stream.
-	//
-	//   - Set this value below half your current shard count for a stream.
-	//
-	//   - Set this value to more than 10000 shards in a stream (the default limit for
-	//   shard count per stream is 10000 per account per region), unless you request a
-	//   limit increase.
-	//
-	//   - Scale a stream with more than 10000 shards down unless you set this value
-	//   to less than 10000 shards.
-	//
-	// This member is required.
-	TargetShardCount *int32
-
-	// The ARN of the stream.
+	// The ARN of the stream to be updated.
 	StreamARN *string
 
 	// Not Implemented. Reserved for future use.
 	StreamId *string
 
-	// The name of the stream.
+	// The name of the stream to be updated.
 	StreamName *string
 
 	noSmithyDocumentSerde
 }
 
-func (in *UpdateShardCountInput) bindEndpointParams(p *EndpointParameters) {
+func (in *UpdateStreamWarmThroughputInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
 	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
-type UpdateShardCountOutput struct {
+type UpdateStreamWarmThroughputOutput struct {
 
-	// The current number of shards.
-	CurrentShardCount *int32
-
-	// The ARN of the stream.
+	// The ARN of the stream that was updated.
 	StreamARN *string
 
-	// The name of the stream.
+	// The name of the stream that was updated.
 	StreamName *string
 
-	// The updated number of shards.
-	TargetShardCount *int32
+	// Specifies the updated warm throughput configuration for your data stream.
+	WarmThroughput *types.WarmThroughputObject
 
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
@@ -139,19 +107,19 @@ type UpdateShardCountOutput struct {
 	noSmithyDocumentSerde
 }
 
-func (c *Client) addOperationUpdateShardCountMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationUpdateStreamWarmThroughputMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpUpdateShardCount{}, middleware.After)
+	err = stack.Serialize.Add(&awsAwsjson11_serializeOpUpdateStreamWarmThroughput{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpUpdateShardCount{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpUpdateStreamWarmThroughput{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	if err := addProtocolFinalizerMiddlewares(stack, options, "UpdateShardCount"); err != nil {
+	if err := addProtocolFinalizerMiddlewares(stack, options, "UpdateStreamWarmThroughput"); err != nil {
 		return fmt.Errorf("add protocol finalizers: %v", err)
 	}
 
@@ -203,10 +171,10 @@ func (c *Client) addOperationUpdateShardCountMiddlewares(stack *middleware.Stack
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
-	if err = addOpUpdateShardCountValidationMiddleware(stack); err != nil {
+	if err = addOpUpdateStreamWarmThroughputValidationMiddleware(stack); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUpdateShardCount(options.Region), middleware.Before); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUpdateStreamWarmThroughput(options.Region), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRecursionDetection(stack); err != nil {
@@ -236,10 +204,10 @@ func (c *Client) addOperationUpdateShardCountMiddlewares(stack *middleware.Stack
 	return nil
 }
 
-func newServiceMetadataMiddleware_opUpdateShardCount(region string) *awsmiddleware.RegisterServiceMetadata {
+func newServiceMetadataMiddleware_opUpdateStreamWarmThroughput(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		OperationName: "UpdateShardCount",
+		OperationName: "UpdateStreamWarmThroughput",
 	}
 }

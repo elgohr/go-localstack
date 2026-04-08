@@ -40,13 +40,17 @@ func (c *Client) AddTagsToStream(ctx context.Context, params *AddTagsToStreamInp
 // Represents the input for AddTagsToStream .
 type AddTagsToStreamInput struct {
 
-	// A set of up to 10 key-value pairs to use to create the tags.
+	// A set of up to 50 key-value pairs to use to create the tags. A tag consists of
+	// a required key and an optional value. You can add up to 50 tags per resource.
 	//
 	// This member is required.
 	Tags map[string]string
 
 	// The ARN of the stream.
 	StreamARN *string
+
+	// Not Implemented. Reserved for future use.
+	StreamId *string
 
 	// The name of the stream.
 	StreamName *string
@@ -57,6 +61,7 @@ type AddTagsToStreamInput struct {
 func (in *AddTagsToStreamInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
+	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
@@ -101,13 +106,16 @@ func (c *Client) addOperationAddTagsToStreamMiddlewares(stack *middleware.Stack,
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -122,10 +130,10 @@ func (c *Client) addOperationAddTagsToStreamMiddlewares(stack *middleware.Stack,
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpAddTagsToStreamValidationMiddleware(stack); err != nil {
@@ -147,6 +155,15 @@ func (c *Client) addOperationAddTagsToStreamMiddlewares(stack *middleware.Stack,
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

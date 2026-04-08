@@ -6,85 +6,61 @@ import (
 	"context"
 	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/aws/smithy-go/middleware"
-	"github.com/aws/smithy-go/ptr"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Decreases the Kinesis data stream's retention period, which is the length of
-// time data records are accessible after they are added to the stream. The minimum
-// value of a stream's retention period is 24 hours.
+// Describes the account-level settings for Amazon Kinesis Data Streams. This
+// operation returns information about the minimum throughput billing commitments
+// and other account-level configurations.
 //
-// When invoking this API, you must use either the StreamARN or the StreamName
-// parameter, or both. It is recommended that you use the StreamARN input
-// parameter when you invoke this API.
-//
-// This operation may result in lost data. For example, if the stream's retention
-// period is 48 hours and is decreased to 24 hours, any data already in the stream
-// that is older than 24 hours is inaccessible.
-func (c *Client) DecreaseStreamRetentionPeriod(ctx context.Context, params *DecreaseStreamRetentionPeriodInput, optFns ...func(*Options)) (*DecreaseStreamRetentionPeriodOutput, error) {
+// This API has a call limit of 5 transactions per second (TPS) for each Amazon
+// Web Services account. TPS over 5 will initiate the LimitExceededException .
+func (c *Client) DescribeAccountSettings(ctx context.Context, params *DescribeAccountSettingsInput, optFns ...func(*Options)) (*DescribeAccountSettingsOutput, error) {
 	if params == nil {
-		params = &DecreaseStreamRetentionPeriodInput{}
+		params = &DescribeAccountSettingsInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DecreaseStreamRetentionPeriod", params, optFns, c.addOperationDecreaseStreamRetentionPeriodMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "DescribeAccountSettings", params, optFns, c.addOperationDescribeAccountSettingsMiddlewares)
 	if err != nil {
 		return nil, err
 	}
 
-	out := result.(*DecreaseStreamRetentionPeriodOutput)
+	out := result.(*DescribeAccountSettingsOutput)
 	out.ResultMetadata = metadata
 	return out, nil
 }
 
-// Represents the input for DecreaseStreamRetentionPeriod.
-type DecreaseStreamRetentionPeriodInput struct {
-
-	// The new retention period of the stream, in hours. Must be less than the current
-	// retention period.
-	//
-	// This member is required.
-	RetentionPeriodHours *int32
-
-	// The ARN of the stream.
-	StreamARN *string
-
-	// Not Implemented. Reserved for future use.
-	StreamId *string
-
-	// The name of the stream to modify.
-	StreamName *string
-
+type DescribeAccountSettingsInput struct {
 	noSmithyDocumentSerde
 }
 
-func (in *DecreaseStreamRetentionPeriodInput) bindEndpointParams(p *EndpointParameters) {
+type DescribeAccountSettingsOutput struct {
 
-	p.StreamARN = in.StreamARN
-	p.StreamId = in.StreamId
-	p.OperationType = ptr.String("control")
-}
+	// The current configuration of the minimum throughput billing commitment for your
+	// Amazon Web Services account.
+	MinimumThroughputBillingCommitment *types.MinimumThroughputBillingCommitmentOutput
 
-type DecreaseStreamRetentionPeriodOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
 
 	noSmithyDocumentSerde
 }
 
-func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationDescribeAccountSettingsMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDescribeAccountSettings{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDescribeAccountSettings{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	if err := addProtocolFinalizerMiddlewares(stack, options, "DecreaseStreamRetentionPeriod"); err != nil {
+	if err := addProtocolFinalizerMiddlewares(stack, options, "DescribeAccountSettings"); err != nil {
 		return fmt.Errorf("add protocol finalizers: %v", err)
 	}
 
@@ -136,10 +112,7 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
-	if err = addOpDecreaseStreamRetentionPeriodValidationMiddleware(stack); err != nil {
-		return err
-	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(options.Region), middleware.Before); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeAccountSettings(options.Region), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRecursionDetection(stack); err != nil {
@@ -169,10 +142,10 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	return nil
 }
 
-func newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(region string) *awsmiddleware.RegisterServiceMetadata {
+func newServiceMetadataMiddleware_opDescribeAccountSettings(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		OperationName: "DecreaseStreamRetentionPeriod",
+		OperationName: "DescribeAccountSettings",
 	}
 }

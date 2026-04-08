@@ -15,7 +15,7 @@ import (
 // Writes a single data record into an Amazon Kinesis data stream. Call PutRecord
 // to send data into the stream for real-time ingestion and subsequent processing,
 // one record at a time. Each shard can support writes up to 1,000 records per
-// second, up to a maximum data write total of 1 MiB per second.
+// second, up to a maximum data write total of 10 MiB per second.
 //
 // When invoking this API, you must use either the StreamARN or the StreamName
 // parameter, or both. It is recommended that you use the StreamARN input
@@ -81,7 +81,7 @@ type PutRecordInput struct {
 	// The data blob to put into the record, which is base64-encoded when the blob is
 	// serialized. When the data blob (the payload before base64-encoding) is added to
 	// the partition key size, the total size must not exceed the maximum record size
-	// (1 MiB).
+	// (10 MiB).
 	//
 	// This member is required.
 	Data []byte
@@ -112,6 +112,9 @@ type PutRecordInput struct {
 	// The ARN of the stream.
 	StreamARN *string
 
+	// Not Implemented. Reserved for future use.
+	StreamId *string
+
 	// The name of the stream to put the data record into.
 	StreamName *string
 
@@ -121,6 +124,7 @@ type PutRecordInput struct {
 func (in *PutRecordInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
+	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("data")
 }
 
@@ -189,13 +193,16 @@ func (c *Client) addOperationPutRecordMiddlewares(stack *middleware.Stack, optio
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -210,10 +217,10 @@ func (c *Client) addOperationPutRecordMiddlewares(stack *middleware.Stack, optio
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpPutRecordValidationMiddleware(stack); err != nil {
@@ -235,6 +242,15 @@ func (c *Client) addOperationPutRecordMiddlewares(stack *middleware.Stack, optio
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

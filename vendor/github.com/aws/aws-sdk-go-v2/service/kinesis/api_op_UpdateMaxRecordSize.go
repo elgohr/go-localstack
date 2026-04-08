@@ -11,80 +11,70 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Decreases the Kinesis data stream's retention period, which is the length of
-// time data records are accessible after they are added to the stream. The minimum
-// value of a stream's retention period is 24 hours.
-//
-// When invoking this API, you must use either the StreamARN or the StreamName
-// parameter, or both. It is recommended that you use the StreamARN input
-// parameter when you invoke this API.
-//
-// This operation may result in lost data. For example, if the stream's retention
-// period is 48 hours and is decreased to 24 hours, any data already in the stream
-// that is older than 24 hours is inaccessible.
-func (c *Client) DecreaseStreamRetentionPeriod(ctx context.Context, params *DecreaseStreamRetentionPeriodInput, optFns ...func(*Options)) (*DecreaseStreamRetentionPeriodOutput, error) {
+// This allows you to update the MaxRecordSize of a single record that you can
+// write to, and read from a stream. You can ingest and digest single records up to
+// 10240 KiB.
+func (c *Client) UpdateMaxRecordSize(ctx context.Context, params *UpdateMaxRecordSizeInput, optFns ...func(*Options)) (*UpdateMaxRecordSizeOutput, error) {
 	if params == nil {
-		params = &DecreaseStreamRetentionPeriodInput{}
+		params = &UpdateMaxRecordSizeInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DecreaseStreamRetentionPeriod", params, optFns, c.addOperationDecreaseStreamRetentionPeriodMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "UpdateMaxRecordSize", params, optFns, c.addOperationUpdateMaxRecordSizeMiddlewares)
 	if err != nil {
 		return nil, err
 	}
 
-	out := result.(*DecreaseStreamRetentionPeriodOutput)
+	out := result.(*UpdateMaxRecordSizeOutput)
 	out.ResultMetadata = metadata
 	return out, nil
 }
 
-// Represents the input for DecreaseStreamRetentionPeriod.
-type DecreaseStreamRetentionPeriodInput struct {
+type UpdateMaxRecordSizeInput struct {
 
-	// The new retention period of the stream, in hours. Must be less than the current
-	// retention period.
+	// The maximum record size of a single record in KiB that you can write to, and
+	// read from a stream. Specify a value between 1024 and 10240 KiB (1 to 10 MiB). If
+	// you specify a value that is out of this range, UpdateMaxRecordSize sends back
+	// an ValidationException message.
 	//
 	// This member is required.
-	RetentionPeriodHours *int32
+	MaxRecordSizeInKiB *int32
 
-	// The ARN of the stream.
+	// The Amazon Resource Name (ARN) of the stream for the MaxRecordSize update.
 	StreamARN *string
 
 	// Not Implemented. Reserved for future use.
 	StreamId *string
 
-	// The name of the stream to modify.
-	StreamName *string
-
 	noSmithyDocumentSerde
 }
 
-func (in *DecreaseStreamRetentionPeriodInput) bindEndpointParams(p *EndpointParameters) {
+func (in *UpdateMaxRecordSizeInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
 	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
-type DecreaseStreamRetentionPeriodOutput struct {
+type UpdateMaxRecordSizeOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
 
 	noSmithyDocumentSerde
 }
 
-func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationUpdateMaxRecordSizeMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Serialize.Add(&awsAwsjson11_serializeOpUpdateMaxRecordSize{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpUpdateMaxRecordSize{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	if err := addProtocolFinalizerMiddlewares(stack, options, "DecreaseStreamRetentionPeriod"); err != nil {
+	if err := addProtocolFinalizerMiddlewares(stack, options, "UpdateMaxRecordSize"); err != nil {
 		return fmt.Errorf("add protocol finalizers: %v", err)
 	}
 
@@ -136,10 +126,10 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
-	if err = addOpDecreaseStreamRetentionPeriodValidationMiddleware(stack); err != nil {
+	if err = addOpUpdateMaxRecordSizeValidationMiddleware(stack); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(options.Region), middleware.Before); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUpdateMaxRecordSize(options.Region), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRecursionDetection(stack); err != nil {
@@ -169,10 +159,10 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	return nil
 }
 
-func newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(region string) *awsmiddleware.RegisterServiceMetadata {
+func newServiceMetadataMiddleware_opUpdateMaxRecordSize(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		OperationName: "DecreaseStreamRetentionPeriod",
+		OperationName: "UpdateMaxRecordSize",
 	}
 }
