@@ -15,6 +15,8 @@ import (
 //
 // Invokes a function asynchronously.
 //
+// The payload limit is 256KB. For larger payloads, for up to 1MB, use Invoke.
+//
 // If you do use the InvokeAsync action, note that it doesn't support the use of
 // X-Ray active tracing. Trace ID is not propagated to the function, even if X-Ray
 // active tracing is turned on.
@@ -108,13 +110,16 @@ func (c *Client) addOperationInvokeAsyncMiddlewares(stack *middleware.Stack, opt
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -129,10 +134,10 @@ func (c *Client) addOperationInvokeAsyncMiddlewares(stack *middleware.Stack, opt
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpInvokeAsyncValidationMiddleware(stack); err != nil {
@@ -154,6 +159,15 @@ func (c *Client) addOperationInvokeAsyncMiddlewares(stack *middleware.Stack, opt
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

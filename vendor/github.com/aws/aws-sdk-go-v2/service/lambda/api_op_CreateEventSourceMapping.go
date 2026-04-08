@@ -32,14 +32,11 @@ import (
 //
 // [Amazon DocumentDB]
 //
-// The following error handling options are available only for stream sources
-// (DynamoDB and Kinesis):
+// The following error handling options are available for stream sources
+// (DynamoDB, Kinesis, Amazon MSK, and self-managed Apache Kafka):
 //
 //   - BisectBatchOnFunctionError – If the function returns an error, split the
 //     batch in two and retry.
-//
-//   - DestinationConfig – Send discarded records to an Amazon SQS queue or Amazon
-//     SNS topic.
 //
 //   - MaximumRecordAgeInSeconds – Discard records older than the specified age.
 //     The default value is infinite (-1). When set to infinite (-1), failed records
@@ -48,6 +45,11 @@ import (
 //   - MaximumRetryAttempts – Discard records after the specified number of
 //     retries. The default value is infinite (-1). When set to infinite (-1), failed
 //     records are retried until the record expires.
+//
+//   - OnFailure – Send discarded records to an Amazon SQS queue, Amazon SNS topic,
+//     Kafka topic, or Amazon S3 bucket. For more information, see [Adding a destination].
+//
+// The following option is available only for DynamoDB and Kinesis event sources:
 //
 //   - ParallelizationFactor – Process multiple batches from each shard
 //     concurrently.
@@ -76,6 +78,7 @@ import (
 // [Amazon MQ and RabbitMQ]: https://docs.aws.amazon.com/lambda/latest/dg/with-mq.html#services-mq-params
 // [Apache Kafka]: https://docs.aws.amazon.com/lambda/latest/dg/with-kafka.html#services-kafka-parms
 // [Amazon DocumentDB]: https://docs.aws.amazon.com/lambda/latest/dg/with-documentdb.html#docdb-configuration
+// [Adding a destination]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-async-retain-records.html#invocation-async-destinations
 func (c *Client) CreateEventSourceMapping(ctx context.Context, params *CreateEventSourceMappingInput, optFns ...func(*Options)) (*CreateEventSourceMappingOutput, error) {
 	if params == nil {
 		params = &CreateEventSourceMappingInput{}
@@ -137,11 +140,11 @@ type CreateEventSourceMappingInput struct {
 	//   - DocumentDB – Default 100. Max 10,000.
 	BatchSize *int32
 
-	// (Kinesis and DynamoDB Streams only) If the function returns an error, split the
-	// batch in two and retry.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) If the
+	// function returns an error, split the batch in two and retry.
 	BisectBatchOnFunctionError *bool
 
-	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Kafka only) A
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) A
 	// configuration object that specifies the destination of an event after Lambda
 	// processes it.
 	DestinationConfig *types.DestinationConfig
@@ -179,8 +182,8 @@ type CreateEventSourceMappingInput struct {
 	// [Lambda event filtering]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html
 	FilterCriteria *types.FilterCriteria
 
-	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
-	// enums applied to the event source mapping.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, self-managed Apache Kafka, and Amazon
+	// SQS) A list of current response type enums applied to the event source mapping.
 	FunctionResponseTypes []types.FunctionResponseType
 
 	//  The ARN of the Key Management Service (KMS) customer managed key that Lambda
@@ -190,6 +193,12 @@ type CreateEventSourceMappingInput struct {
 	//
 	// [filter criteria]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-basics
 	KMSKeyArn *string
+
+	// (Amazon MSK, and self-managed Apache Kafka only) The logging configuration for
+	// your event source. For more information, see [Event source mapping logging].
+	//
+	// [Event source mapping logging]: https://docs.aws.amazon.com/lambda/latest/dg/esm-logging.html
+	LoggingConfig *types.EventSourceMappingLoggingConfig
 
 	// The maximum amount of time, in seconds, that Lambda spends gathering records
 	// before invoking the function. You can configure MaximumBatchingWindowInSeconds
@@ -208,18 +217,30 @@ type CreateEventSourceMappingInput struct {
 	// MaximumBatchingWindowInSeconds to at least 1.
 	MaximumBatchingWindowInSeconds *int32
 
-	// (Kinesis and DynamoDB Streams only) Discard records older than the specified
-	// age. The default value is infinite (-1).
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records older than the specified age. The default value is infinite (-1).
 	MaximumRecordAgeInSeconds *int32
 
-	// (Kinesis and DynamoDB Streams only) Discard records after the specified number
-	// of retries. The default value is infinite (-1). When set to infinite (-1),
-	// failed records are retried until the record expires.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records after the specified number of retries. The default value is infinite
+	// (-1). When set to infinite (-1), failed records are retried until the record
+	// expires.
 	MaximumRetryAttempts *int32
+
+	// The metrics configuration for your event source. For more information, see [Event source mapping metrics].
+	//
+	// [Event source mapping metrics]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics-types.html#event-source-mapping-metrics
+	MetricsConfig *types.EventSourceMappingMetricsConfig
 
 	// (Kinesis and DynamoDB Streams only) The number of batches to process from each
 	// shard concurrently.
 	ParallelizationFactor *int32
+
+	// (Amazon SQS, Amazon MSK, and self-managed Apache Kafka only) The provisioned
+	// mode configuration for the event source. For more information, see [provisioned mode].
+	//
+	// [provisioned mode]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode
+	ProvisionedPollerConfig *types.ProvisionedPollerConfig
 
 	//  (MQ) The name of the Amazon MQ broker destination queue to consume.
 	Queues []string
@@ -249,6 +270,9 @@ type CreateEventSourceMappingInput struct {
 	// With StartingPosition set to AT_TIMESTAMP , the time from which to start
 	// reading. StartingPositionTimestamp cannot be in the future.
 	StartingPositionTimestamp *time.Time
+
+	// A list of tags to apply to the event source mapping.
+	Tags map[string]string
 
 	// The name of the Kafka topic.
 	Topics []string
@@ -281,13 +305,14 @@ type CreateEventSourceMappingOutput struct {
 	// set MaximumBatchingWindowInSeconds to at least 1.
 	BatchSize *int32
 
-	// (Kinesis and DynamoDB Streams only) If the function returns an error, split the
-	// batch in two and retry. The default value is false.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) If the
+	// function returns an error, split the batch in two and retry. The default value
+	// is false.
 	BisectBatchOnFunctionError *bool
 
-	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka event
-	// sources only) A configuration object that specifies the destination of an event
-	// after Lambda processes it.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) A
+	// configuration object that specifies the destination of an event after Lambda
+	// processes it.
 	DestinationConfig *types.DestinationConfig
 
 	// Specific configuration settings for a DocumentDB event source.
@@ -295,6 +320,9 @@ type CreateEventSourceMappingOutput struct {
 
 	// The Amazon Resource Name (ARN) of the event source.
 	EventSourceArn *string
+
+	// The Amazon Resource Name (ARN) of the event source mapping.
+	EventSourceMappingArn *string
 
 	// An object that defines the filter criteria that determine whether Lambda should
 	// process an event. For more information, see [Lambda event filtering].
@@ -314,8 +342,8 @@ type CreateEventSourceMappingOutput struct {
 	// The ARN of the Lambda function.
 	FunctionArn *string
 
-	// (Kinesis, DynamoDB Streams, and Amazon SQS) A list of current response type
-	// enums applied to the event source mapping.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, self-managed Apache Kafka, and Amazon
+	// SQS) A list of current response type enums applied to the event source mapping.
 	FunctionResponseTypes []types.FunctionResponseType
 
 	//  The ARN of the Key Management Service (KMS) customer managed key that Lambda
@@ -328,8 +356,14 @@ type CreateEventSourceMappingOutput struct {
 	// changed.
 	LastModified *time.Time
 
-	// The result of the last Lambda invocation of your function.
+	// The result of the event source mapping's last processing attempt.
 	LastProcessingResult *string
+
+	// (Amazon MSK, and self-managed Apache Kafka only) The logging configuration for
+	// your event source. For more information, see [Event source mapping logging].
+	//
+	// [Event source mapping logging]: https://docs.aws.amazon.com/lambda/latest/dg/esm-logging.html
+	LoggingConfig *types.EventSourceMappingLoggingConfig
 
 	// The maximum amount of time, in seconds, that Lambda spends gathering records
 	// before invoking the function. You can configure MaximumBatchingWindowInSeconds
@@ -347,24 +381,37 @@ type CreateEventSourceMappingOutput struct {
 	// MaximumBatchingWindowInSeconds to at least 1.
 	MaximumBatchingWindowInSeconds *int32
 
-	// (Kinesis and DynamoDB Streams only) Discard records older than the specified
-	// age. The default value is -1, which sets the maximum age to infinite. When the
-	// value is set to infinite, Lambda never discards old records.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records older than the specified age. The default value is -1, which sets the
+	// maximum age to infinite. When the value is set to infinite, Lambda never
+	// discards old records.
 	//
 	// The minimum valid value for maximum record age is 60s. Although values less
 	// than 60 and greater than -1 fall within the parameter's absolute range, they are
 	// not allowed
 	MaximumRecordAgeInSeconds *int32
 
-	// (Kinesis and DynamoDB Streams only) Discard records after the specified number
-	// of retries. The default value is -1, which sets the maximum number of retries to
-	// infinite. When MaximumRetryAttempts is infinite, Lambda retries failed records
-	// until the record expires in the event source.
+	// (Kinesis, DynamoDB Streams, Amazon MSK, and self-managed Apache Kafka) Discard
+	// records after the specified number of retries. The default value is -1, which
+	// sets the maximum number of retries to infinite. When MaximumRetryAttempts is
+	// infinite, Lambda retries failed records until the record expires in the event
+	// source.
 	MaximumRetryAttempts *int32
+
+	// The metrics configuration for your event source. For more information, see [Event source mapping metrics].
+	//
+	// [Event source mapping metrics]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-metrics-types.html#event-source-mapping-metrics
+	MetricsConfig *types.EventSourceMappingMetricsConfig
 
 	// (Kinesis and DynamoDB Streams only) The number of batches to process
 	// concurrently from each shard. The default value is 1.
 	ParallelizationFactor *int32
+
+	// (Amazon SQS, Amazon MSK, and self-managed Apache Kafka only) The provisioned
+	// mode configuration for the event source. For more information, see [provisioned mode].
+	//
+	// [provisioned mode]: https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventsourcemapping.html#invocation-eventsourcemapping-provisioned-mode
+	ProvisionedPollerConfig *types.ProvisionedPollerConfig
 
 	//  (Amazon MQ) The name of the Amazon MQ broker destination queue to consume.
 	Queues []string
@@ -454,13 +501,16 @@ func (c *Client) addOperationCreateEventSourceMappingMiddlewares(stack *middlewa
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -475,10 +525,10 @@ func (c *Client) addOperationCreateEventSourceMappingMiddlewares(stack *middlewa
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpCreateEventSourceMappingValidationMiddleware(stack); err != nil {
@@ -500,6 +550,15 @@ func (c *Client) addOperationCreateEventSourceMappingMiddlewares(stack *middlewa
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

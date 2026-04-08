@@ -11,26 +11,26 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Grants an Amazon Web Servicesservice, Amazon Web Services account, or Amazon
-// Web Services organization permission to use a function. You can apply the policy
-// at the function level, or specify a qualifier to restrict access to a single
-// version or alias. If you use a qualifier, the invoker must use the full Amazon
-// Resource Name (ARN) of that version or alias to invoke the function. Note:
-// Lambda does not support adding policies to version $LATEST.
+// Grants a [principal] permission to use a function. You can apply the policy at the
+// function level, or specify a qualifier to restrict access to a single version or
+// alias. If you use a qualifier, the invoker must use the full Amazon Resource
+// Name (ARN) of that version or alias to invoke the function. Note: Lambda does
+// not support adding policies to version $LATEST.
 //
 // To grant permission to another account, specify the account ID as the Principal
 // . To grant permission to an organization defined in Organizations, specify the
-// organization ID as the PrincipalOrgID . For Amazon Web Servicesservices, the
+// organization ID as the PrincipalOrgID . For Amazon Web Services services, the
 // principal is a domain-style identifier that the service defines, such as
-// s3.amazonaws.com or sns.amazonaws.com . For Amazon Web Servicesservices, you can
-// also specify the ARN of the associated resource as the SourceArn . If you grant
-// permission to a service principal without specifying the source, other accounts
-// could potentially configure resources in their account to invoke your Lambda
-// function.
+// s3.amazonaws.com or sns.amazonaws.com . For Amazon Web Services services, you
+// can also specify the ARN of the associated resource as the SourceArn . If you
+// grant permission to a service principal without specifying the source, other
+// accounts could potentially configure resources in their account to invoke your
+// Lambda function.
 //
 // This operation adds a statement to a resource-based permissions policy for the
 // function. For more information about function policies, see [Using resource-based policies for Lambda].
 //
+// [principal]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#Principal_specifying
 // [Using resource-based policies for Lambda]: https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html
 func (c *Client) AddPermission(ctx context.Context, params *AddPermissionInput, optFns ...func(*Options)) (*AddPermissionOutput, error) {
 	if params == nil {
@@ -72,9 +72,9 @@ type AddPermissionInput struct {
 	// This member is required.
 	FunctionName *string
 
-	// The Amazon Web Servicesservice or Amazon Web Services account that invokes the
-	// function. If you specify a service, use SourceArn or SourceAccount to limit who
-	// can invoke the function through that service.
+	// The Amazon Web Services service, Amazon Web Services account, IAM user, or IAM
+	// role that invokes the function. If you specify a service, use SourceArn or
+	// SourceAccount to limit who can invoke the function through that service.
 	//
 	// This member is required.
 	Principal *string
@@ -91,10 +91,14 @@ type AddPermissionInput struct {
 	// The type of authentication that your function URL uses. Set to AWS_IAM if you
 	// want to restrict access to authenticated users only. Set to NONE if you want to
 	// bypass IAM authentication to create a public endpoint. For more information, see
-	// [Security and auth model for Lambda function URLs].
+	// [Control access to Lambda function URLs].
 	//
-	// [Security and auth model for Lambda function URLs]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
+	// [Control access to Lambda function URLs]: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html
 	FunctionUrlAuthType types.FunctionUrlAuthType
+
+	// Indicates whether the permission applies when the function is invoked through a
+	// function URL.
+	InvokedViaFunctionUrl *bool
 
 	// The identifier for your organization in Organizations. Use this to grant
 	// permissions to all the Amazon Web Services accounts under this organization.
@@ -108,13 +112,13 @@ type AddPermissionInput struct {
 	// this option to avoid modifying a policy that has changed since you last read it.
 	RevisionId *string
 
-	// For Amazon Web Servicesservice, the ID of the Amazon Web Services account that
+	// For Amazon Web Services service, the ID of the Amazon Web Services account that
 	// owns the resource. Use this together with SourceArn to ensure that the
 	// specified account owns the resource. It is possible for an Amazon S3 bucket to
 	// be deleted by its owner and recreated by another account.
 	SourceAccount *string
 
-	// For Amazon Web Servicesservices, the ARN of the Amazon Web Services resource
+	// For Amazon Web Services services, the ARN of the Amazon Web Services resource
 	// that invokes the function. For example, an Amazon S3 bucket or Amazon SNS topic.
 	//
 	// Note that Lambda configures the comparison using the StringLike operator.
@@ -168,13 +172,16 @@ func (c *Client) addOperationAddPermissionMiddlewares(stack *middleware.Stack, o
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -189,10 +196,10 @@ func (c *Client) addOperationAddPermissionMiddlewares(stack *middleware.Stack, o
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpAddPermissionValidationMiddleware(stack); err != nil {
@@ -214,6 +221,15 @@ func (c *Client) addOperationAddPermissionMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil
