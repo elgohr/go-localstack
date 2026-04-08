@@ -58,9 +58,14 @@ type UpdateFunctionEventInvokeConfigInput struct {
 	//
 	//   - Queue - The ARN of a standard SQS queue.
 	//
+	//   - Bucket - The ARN of an Amazon S3 bucket.
+	//
 	//   - Topic - The ARN of a standard SNS topic.
 	//
 	//   - Event Bus - The ARN of an Amazon EventBridge event bus.
+	//
+	// S3 buckets are supported only for on-failure destinations. To retain records of
+	// successful invocations, use another destination type.
 	DestinationConfig *types.DestinationConfig
 
 	// The maximum age of a request that Lambda sends to a function for processing.
@@ -85,9 +90,14 @@ type UpdateFunctionEventInvokeConfigOutput struct {
 	//
 	//   - Queue - The ARN of a standard SQS queue.
 	//
+	//   - Bucket - The ARN of an Amazon S3 bucket.
+	//
 	//   - Topic - The ARN of a standard SNS topic.
 	//
 	//   - Event Bus - The ARN of an Amazon EventBridge event bus.
+	//
+	// S3 buckets are supported only for on-failure destinations. To retain records of
+	// successful invocations, use another destination type.
 	DestinationConfig *types.DestinationConfig
 
 	// The Amazon Resource Name (ARN) of the function.
@@ -142,13 +152,16 @@ func (c *Client) addOperationUpdateFunctionEventInvokeConfigMiddlewares(stack *m
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -163,10 +176,10 @@ func (c *Client) addOperationUpdateFunctionEventInvokeConfigMiddlewares(stack *m
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpUpdateFunctionEventInvokeConfigValidationMiddleware(stack); err != nil {
@@ -188,6 +201,15 @@ func (c *Client) addOperationUpdateFunctionEventInvokeConfigMiddlewares(stack *m
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

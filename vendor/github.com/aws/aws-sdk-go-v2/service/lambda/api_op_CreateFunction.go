@@ -14,8 +14,8 @@ import (
 // Creates a Lambda function. To create a function, you need a [deployment package] and an [execution role]. The
 // deployment package is a .zip file archive or container image that contains your
 // function code. The execution role grants the function permission to use Amazon
-// Web Servicesservices, such as Amazon CloudWatch Logs for log streaming and X-Ray
-// for request tracing.
+// Web Services services, such as Amazon CloudWatch Logs for log streaming and
+// X-Ray for request tracing.
 //
 // If the deployment package is a [container image], then you set the package type to Image . For a
 // container image, the code property must include the URI of a container image in
@@ -54,15 +54,15 @@ import (
 // code-signing configuration includes set of signing profiles, which define the
 // trusted publishers for this function.
 //
-// If another Amazon Web Services account or an Amazon Web Servicesservice invokes
-// your function, use AddPermissionto grant permission by creating a resource-based Identity
-// and Access Management (IAM) policy. You can grant permissions at the function
-// level, on a version, or on an alias.
+// If another Amazon Web Services account or an Amazon Web Services service
+// invokes your function, use AddPermissionto grant permission by creating a resource-based
+// Identity and Access Management (IAM) policy. You can grant permissions at the
+// function level, on a version, or on an alias.
 //
 // To invoke your function directly, use Invoke. To invoke your function in response to
-// events in other Amazon Web Servicesservices, create an event source mapping (CreateEventSourceMapping ),
-// or configure a function trigger in the other service. For more information, see [Invoking Lambda functions]
-// .
+// events in other Amazon Web Services services, create an event source mapping (CreateEventSourceMapping
+// ), or configure a function trigger in the other service. For more information,
+// see [Invoking Lambda functions].
 //
 // [Invoking Lambda functions]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html
 // [Lambda function states]: https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html
@@ -118,6 +118,10 @@ type CreateFunctionInput struct {
 	// x86_64 .
 	Architectures []types.Architecture
 
+	// Configuration for the capacity provider that manages compute resources for
+	// Lambda functions.
+	CapacityProviderConfig *types.CapacityProviderConfig
+
 	// To enable code signing for this function, specify the ARN of a code-signing
 	// configuration. A code-signing configuration includes a set of signing profiles,
 	// which define the trusted publishers for this function.
@@ -132,6 +136,11 @@ type CreateFunctionInput struct {
 
 	// A description of the function.
 	Description *string
+
+	// Configuration settings for durable functions. Enables creating functions with
+	// durability that can remember their state and continue execution even after
+	// interruptions.
+	DurableConfig *types.DurableConfig
 
 	// Environment variables that are accessible from function code during execution.
 	Environment *types.Environment
@@ -159,15 +168,28 @@ type CreateFunctionInput struct {
 	ImageConfig *types.ImageConfig
 
 	// The ARN of the Key Management Service (KMS) customer managed key that's used to
-	// encrypt your function's [environment variables]. When [Lambda SnapStart] is activated, Lambda also uses this key is to
-	// encrypt your function's snapshot. If you deploy your function using a container
-	// image, Lambda also uses this key to encrypt your function when it's deployed.
-	// Note that this is not the same key that's used to protect your container image
-	// in the Amazon Elastic Container Registry (Amazon ECR). If you don't provide a
-	// customer managed key, Lambda uses a default service key.
+	// encrypt the following resources:
 	//
+	//   - The function's [environment variables].
+	//
+	//   - The function's [Lambda SnapStart]snapshots.
+	//
+	//   - When used with SourceKMSKeyArn , the unzipped version of the .zip deployment
+	//   package that's used for function invocations. For more information, see [Specifying a customer managed key for Lambda].
+	//
+	//   - The optimized version of the container image that's used for function
+	//   invocations. Note that this is not the same key that's used to protect your
+	//   container image in the Amazon Elastic Container Registry (Amazon ECR). For more
+	//   information, see [Function lifecycle].
+	//
+	// If you don't provide a customer managed key, Lambda uses an [Amazon Web Services owned key] or an [Amazon Web Services managed key].
+	//
+	// [Amazon Web Services owned key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk
+	// [Specifying a customer managed key for Lambda]: https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption
 	// [Lambda SnapStart]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
 	// [environment variables]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+	// [Function lifecycle]: https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle
+	// [Amazon Web Services managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk
 	KMSKeyArn *string
 
 	// A list of [function layers] to add to the function's execution environment. Specify each layer
@@ -193,6 +215,9 @@ type CreateFunctionInput struct {
 	// Set to true to publish the first version of the function during creation.
 	Publish bool
 
+	// Specifies where to publish the function version or configuration.
+	PublishTo types.FunctionVersionLatestPublished
+
 	// The identifier of the function's [runtime]. Runtime is required if the deployment
 	// package is a .zip file archive. Specifying a runtime results in an error if
 	// you're deploying a function using a container image.
@@ -217,6 +242,11 @@ type CreateFunctionInput struct {
 	//
 	// [tags]: https://docs.aws.amazon.com/lambda/latest/dg/tagging.html
 	Tags map[string]string
+
+	// Configuration for multi-tenant applications that use Lambda functions. Defines
+	// tenant isolation settings and resource allocations. Required for functions
+	// supporting multiple tenants.
+	TenancyConfig *types.TenancyConfig
 
 	// The amount of time (in seconds) that Lambda allows a function to run before
 	// stopping it. The default is 3 seconds. The maximum allowed value is 900 seconds.
@@ -249,17 +279,28 @@ type CreateFunctionOutput struct {
 	// x86_64 .
 	Architectures []types.Architecture
 
+	// Configuration for the capacity provider that manages compute resources for
+	// Lambda functions.
+	CapacityProviderConfig *types.CapacityProviderConfig
+
 	// The SHA256 hash of the function's deployment package.
 	CodeSha256 *string
 
 	// The size of the function's deployment package, in bytes.
 	CodeSize int64
 
+	// The SHA256 hash of the function configuration.
+	ConfigSha256 *string
+
 	// The function's dead letter queue.
 	DeadLetterConfig *types.DeadLetterConfig
 
 	// The function's description.
 	Description *string
+
+	// The function's durable execution configuration settings, if the function is
+	// configured for durability.
+	DurableConfig *types.DurableConfig
 
 	// The function's [environment variables]. Omitted from CloudTrail logs.
 	//
@@ -289,12 +330,29 @@ type CreateFunctionOutput struct {
 	// The function's image configuration values.
 	ImageConfigResponse *types.ImageConfigResponse
 
-	// The KMS key that's used to encrypt the function's [environment variables]. When [Lambda SnapStart] is activated, this
-	// key is also used to encrypt the function's snapshot. This key is returned only
-	// if you've configured a customer managed key.
+	// The ARN of the Key Management Service (KMS) customer managed key that's used to
+	// encrypt the following resources:
 	//
+	//   - The function's [environment variables].
+	//
+	//   - The function's [Lambda SnapStart]snapshots.
+	//
+	//   - When used with SourceKMSKeyArn , the unzipped version of the .zip deployment
+	//   package that's used for function invocations. For more information, see [Specifying a customer managed key for Lambda].
+	//
+	//   - The optimized version of the container image that's used for function
+	//   invocations. Note that this is not the same key that's used to protect your
+	//   container image in the Amazon Elastic Container Registry (Amazon ECR). For more
+	//   information, see [Function lifecycle].
+	//
+	// If you don't provide a customer managed key, Lambda uses an [Amazon Web Services owned key] or an [Amazon Web Services managed key].
+	//
+	// [Amazon Web Services owned key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk
+	// [Specifying a customer managed key for Lambda]: https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption
 	// [Lambda SnapStart]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
 	// [environment variables]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+	// [Function lifecycle]: https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle
+	// [Amazon Web Services managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk
 	KMSKeyArn *string
 
 	// The date and time that the function was last updated, in [ISO-8601 format]
@@ -379,6 +437,10 @@ type CreateFunctionOutput struct {
 	// you can't invoke or modify the function.
 	StateReasonCode types.StateReasonCode
 
+	// The function's tenant isolation configuration settings. Determines whether the
+	// Lambda function runs on a shared or dedicated infrastructure per unique tenant.
+	TenancyConfig *types.TenancyConfig
+
 	// The amount of time in seconds that Lambda allows a function to run before
 	// stopping it.
 	Timeout *int32
@@ -432,13 +494,16 @@ func (c *Client) addOperationCreateFunctionMiddlewares(stack *middleware.Stack, 
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -453,10 +518,10 @@ func (c *Client) addOperationCreateFunctionMiddlewares(stack *middleware.Stack, 
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpCreateFunctionValidationMiddleware(stack); err != nil {
@@ -478,6 +543,15 @@ func (c *Client) addOperationCreateFunctionMiddlewares(stack *middleware.Stack, 
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

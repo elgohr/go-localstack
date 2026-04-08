@@ -85,6 +85,9 @@ type UpdateFunctionCodeInput struct {
 	// This has the same effect as calling PublishVersionseparately.
 	Publish bool
 
+	// Specifies where to publish the function version or configuration.
+	PublishTo types.FunctionVersionLatestPublished
+
 	// Update the function only if the revision ID matches the ID that's specified.
 	// Use this option to avoid modifying a function that has changed since you last
 	// read it.
@@ -102,6 +105,11 @@ type UpdateFunctionCodeInput struct {
 	// For versioned objects, the version of the deployment package object to use.
 	S3ObjectVersion *string
 
+	// The ARN of the Key Management Service (KMS) customer managed key that's used to
+	// encrypt your function's .zip deployment package. If you don't provide a customer
+	// managed key, Lambda uses an Amazon Web Services managed key.
+	SourceKMSKeyArn *string
+
 	// The base64-encoded contents of the deployment package. Amazon Web Services SDK
 	// and CLI clients handle the encoding for you. Use only with a function defined
 	// with a .zip file archive deployment package.
@@ -118,17 +126,28 @@ type UpdateFunctionCodeOutput struct {
 	// x86_64 .
 	Architectures []types.Architecture
 
+	// Configuration for the capacity provider that manages compute resources for
+	// Lambda functions.
+	CapacityProviderConfig *types.CapacityProviderConfig
+
 	// The SHA256 hash of the function's deployment package.
 	CodeSha256 *string
 
 	// The size of the function's deployment package, in bytes.
 	CodeSize int64
 
+	// The SHA256 hash of the function configuration.
+	ConfigSha256 *string
+
 	// The function's dead letter queue.
 	DeadLetterConfig *types.DeadLetterConfig
 
 	// The function's description.
 	Description *string
+
+	// The function's durable execution configuration settings, if the function is
+	// configured for durability.
+	DurableConfig *types.DurableConfig
 
 	// The function's [environment variables]. Omitted from CloudTrail logs.
 	//
@@ -158,12 +177,29 @@ type UpdateFunctionCodeOutput struct {
 	// The function's image configuration values.
 	ImageConfigResponse *types.ImageConfigResponse
 
-	// The KMS key that's used to encrypt the function's [environment variables]. When [Lambda SnapStart] is activated, this
-	// key is also used to encrypt the function's snapshot. This key is returned only
-	// if you've configured a customer managed key.
+	// The ARN of the Key Management Service (KMS) customer managed key that's used to
+	// encrypt the following resources:
 	//
+	//   - The function's [environment variables].
+	//
+	//   - The function's [Lambda SnapStart]snapshots.
+	//
+	//   - When used with SourceKMSKeyArn , the unzipped version of the .zip deployment
+	//   package that's used for function invocations. For more information, see [Specifying a customer managed key for Lambda].
+	//
+	//   - The optimized version of the container image that's used for function
+	//   invocations. Note that this is not the same key that's used to protect your
+	//   container image in the Amazon Elastic Container Registry (Amazon ECR). For more
+	//   information, see [Function lifecycle].
+	//
+	// If you don't provide a customer managed key, Lambda uses an [Amazon Web Services owned key] or an [Amazon Web Services managed key].
+	//
+	// [Amazon Web Services owned key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-owned-cmk
+	// [Specifying a customer managed key for Lambda]: https://docs.aws.amazon.com/lambda/latest/dg/encrypt-zip-package.html#enable-zip-custom-encryption
 	// [Lambda SnapStart]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart-security.html
 	// [environment variables]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-encryption
+	// [Function lifecycle]: https://docs.aws.amazon.com/lambda/latest/dg/images-create.html#images-lifecycle
+	// [Amazon Web Services managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk
 	KMSKeyArn *string
 
 	// The date and time that the function was last updated, in [ISO-8601 format]
@@ -248,6 +284,10 @@ type UpdateFunctionCodeOutput struct {
 	// you can't invoke or modify the function.
 	StateReasonCode types.StateReasonCode
 
+	// The function's tenant isolation configuration settings. Determines whether the
+	// Lambda function runs on a shared or dedicated infrastructure per unique tenant.
+	TenancyConfig *types.TenancyConfig
+
 	// The amount of time in seconds that Lambda allows a function to run before
 	// stopping it.
 	Timeout *int32
@@ -301,13 +341,16 @@ func (c *Client) addOperationUpdateFunctionCodeMiddlewares(stack *middleware.Sta
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -322,10 +365,10 @@ func (c *Client) addOperationUpdateFunctionCodeMiddlewares(stack *middleware.Sta
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpUpdateFunctionCodeValidationMiddleware(stack); err != nil {
@@ -347,6 +390,15 @@ func (c *Client) addOperationUpdateFunctionCodeMiddlewares(stack *middleware.Sta
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

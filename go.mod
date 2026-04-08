@@ -19,7 +19,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.29.7
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.58.3
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.5
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.46.8
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.61.2

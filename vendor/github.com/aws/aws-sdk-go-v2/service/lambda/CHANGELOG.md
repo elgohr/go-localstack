@@ -1,3 +1,370 @@
+# v1.88.5 (2026-03-26)
+
+* **Bug Fix**: Fix a bug where a recorded clock skew could persist on the client even if the client and server clock ended up realigning.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.88.4 (2026-03-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.88.3 (2026-03-13)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.88.2 (2026-03-03)
+
+* **Dependency Update**: Bump minimum Go version to 1.24
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.88.1 (2026-02-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.88.0 (2026-01-28)
+
+* **Feature**: We are launching ESM Metrics and logging for Kafka ESM to allow customers to monitor Kafka event processing using CloudWatch Metrics and Logs.
+
+# v1.87.1 (2026-01-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.87.0 (2025-12-11)
+
+* **Feature**: Add Dotnet 10 (dotnet10) support to AWS Lambda.
+
+# v1.86.2 (2025-12-09)
+
+* No change notes available for this release.
+
+# v1.86.1 (2025-12-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.86.0 (2025-12-04)
+
+* **Feature**: Add DisallowedByVpcEncryptionControl to the LastUpdateStatusReasonCode and StateReasonCode enums to represent failures caused by VPC Encryption Controls.
+
+# v1.85.0 (2025-12-02)
+
+* **Feature**: Launching Lambda durable functions - a new feature to build reliable multi-step applications and AI workflows natively within the Lambda developer experience.
+* **Dependency Update**: Updated to the latest SDK module versions
+* **Dependency Update**: Upgrade to smithy-go v1.24.0. Notably this version of the library reduces the allocation footprint of the middleware system. We observe a ~10% reduction in allocations per SDK call with this change.
+
+# v1.84.0 (2025-12-01)
+
+* **Feature**: Launching Lambda Managed Instances - a new feature to run Lambda on EC2.
+
+# v1.83.1 (2025-11-25)
+
+* **Bug Fix**: Add error check for endpoint param binding during auth scheme resolution to fix panic reported in #3234
+
+# v1.83.0 (2025-11-21)
+
+* **Feature**: Launching Enhanced Error Handling and ESM Grouping capabilities for Kafka ESMs
+
+# v1.82.1 (2025-11-19.2)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.82.0 (2025-11-19)
+
+* **Feature**: Added support for creating and invoking Tenant Isolated functions in AWS Lambda APIs.
+
+# v1.81.3 (2025-11-12)
+
+* **Bug Fix**: Further reduce allocation overhead when the metrics system isn't in-use.
+* **Bug Fix**: Reduce allocation overhead when the client doesn't have any HTTP interceptors configured.
+* **Bug Fix**: Remove blank trace spans towards the beginning of the request that added no additional information. This conveys a slight reduction in overall allocations.
+
+# v1.81.2 (2025-11-11)
+
+* **Bug Fix**: Return validation error if input region is not a valid host label.
+
+# v1.81.1 (2025-11-04)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+* **Dependency Update**: Upgrade to smithy-go v1.23.2 which should convey some passive reduction of overall allocations, especially when not using the metrics system.
+
+# v1.81.0 (2025-10-31)
+
+* **Feature**: Add Python3.14 (python3.14) and Java 25 (java25) support to AWS Lambda
+
+# v1.80.1 (2025-10-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.80.0 (2025-10-28)
+
+* **Feature**: Added SerializedRequestEntityTooLargeException to Lambda Invoke API
+
+# v1.79.0 (2025-10-23)
+
+* **Feature**: Add NodeJs 24 (nodejs24.x) support to AWS Lambda.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.78.2 (2025-10-22)
+
+* No change notes available for this release.
+
+# v1.78.1 (2025-10-16)
+
+* **Dependency Update**: Bump minimum Go version to 1.23.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.78.0 (2025-10-10)
+
+* **Feature**: Add InvokedViaFunctionUrl context key to limit invocations to only FURL invokes.
+
+# v1.77.6 (2025-09-26)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.77.5 (2025-09-23)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.77.4 (2025-09-10)
+
+* No change notes available for this release.
+
+# v1.77.3 (2025-09-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.77.2 (2025-08-29)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.77.1 (2025-08-27)
+
+* **Dependency Update**: Update to smithy-go v1.23.0.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.77.0 (2025-08-25)
+
+* **Feature**: Remove incorrect endpoint tests
+
+# v1.76.2 (2025-08-21)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.76.1 (2025-08-20)
+
+* **Bug Fix**: Remove unused deserialization code.
+
+# v1.76.0 (2025-08-11)
+
+* **Feature**: Add support for configuring per-service Options via callback on global config.
+* **Documentation**: Doc-only update for Lambda that updates the maximum payload size for response streaming invocations to 200 MB.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.75.0 (2025-08-04)
+
+* **Feature**: Support configurable auth scheme preferences in service clients via AWS_AUTH_SCHEME_PREFERENCE in the environment, auth_scheme_preference in the config file, and through in-code settings on LoadDefaultConfig and client constructor methods.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.74.1 (2025-07-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.74.0 (2025-07-28)
+
+* **Feature**: Add support for HTTP interceptors.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.73.0 (2025-07-22)
+
+* **Feature**: This release migrated the model to Smithy keeping all features unchanged.
+
+# v1.72.1 (2025-07-19)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.72.0 (2025-06-19)
+
+* **Feature**: Support Schema Registry feature for Kafka Event Source Mapping. Customers can now configure a Schema Registry to enable schema validation and filtering for Avro, Protobuf, and JSON-formatted events in Lambda for Kafka Event Source.
+
+# v1.71.5 (2025-06-17)
+
+* **Dependency Update**: Update to smithy-go v1.22.4.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.71.4 (2025-06-10)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.71.3 (2025-06-06)
+
+* No change notes available for this release.
+
+# v1.71.2 (2025-04-10)
+
+* No change notes available for this release.
+
+# v1.71.1 (2025-04-03)
+
+* No change notes available for this release.
+
+# v1.71.0 (2025-03-19)
+
+* **Feature**: Add Ruby 3.4 (ruby3.4) support to AWS Lambda.
+
+# v1.70.1 (2025-03-04.2)
+
+* **Bug Fix**: Add assurance test for operation order.
+
+# v1.70.0 (2025-02-27)
+
+* **Feature**: Track credential providers via User-Agent Feature ids
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.14 (2025-02-18)
+
+* **Bug Fix**: Bump go version to 1.22
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.13 (2025-02-14)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.12 (2025-02-05)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.11 (2025-02-04)
+
+* No change notes available for this release.
+
+# v1.69.10 (2025-01-31)
+
+* **Dependency Update**: Switch to code-generated waiter matchers, removing the dependency on go-jmespath.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.9 (2025-01-30)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.8 (2025-01-24)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+* **Dependency Update**: Upgrade to smithy-go v1.22.2.
+
+# v1.69.7 (2025-01-17)
+
+* **Bug Fix**: Fix bug where credentials weren't refreshed during retry loop.
+
+# v1.69.6 (2025-01-15)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.5 (2025-01-14)
+
+* **Bug Fix**: Fix issue where waiters were not failing on unmatched errors as they should. This may have breaking behavioral changes for users in fringe cases. See [this announcement](https://github.com/aws/aws-sdk-go-v2/discussions/2954) for more information.
+
+# v1.69.4 (2025-01-09)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.3 (2025-01-08)
+
+* No change notes available for this release.
+
+# v1.69.2 (2024-12-19)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.1 (2024-12-02)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.69.0 (2024-11-22)
+
+* **Feature**: Add ProvisionedPollerConfig to Lambda event-source-mapping API.
+
+# v1.68.0 (2024-11-21)
+
+* **Feature**: Adds support for metrics for event source mappings for AWS Lambda
+
+# v1.67.0 (2024-11-20)
+
+* **Feature**: Add Node 22.x (node22.x) support to AWS Lambda
+
+# v1.66.1 (2024-11-18)
+
+* **Dependency Update**: Update to smithy-go v1.22.1.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.66.0 (2024-11-11)
+
+* **Feature**: Add Python 3.13 (python3.13) support to AWS Lambda
+
+# v1.65.0 (2024-11-08)
+
+* **Feature**: This release adds support for using AWS KMS customer managed keys to encrypt AWS Lambda .zip deployment packages.
+
+# v1.64.3 (2024-11-07)
+
+* **Bug Fix**: Adds case-insensitive handling of error message fields in service responses
+
+# v1.64.2 (2024-11-06)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.64.1 (2024-10-28)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.64.0 (2024-10-25)
+
+* **Feature**: Add TagsError field in Lambda GetFunctionResponse. The TagsError field contains details related to errors retrieving tags.
+
+# v1.63.2 (2024-10-08)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.63.1 (2024-10-07)
+
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.63.0 (2024-10-04)
+
+* **Feature**: Add support for HTTP client metrics.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.62.2 (2024-10-03)
+
+* No change notes available for this release.
+
+# v1.62.1 (2024-09-27)
+
+* No change notes available for this release.
+
+# v1.62.0 (2024-09-26)
+
+* **Feature**: Reverting Lambda resource-based policy and block public access APIs.
+
+# v1.61.2 (2024-09-25)
+
+* No change notes available for this release.
+
+# v1.61.1 (2024-09-23)
+
+* No change notes available for this release.
+
+# v1.61.0 (2024-09-20)
+
+* **Feature**: Add tracing and metrics support to service clients.
+* **Dependency Update**: Updated to the latest SDK module versions
+
+# v1.60.0 (2024-09-19)
+
+* **Feature**: Tagging support for Lambda event source mapping, and code signing configuration resources.
+
+# v1.59.0 (2024-09-17)
+
+* **Feature**: Support for JSON resource-based policies and block public access
+* **Bug Fix**: **BREAKFIX**: Only generate AccountIDEndpointMode config for services that use it. This is a compiler break, but removes no actual functionality, as no services currently use the account ID in endpoint resolution.
+
 # v1.58.3 (2024-09-04)
 
 * No change notes available for this release.
