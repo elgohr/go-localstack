@@ -18,11 +18,11 @@ import (
 // The maximum number of metric filters that can be associated with a log group is
 // 100.
 //
-// Using regular expressions to create metric filters is supported. For these
-// filters, there is a quotas of quota of two regular expression patterns within a
-// single filter pattern. There is also a quota of five regular expression patterns
-// per log group. For more information about using regular expressions in metric
-// filters, see [Filter pattern syntax for metric filters, subscription filters, filter log events, and Live Tail].
+// Using regular expressions in filter patterns is supported. For these filters,
+// there is a quota of two regular expression patterns within a single filter
+// pattern. There is also a quota of five regular expression patterns per log
+// group. For more information about using regular expressions in filter patterns,
+// see [Filter pattern syntax for metric filters, subscription filters, filter log events, and Live Tail].
 //
 // When you create a metric filter, you can also optionally assign a unit and
 // dimensions to the metric that is created.
@@ -79,6 +79,29 @@ type PutMetricFilterInput struct {
 	// This member is required.
 	MetricTransformations []types.MetricTransformation
 
+	// This parameter is valid only for log groups that have an active log
+	// transformer. For more information about log transformers, see [PutTransformer].
+	//
+	// If the log group uses either a log-group level or account-level transformer,
+	// and you specify true , the metric filter will be applied on the transformed
+	// version of the log events instead of the original ingested log events.
+	//
+	// [PutTransformer]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutTransformer.html
+	ApplyOnTransformedLogs bool
+
+	// A list of system fields to emit as additional dimensions in the generated
+	// metrics. Valid values are @aws.account and @aws.region . These dimensions help
+	// identify the source of centralized log data and count toward the total dimension
+	// limit for metric filters.
+	EmitSystemFieldDimensions []string
+
+	// A filter expression that specifies which log events should be processed by this
+	// metric filter based on system fields such as source account and source region.
+	// Uses selection criteria syntax with operators like = , != , AND , OR , IN , NOT
+	// IN . Example: @aws.region = "us-east-1" or @aws.account IN ["123456789012",
+	// "987654321098"] . Maximum length: 2000 characters.
+	FieldSelectionCriteria *string
+
 	noSmithyDocumentSerde
 }
 
@@ -123,13 +146,16 @@ func (c *Client) addOperationPutMetricFilterMiddlewares(stack *middleware.Stack,
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -144,10 +170,10 @@ func (c *Client) addOperationPutMetricFilterMiddlewares(stack *middleware.Stack,
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpPutMetricFilterValidationMiddleware(stack); err != nil {
@@ -169,6 +195,15 @@ func (c *Client) addOperationPutMetricFilterMiddlewares(stack *middleware.Stack,
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

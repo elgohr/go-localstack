@@ -31,11 +31,16 @@ import (
 // same S3 bucket. To separate log data for each export task, specify a prefix to
 // be used as the Amazon S3 key prefix for all exported objects.
 //
+// We recommend that you don't regularly export to Amazon S3 as a way to
+// continuously archive your logs. For that use case, we instead recommend that you
+// use subscriptions. For more information about subscriptions, see [Real-time processing of log data with subscriptions].
+//
 // Time-based sorting on chunks of log data inside an exported file is not
 // guaranteed. You can sort the exported log field data by using Linux utilities.
 //
 // [CancelExportTask]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CancelExportTask.html
 // [DescribeExportTasks]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeExportTasks.html
+// [Real-time processing of log data with subscriptions]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/Subscriptions.html
 func (c *Client) CreateExportTask(ctx context.Context, params *CreateExportTaskInput, optFns ...func(*Options)) (*CreateExportTaskOutput, error) {
 	if params == nil {
 		params = &CreateExportTaskInput{}
@@ -83,6 +88,10 @@ type CreateExportTaskInput struct {
 
 	// The prefix used as the start of the key for every object exported. If you don't
 	// specify a value, the default is exportedlogs .
+	//
+	// The length of this parameter must comply with the S3 object key name length
+	// limits. The object key name is a sequence of Unicode characters with UTF-8
+	// encoding, and can be up to 1,024 bytes.
 	DestinationPrefix *string
 
 	// Export only log streams that match the provided prefix. If you don't specify a
@@ -140,13 +149,16 @@ func (c *Client) addOperationCreateExportTaskMiddlewares(stack *middleware.Stack
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -161,10 +173,10 @@ func (c *Client) addOperationCreateExportTaskMiddlewares(stack *middleware.Stack
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpCreateExportTaskValidationMiddleware(stack); err != nil {
@@ -186,6 +198,15 @@ func (c *Client) addOperationCreateExportTaskMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

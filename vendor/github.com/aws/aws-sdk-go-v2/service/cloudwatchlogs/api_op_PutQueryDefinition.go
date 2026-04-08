@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
@@ -60,17 +61,24 @@ type PutQueryDefinitionInput struct {
 	QueryString *string
 
 	// Used as an idempotency token, to avoid returning an exception if the service
-	// receives the same request twice because of a network
-	//
-	// error.
+	// receives the same request twice because of a network error.
 	ClientToken *string
 
 	// Use this parameter to include specific log groups as part of your query
-	// definition.
+	// definition. If your query uses the OpenSearch Service query language, you
+	// specify the log group names inside the querystring instead of here.
 	//
-	// If you are updating a query definition and you omit this parameter, then the
-	// updated definition will contain no log groups.
+	// If you are updating an existing query definition for the Logs Insights QL or
+	// OpenSearch Service PPL and you omit this parameter, then the updated definition
+	// will contain no log groups.
 	LogGroupNames []string
+
+	// Use this parameter to include specific query parameters as part of your query
+	// definition. Query parameters are supported only for Logs Insights QL queries.
+	// Query parameters allow you to use placeholder variables in your query string
+	// that are substituted with values at execution time. Use the {{parameterName}}
+	// syntax in your query string to reference a parameter.
+	Parameters []types.QueryParameter
 
 	// If you are updating a query definition, use this parameter to specify the ID of
 	// the query definition that you want to update. You can use [DescribeQueryDefinitions]to retrieve the IDs
@@ -82,6 +90,13 @@ type PutQueryDefinitionInput struct {
 	//
 	// [DescribeQueryDefinitions]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_DescribeQueryDefinitions.html
 	QueryDefinitionId *string
+
+	// Specify the query language to use for this query. The options are Logs Insights
+	// QL, OpenSearch PPL, and OpenSearch SQL. For more information about the query
+	// languages that CloudWatch Logs supports, see [Supported query languages].
+	//
+	// [Supported query languages]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_AnalyzeLogData_Languages.html
+	QueryLanguage types.QueryLanguage
 
 	noSmithyDocumentSerde
 }
@@ -131,13 +146,16 @@ func (c *Client) addOperationPutQueryDefinitionMiddlewares(stack *middleware.Sta
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -152,10 +170,10 @@ func (c *Client) addOperationPutQueryDefinitionMiddlewares(stack *middleware.Sta
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addIdempotencyToken_opPutQueryDefinitionMiddleware(stack, options); err != nil {
@@ -180,6 +198,15 @@ func (c *Client) addOperationPutQueryDefinitionMiddlewares(stack *middleware.Sta
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

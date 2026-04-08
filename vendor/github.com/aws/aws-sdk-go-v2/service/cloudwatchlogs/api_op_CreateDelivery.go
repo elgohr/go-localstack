@@ -19,7 +19,7 @@ import (
 // Permissions] in the table at [Enabling logging from Amazon Web Services services.]
 //
 // A delivery destination can represent a log group in CloudWatch Logs, an Amazon
-// S3 bucket, or a delivery stream in Firehose.
+// S3 bucket, a delivery stream in Firehose, or X-Ray.
 //
 // To configure logs delivery between a supported Amazon Web Services service and
 // a destination, you must do the following:
@@ -42,13 +42,13 @@ import (
 // deliveries to configure multiple delivery sources to send logs to the same
 // delivery destination.
 //
-// You can't update an existing delivery. You can only create and delete
-// deliveries.
+// To update an existing delivery configuration, use [UpdateDeliveryConfiguration].
 //
 // [PutDeliveryDestination]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDeliveryDestination.html
 // [PutDeliverySource]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDeliverySource.html
 // [Enabling logging from Amazon Web Services services.]: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AWS-logs-and-resource-policy.html
 // [PutDeliveryDestinationPolicy]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDeliveryDestinationPolicy.html
+// [UpdateDeliveryConfiguration]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_UpdateDeliveryConfiguration.html
 func (c *Client) CreateDelivery(ctx context.Context, params *CreateDeliveryInput, optFns ...func(*Options)) (*CreateDeliveryOutput, error) {
 	if params == nil {
 		params = &CreateDeliveryInput{}
@@ -81,10 +81,10 @@ type CreateDeliveryInput struct {
 	FieldDelimiter *string
 
 	// The list of record fields to be delivered to the destination, in order. If the
-	// delivery’s log source has mandatory fields, they must be included in this list.
+	// delivery's log source has mandatory fields, they must be included in this list.
 	RecordFields []string
 
-	// This structure contains parameters that are valid only when the delivery’s
+	// This structure contains parameters that are valid only when the delivery's
 	// delivery destination is an S3 bucket.
 	S3DeliveryConfiguration *types.S3DeliveryConfiguration
 
@@ -143,13 +143,16 @@ func (c *Client) addOperationCreateDeliveryMiddlewares(stack *middleware.Stack, 
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -164,10 +167,10 @@ func (c *Client) addOperationCreateDeliveryMiddlewares(stack *middleware.Stack, 
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpCreateDeliveryValidationMiddleware(stack); err != nil {
@@ -189,6 +192,15 @@ func (c *Client) addOperationCreateDeliveryMiddlewares(stack *middleware.Stack, 
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

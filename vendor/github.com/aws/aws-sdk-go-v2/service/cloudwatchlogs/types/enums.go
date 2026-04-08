@@ -2,6 +2,29 @@
 
 package types
 
+type ActionStatus string
+
+// Enum values for ActionStatus
+const (
+	ActionStatusInProgress  ActionStatus = "IN_PROGRESS"
+	ActionStatusClientError ActionStatus = "CLIENT_ERROR"
+	ActionStatusFailed      ActionStatus = "FAILED"
+	ActionStatusComplete    ActionStatus = "COMPLETE"
+)
+
+// Values returns all known values for ActionStatus. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ActionStatus) Values() []ActionStatus {
+	return []ActionStatus{
+		"IN_PROGRESS",
+		"CLIENT_ERROR",
+		"FAILED",
+		"COMPLETE",
+	}
+}
+
 type AnomalyDetectorStatus string
 
 // Enum values for AnomalyDetectorStatus
@@ -56,9 +79,10 @@ type DeliveryDestinationType string
 
 // Enum values for DeliveryDestinationType
 const (
-	DeliveryDestinationTypeS3  DeliveryDestinationType = "S3"
-	DeliveryDestinationTypeCwl DeliveryDestinationType = "CWL"
-	DeliveryDestinationTypeFh  DeliveryDestinationType = "FH"
+	DeliveryDestinationTypeS3   DeliveryDestinationType = "S3"
+	DeliveryDestinationTypeCwl  DeliveryDestinationType = "CWL"
+	DeliveryDestinationTypeFh   DeliveryDestinationType = "FH"
+	DeliveryDestinationTypeXray DeliveryDestinationType = "XRAY"
 )
 
 // Values returns all known values for DeliveryDestinationType. Note that this can
@@ -70,6 +94,7 @@ func (DeliveryDestinationType) Values() []DeliveryDestinationType {
 		"S3",
 		"CWL",
 		"FH",
+		"XRAY",
 	}
 }
 
@@ -148,6 +173,56 @@ func (EvaluationFrequency) Values() []EvaluationFrequency {
 	}
 }
 
+type EventSource string
+
+// Enum values for EventSource
+const (
+	EventSourceCloudTrail      EventSource = "CloudTrail"
+	EventSourceRoute53Resolver EventSource = "Route53Resolver"
+	EventSourceVpcFlow         EventSource = "VPCFlow"
+	EventSourceEksAudit        EventSource = "EKSAudit"
+	EventSourceAwswaf          EventSource = "AWSWAF"
+)
+
+// Values returns all known values for EventSource. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (EventSource) Values() []EventSource {
+	return []EventSource{
+		"CloudTrail",
+		"Route53Resolver",
+		"VPCFlow",
+		"EKSAudit",
+		"AWSWAF",
+	}
+}
+
+type ExecutionStatus string
+
+// Enum values for ExecutionStatus
+const (
+	ExecutionStatusRunning      ExecutionStatus = "Running"
+	ExecutionStatusInvalidQuery ExecutionStatus = "InvalidQuery"
+	ExecutionStatusComplete     ExecutionStatus = "Complete"
+	ExecutionStatusFailed       ExecutionStatus = "Failed"
+	ExecutionStatusTimeout      ExecutionStatus = "Timeout"
+)
+
+// Values returns all known values for ExecutionStatus. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ExecutionStatus) Values() []ExecutionStatus {
+	return []ExecutionStatus{
+		"Running",
+		"InvalidQuery",
+		"Complete",
+		"Failed",
+		"Timeout",
+	}
+}
+
 type ExportTaskStatusCode string
 
 // Enum values for ExportTaskStatusCode
@@ -175,6 +250,86 @@ func (ExportTaskStatusCode) Values() []ExportTaskStatusCode {
 	}
 }
 
+type FlattenedElement string
+
+// Enum values for FlattenedElement
+const (
+	FlattenedElementFirst FlattenedElement = "first"
+	FlattenedElementLast  FlattenedElement = "last"
+)
+
+// Values returns all known values for FlattenedElement. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (FlattenedElement) Values() []FlattenedElement {
+	return []FlattenedElement{
+		"first",
+		"last",
+	}
+}
+
+type ImportStatus string
+
+// Enum values for ImportStatus
+const (
+	ImportStatusInProgress ImportStatus = "IN_PROGRESS"
+	ImportStatusCancelled  ImportStatus = "CANCELLED"
+	ImportStatusCompleted  ImportStatus = "COMPLETED"
+	ImportStatusFailed     ImportStatus = "FAILED"
+)
+
+// Values returns all known values for ImportStatus. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ImportStatus) Values() []ImportStatus {
+	return []ImportStatus{
+		"IN_PROGRESS",
+		"CANCELLED",
+		"COMPLETED",
+		"FAILED",
+	}
+}
+
+type IndexSource string
+
+// Enum values for IndexSource
+const (
+	IndexSourceAccount  IndexSource = "ACCOUNT"
+	IndexSourceLogGroup IndexSource = "LOG_GROUP"
+)
+
+// Values returns all known values for IndexSource. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (IndexSource) Values() []IndexSource {
+	return []IndexSource{
+		"ACCOUNT",
+		"LOG_GROUP",
+	}
+}
+
+type IndexType string
+
+// Enum values for IndexType
+const (
+	IndexTypeFacet      IndexType = "FACET"
+	IndexTypeFieldIndex IndexType = "FIELD_INDEX"
+)
+
+// Values returns all known values for IndexType. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (IndexType) Values() []IndexType {
+	return []IndexType{
+		"FACET",
+		"FIELD_INDEX",
+	}
+}
+
 type InheritedProperty string
 
 // Enum values for InheritedProperty
@@ -192,12 +347,71 @@ func (InheritedProperty) Values() []InheritedProperty {
 	}
 }
 
+type IntegrationStatus string
+
+// Enum values for IntegrationStatus
+const (
+	IntegrationStatusProvisioning IntegrationStatus = "PROVISIONING"
+	IntegrationStatusActive       IntegrationStatus = "ACTIVE"
+	IntegrationStatusFailed       IntegrationStatus = "FAILED"
+)
+
+// Values returns all known values for IntegrationStatus. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (IntegrationStatus) Values() []IntegrationStatus {
+	return []IntegrationStatus{
+		"PROVISIONING",
+		"ACTIVE",
+		"FAILED",
+	}
+}
+
+type IntegrationType string
+
+// Enum values for IntegrationType
+const (
+	IntegrationTypeOpensearch IntegrationType = "OPENSEARCH"
+)
+
+// Values returns all known values for IntegrationType. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (IntegrationType) Values() []IntegrationType {
+	return []IntegrationType{
+		"OPENSEARCH",
+	}
+}
+
+type ListAggregateLogGroupSummariesGroupBy string
+
+// Enum values for ListAggregateLogGroupSummariesGroupBy
+const (
+	ListAggregateLogGroupSummariesGroupByDataSourceNameTypeAndFormat ListAggregateLogGroupSummariesGroupBy = "DATA_SOURCE_NAME_TYPE_AND_FORMAT"
+	ListAggregateLogGroupSummariesGroupByDataSourceNameAndType       ListAggregateLogGroupSummariesGroupBy = "DATA_SOURCE_NAME_AND_TYPE"
+)
+
+// Values returns all known values for ListAggregateLogGroupSummariesGroupBy. Note
+// that this can be expanded in the future, and so it is only as up to date as the
+// client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ListAggregateLogGroupSummariesGroupBy) Values() []ListAggregateLogGroupSummariesGroupBy {
+	return []ListAggregateLogGroupSummariesGroupBy{
+		"DATA_SOURCE_NAME_TYPE_AND_FORMAT",
+		"DATA_SOURCE_NAME_AND_TYPE",
+	}
+}
+
 type LogGroupClass string
 
 // Enum values for LogGroupClass
 const (
 	LogGroupClassStandard         LogGroupClass = "STANDARD"
 	LogGroupClassInfrequentAccess LogGroupClass = "INFREQUENT_ACCESS"
+	LogGroupClassDelivery         LogGroupClass = "DELIVERY"
 )
 
 // Values returns all known values for LogGroupClass. Note that this can be
@@ -208,6 +422,48 @@ func (LogGroupClass) Values() []LogGroupClass {
 	return []LogGroupClass{
 		"STANDARD",
 		"INFREQUENT_ACCESS",
+		"DELIVERY",
+	}
+}
+
+type OCSFVersion string
+
+// Enum values for OCSFVersion
+const (
+	OCSFVersionV11 OCSFVersion = "V1.1"
+	OCSFVersionV15 OCSFVersion = "V1.5"
+)
+
+// Values returns all known values for OCSFVersion. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (OCSFVersion) Values() []OCSFVersion {
+	return []OCSFVersion{
+		"V1.1",
+		"V1.5",
+	}
+}
+
+type OpenSearchResourceStatusType string
+
+// Enum values for OpenSearchResourceStatusType
+const (
+	OpenSearchResourceStatusTypeActive   OpenSearchResourceStatusType = "ACTIVE"
+	OpenSearchResourceStatusTypeNotFound OpenSearchResourceStatusType = "NOT_FOUND"
+	OpenSearchResourceStatusTypeError    OpenSearchResourceStatusType = "ERROR"
+)
+
+// Values returns all known values for OpenSearchResourceStatusType. Note that
+// this can be expanded in the future, and so it is only as up to date as the
+// client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (OpenSearchResourceStatusType) Values() []OpenSearchResourceStatusType {
+	return []OpenSearchResourceStatusType{
+		"ACTIVE",
+		"NOT_FOUND",
+		"ERROR",
 	}
 }
 
@@ -255,12 +511,34 @@ func (OutputFormat) Values() []OutputFormat {
 	}
 }
 
+type PolicyScope string
+
+// Enum values for PolicyScope
+const (
+	PolicyScopeAccount  PolicyScope = "ACCOUNT"
+	PolicyScopeResource PolicyScope = "RESOURCE"
+)
+
+// Values returns all known values for PolicyScope. Note that this can be expanded
+// in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (PolicyScope) Values() []PolicyScope {
+	return []PolicyScope{
+		"ACCOUNT",
+		"RESOURCE",
+	}
+}
+
 type PolicyType string
 
 // Enum values for PolicyType
 const (
 	PolicyTypeDataProtectionPolicy     PolicyType = "DATA_PROTECTION_POLICY"
 	PolicyTypeSubscriptionFilterPolicy PolicyType = "SUBSCRIPTION_FILTER_POLICY"
+	PolicyTypeFieldIndexPolicy         PolicyType = "FIELD_INDEX_POLICY"
+	PolicyTypeTransformerPolicy        PolicyType = "TRANSFORMER_POLICY"
+	PolicyTypeMetricExtractionPolicy   PolicyType = "METRIC_EXTRACTION_POLICY"
 )
 
 // Values returns all known values for PolicyType. Note that this can be expanded
@@ -271,6 +549,30 @@ func (PolicyType) Values() []PolicyType {
 	return []PolicyType{
 		"DATA_PROTECTION_POLICY",
 		"SUBSCRIPTION_FILTER_POLICY",
+		"FIELD_INDEX_POLICY",
+		"TRANSFORMER_POLICY",
+		"METRIC_EXTRACTION_POLICY",
+	}
+}
+
+type QueryLanguage string
+
+// Enum values for QueryLanguage
+const (
+	QueryLanguageCwli QueryLanguage = "CWLI"
+	QueryLanguageSql  QueryLanguage = "SQL"
+	QueryLanguagePpl  QueryLanguage = "PPL"
+)
+
+// Values returns all known values for QueryLanguage. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (QueryLanguage) Values() []QueryLanguage {
+	return []QueryLanguage{
+		"CWLI",
+		"SQL",
+		"PPL",
 	}
 }
 
@@ -300,6 +602,67 @@ func (QueryStatus) Values() []QueryStatus {
 		"Cancelled",
 		"Timeout",
 		"Unknown",
+	}
+}
+
+type S3TableIntegrationSourceStatus string
+
+// Enum values for S3TableIntegrationSourceStatus
+const (
+	S3TableIntegrationSourceStatusActive                     S3TableIntegrationSourceStatus = "ACTIVE"
+	S3TableIntegrationSourceStatusUnhealthy                  S3TableIntegrationSourceStatus = "UNHEALTHY"
+	S3TableIntegrationSourceStatusFailed                     S3TableIntegrationSourceStatus = "FAILED"
+	S3TableIntegrationSourceStatusDataSourceDeleteInProgress S3TableIntegrationSourceStatus = "DATA_SOURCE_DELETE_IN_PROGRESS"
+)
+
+// Values returns all known values for S3TableIntegrationSourceStatus. Note that
+// this can be expanded in the future, and so it is only as up to date as the
+// client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (S3TableIntegrationSourceStatus) Values() []S3TableIntegrationSourceStatus {
+	return []S3TableIntegrationSourceStatus{
+		"ACTIVE",
+		"UNHEALTHY",
+		"FAILED",
+		"DATA_SOURCE_DELETE_IN_PROGRESS",
+	}
+}
+
+type ScheduledQueryDestinationType string
+
+// Enum values for ScheduledQueryDestinationType
+const (
+	ScheduledQueryDestinationTypeS3 ScheduledQueryDestinationType = "S3"
+)
+
+// Values returns all known values for ScheduledQueryDestinationType. Note that
+// this can be expanded in the future, and so it is only as up to date as the
+// client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ScheduledQueryDestinationType) Values() []ScheduledQueryDestinationType {
+	return []ScheduledQueryDestinationType{
+		"S3",
+	}
+}
+
+type ScheduledQueryState string
+
+// Enum values for ScheduledQueryState
+const (
+	ScheduledQueryStateEnabled  ScheduledQueryState = "ENABLED"
+	ScheduledQueryStateDisabled ScheduledQueryState = "DISABLED"
+)
+
+// Values returns all known values for ScheduledQueryState. Note that this can be
+// expanded in the future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (ScheduledQueryState) Values() []ScheduledQueryState {
+	return []ScheduledQueryState{
+		"ENABLED",
+		"DISABLED",
 	}
 }
 
@@ -466,5 +829,28 @@ func (SuppressionUnit) Values() []SuppressionUnit {
 		"SECONDS",
 		"MINUTES",
 		"HOURS",
+	}
+}
+
+type Type string
+
+// Enum values for Type
+const (
+	TypeBoolean Type = "boolean"
+	TypeInteger Type = "integer"
+	TypeDouble  Type = "double"
+	TypeString  Type = "string"
+)
+
+// Values returns all known values for Type. Note that this can be expanded in the
+// future, and so it is only as up to date as the client.
+//
+// The ordering of this slice is not guaranteed to be stable across updates.
+func (Type) Values() []Type {
+	return []Type{
+		"boolean",
+		"integer",
+		"double",
+		"string",
 	}
 }

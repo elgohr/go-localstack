@@ -12,9 +12,9 @@ import (
 )
 
 // Use this operation to suppress anomaly detection for a specified anomaly or
-// pattern. If you suppress an anomaly, CloudWatch Logs won’t report new
+// pattern. If you suppress an anomaly, CloudWatch Logs won't report new
 // occurrences of that anomaly and won't update that anomaly with new data. If you
-// suppress a pattern, CloudWatch Logs won’t report any anomalies related to that
+// suppress a pattern, CloudWatch Logs won't report any anomalies related to that
 // pattern.
 //
 // You must specify either anomalyId or patternId , but you can't specify both
@@ -52,6 +52,14 @@ type UpdateAnomalyInput struct {
 	//
 	// [ListAnomalies]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_ListAnomalies.html
 	AnomalyId *string
+
+	// Set this to true to prevent CloudWatch Logs from displaying this behavior as an
+	// anomaly in the future. The behavior is then treated as baseline behavior.
+	// However, if similar but more severe occurrences of this behavior occur in the
+	// future, those will still be reported as anomalies.
+	//
+	// The default is false
+	Baseline *bool
 
 	// If you are suppressing or unsuppressing an pattern, specify its unique ID here.
 	// You can find pattern IDs by using the [ListAnomalies]operation.
@@ -112,13 +120,16 @@ func (c *Client) addOperationUpdateAnomalyMiddlewares(stack *middleware.Stack, o
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -133,10 +144,10 @@ func (c *Client) addOperationUpdateAnomalyMiddlewares(stack *middleware.Stack, o
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpUpdateAnomalyValidationMiddleware(stack); err != nil {
@@ -158,6 +169,15 @@ func (c *Client) addOperationUpdateAnomalyMiddlewares(stack *middleware.Stack, o
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

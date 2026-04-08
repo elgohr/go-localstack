@@ -17,8 +17,8 @@ import (
 //
 // A delivery source represents an Amazon Web Services resource that sends logs to
 // an logs delivery destination. The destination can be CloudWatch Logs, Amazon S3,
-// or Firehose. Only some Amazon Web Services services support being configured as
-// a delivery source. These services are listed in [Enable logging from Amazon Web Services services.]
+// Firehose or X-Ray. Only some Amazon Web Services services support being
+// configured as a delivery source. These services are listed in [Enable logging from Amazon Web Services services.]
 //
 // [delivery destination]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDeliveryDestination.html
 // [delivery source]: https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutDeliverySource.html
@@ -98,13 +98,16 @@ func (c *Client) addOperationDescribeDeliveriesMiddlewares(stack *middleware.Sta
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -119,10 +122,10 @@ func (c *Client) addOperationDescribeDeliveriesMiddlewares(stack *middleware.Sta
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDescribeDeliveries(options.Region), middleware.Before); err != nil {
@@ -141,6 +144,15 @@ func (c *Client) addOperationDescribeDeliveriesMiddlewares(stack *middleware.Sta
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil
