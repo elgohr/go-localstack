@@ -11,80 +11,70 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
-// Decreases the Kinesis data stream's retention period, which is the length of
-// time data records are accessible after they are added to the stream. The minimum
-// value of a stream's retention period is 24 hours.
-//
-// When invoking this API, you must use either the StreamARN or the StreamName
-// parameter, or both. It is recommended that you use the StreamARN input
-// parameter when you invoke this API.
-//
-// This operation may result in lost data. For example, if the stream's retention
-// period is 48 hours and is decreased to 24 hours, any data already in the stream
-// that is older than 24 hours is inaccessible.
-func (c *Client) DecreaseStreamRetentionPeriod(ctx context.Context, params *DecreaseStreamRetentionPeriodInput, optFns ...func(*Options)) (*DecreaseStreamRetentionPeriodOutput, error) {
+// Removes tags from the specified Kinesis resource. Removed tags are deleted and
+// can't be recovered after this operation completes successfully.
+func (c *Client) UntagResource(ctx context.Context, params *UntagResourceInput, optFns ...func(*Options)) (*UntagResourceOutput, error) {
 	if params == nil {
-		params = &DecreaseStreamRetentionPeriodInput{}
+		params = &UntagResourceInput{}
 	}
 
-	result, metadata, err := c.invokeOperation(ctx, "DecreaseStreamRetentionPeriod", params, optFns, c.addOperationDecreaseStreamRetentionPeriodMiddlewares)
+	result, metadata, err := c.invokeOperation(ctx, "UntagResource", params, optFns, c.addOperationUntagResourceMiddlewares)
 	if err != nil {
 		return nil, err
 	}
 
-	out := result.(*DecreaseStreamRetentionPeriodOutput)
+	out := result.(*UntagResourceOutput)
 	out.ResultMetadata = metadata
 	return out, nil
 }
 
-// Represents the input for DecreaseStreamRetentionPeriod.
-type DecreaseStreamRetentionPeriodInput struct {
+type UntagResourceInput struct {
 
-	// The new retention period of the stream, in hours. Must be less than the current
-	// retention period.
+	// The Amazon Resource Name (ARN) of the Kinesis resource from which to remove
+	// tags.
 	//
 	// This member is required.
-	RetentionPeriodHours *int32
+	ResourceARN *string
 
-	// The ARN of the stream.
-	StreamARN *string
+	// A list of tag key-value pairs. Existing tags of the resource whose keys are
+	// members of this list will be removed from the Kinesis resource.
+	//
+	// This member is required.
+	TagKeys []string
 
 	// Not Implemented. Reserved for future use.
 	StreamId *string
 
-	// The name of the stream to modify.
-	StreamName *string
-
 	noSmithyDocumentSerde
 }
 
-func (in *DecreaseStreamRetentionPeriodInput) bindEndpointParams(p *EndpointParameters) {
+func (in *UntagResourceInput) bindEndpointParams(p *EndpointParameters) {
 
-	p.StreamARN = in.StreamARN
+	p.ResourceARN = in.ResourceARN
 	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
-type DecreaseStreamRetentionPeriodOutput struct {
+type UntagResourceOutput struct {
 	// Metadata pertaining to the operation's result.
 	ResultMetadata middleware.Metadata
 
 	noSmithyDocumentSerde
 }
 
-func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *middleware.Stack, options Options) (err error) {
+func (c *Client) addOperationUntagResourceMiddlewares(stack *middleware.Stack, options Options) (err error) {
 	if err := stack.Serialize.Add(&setOperationInputMiddleware{}, middleware.After); err != nil {
 		return err
 	}
-	err = stack.Serialize.Add(&awsAwsjson11_serializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Serialize.Add(&awsAwsjson11_serializeOpUntagResource{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpDecreaseStreamRetentionPeriod{}, middleware.After)
+	err = stack.Deserialize.Add(&awsAwsjson11_deserializeOpUntagResource{}, middleware.After)
 	if err != nil {
 		return err
 	}
-	if err := addProtocolFinalizerMiddlewares(stack, options, "DecreaseStreamRetentionPeriod"); err != nil {
+	if err := addProtocolFinalizerMiddlewares(stack, options, "UntagResource"); err != nil {
 		return fmt.Errorf("add protocol finalizers: %v", err)
 	}
 
@@ -136,10 +126,10 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
-	if err = addOpDecreaseStreamRetentionPeriodValidationMiddleware(stack); err != nil {
+	if err = addOpUntagResourceValidationMiddleware(stack); err != nil {
 		return err
 	}
-	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(options.Region), middleware.Before); err != nil {
+	if err = stack.Initialize.Add(newServiceMetadataMiddleware_opUntagResource(options.Region), middleware.Before); err != nil {
 		return err
 	}
 	if err = addRecursionDetection(stack); err != nil {
@@ -169,10 +159,10 @@ func (c *Client) addOperationDecreaseStreamRetentionPeriodMiddlewares(stack *mid
 	return nil
 }
 
-func newServiceMetadataMiddleware_opDecreaseStreamRetentionPeriod(region string) *awsmiddleware.RegisterServiceMetadata {
+func newServiceMetadataMiddleware_opUntagResource(region string) *awsmiddleware.RegisterServiceMetadata {
 	return &awsmiddleware.RegisterServiceMetadata{
 		Region:        region,
 		ServiceID:     ServiceID,
-		OperationName: "DecreaseStreamRetentionPeriod",
+		OperationName: "UntagResource",
 	}
 }

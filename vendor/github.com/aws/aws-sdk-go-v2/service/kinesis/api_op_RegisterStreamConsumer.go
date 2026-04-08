@@ -18,16 +18,26 @@ import (
 // subscribe to. This rate is unaffected by the total number of consumers that read
 // from the same stream.
 //
-// You can register up to 20 consumers per stream. A given consumer can only be
-// registered with one stream at a time.
+// You can add tags to the registered consumer when making a RegisterStreamConsumer
+// request by setting the Tags parameter. If you pass the Tags parameter, in
+// addition to having the kinesis:RegisterStreamConsumer permission, you must also
+// have the kinesis:TagResource permission for the consumer that will be
+// registered. Tags will take effect from the CREATING status of the consumer.
 //
-// For an example of how to use this operations, see Enhanced Fan-Out Using the Kinesis Data Streams API.
+// With On-demand Advantage streams, you can register up to 50 consumers per
+// stream to use Enhanced Fan-out. With On-demand Standard and Provisioned streams,
+// you can register up to 20 consumers per stream to use Enhanced Fan-out. A given
+// consumer can only be registered with one stream at a time.
+//
+// For an example of how to use this operation, see [Enhanced Fan-Out Using the Kinesis Data Streams API].
 //
 // The use of this operation has a limit of five transactions per second per
 // account. Also, only 5 consumers can be created simultaneously. In other words,
 // you cannot have more than 5 consumers in a CREATING status at the same time.
 // Registering a 6th consumer while there are 5 in a CREATING status results in a
 // LimitExceededException .
+//
+// [Enhanced Fan-Out Using the Kinesis Data Streams API]: https://docs.aws.amazon.com/streams/latest/dev/building-enhanced-consumers-api.html
 func (c *Client) RegisterStreamConsumer(ctx context.Context, params *RegisterStreamConsumerInput, optFns ...func(*Options)) (*RegisterStreamConsumerOutput, error) {
 	if params == nil {
 		params = &RegisterStreamConsumerInput{}
@@ -59,12 +69,20 @@ type RegisterStreamConsumerInput struct {
 	// This member is required.
 	StreamARN *string
 
+	// Not Implemented. Reserved for future use.
+	StreamId *string
+
+	// A set of up to 50 key-value pairs. A tag consists of a required key and an
+	// optional value.
+	Tags map[string]string
+
 	noSmithyDocumentSerde
 }
 
 func (in *RegisterStreamConsumerInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
+	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
@@ -116,13 +134,16 @@ func (c *Client) addOperationRegisterStreamConsumerMiddlewares(stack *middleware
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -137,10 +158,10 @@ func (c *Client) addOperationRegisterStreamConsumerMiddlewares(stack *middleware
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpRegisterStreamConsumerValidationMiddleware(stack); err != nil {
@@ -162,6 +183,15 @@ func (c *Client) addOperationRegisterStreamConsumerMiddlewares(stack *middleware
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

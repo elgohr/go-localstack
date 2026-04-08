@@ -16,6 +16,12 @@ import (
 //
 // Streams, you can choose between an on-demand capacity mode and a provisioned
 // capacity mode for your data stream.
+//
+// If you'd still like to proactively scale your on-demand data stream’s capacity,
+// you can unlock the warm throughput feature for on-demand data streams by
+// enabling MinimumThroughputBillingCommitment for your account. Once your account
+// has MinimumThroughputBillingCommitment enabled, you can specify the warm
+// throughput in MiB per second that your stream can support in writes.
 func (c *Client) UpdateStreamMode(ctx context.Context, params *UpdateStreamModeInput, optFns ...func(*Options)) (*UpdateStreamModeOutput, error) {
 	if params == nil {
 		params = &UpdateStreamModeInput{}
@@ -45,12 +51,22 @@ type UpdateStreamModeInput struct {
 	// This member is required.
 	StreamModeDetails *types.StreamModeDetails
 
+	// Not Implemented. Reserved for future use.
+	StreamId *string
+
+	// The target warm throughput in MB/s that the stream should be scaled to handle.
+	// This represents the throughput capacity that will be immediately available for
+	// write operations. This field is only valid when the stream mode is being updated
+	// to on-demand.
+	WarmThroughputMiBps *int32
+
 	noSmithyDocumentSerde
 }
 
 func (in *UpdateStreamModeInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
+	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("control")
 }
 
@@ -95,13 +111,16 @@ func (c *Client) addOperationUpdateStreamModeMiddlewares(stack *middleware.Stack
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -116,10 +135,10 @@ func (c *Client) addOperationUpdateStreamModeMiddlewares(stack *middleware.Stack
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpUpdateStreamModeValidationMiddleware(stack); err != nil {
@@ -141,6 +160,15 @@ func (c *Client) addOperationUpdateStreamModeMiddlewares(stack *middleware.Stack
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

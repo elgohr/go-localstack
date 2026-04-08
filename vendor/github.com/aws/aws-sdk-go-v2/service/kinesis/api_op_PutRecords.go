@@ -21,9 +21,9 @@ import (
 // parameter when you invoke this API.
 //
 // Each PutRecords request can support up to 500 records. Each record in the
-// request can be as large as 1 MiB, up to a limit of 5 MiB for the entire request,
-// including partition keys. Each shard can support writes up to 1,000 records per
-// second, up to a maximum data write total of 1 MiB per second.
+// request can be as large as 10 MiB, up to a limit of 10 MiB for the entire
+// request, including partition keys. Each shard can support writes up to 1,000
+// records per second, up to a maximum data write total of 1 MB per second.
 //
 // You must specify the name of the stream that captures, stores, and transports
 // the data; and an array of request Records , with each record in the array
@@ -108,6 +108,9 @@ type PutRecordsInput struct {
 	// The ARN of the stream.
 	StreamARN *string
 
+	// Not Implemented. Reserved for future use.
+	StreamId *string
+
 	// The stream name associated with the request.
 	StreamName *string
 
@@ -117,6 +120,7 @@ type PutRecordsInput struct {
 func (in *PutRecordsInput) bindEndpointParams(p *EndpointParameters) {
 
 	p.StreamARN = in.StreamARN
+	p.StreamId = in.StreamId
 	p.OperationType = ptr.String("data")
 }
 
@@ -183,13 +187,16 @@ func (c *Client) addOperationPutRecordsMiddlewares(stack *middleware.Stack, opti
 	if err = addComputePayloadSHA256(stack); err != nil {
 		return err
 	}
-	if err = addRetry(stack, options); err != nil {
+	if err = addRetry(stack, options, c); err != nil {
 		return err
 	}
 	if err = addRawResponseToMetadata(stack); err != nil {
 		return err
 	}
 	if err = addRecordResponseTiming(stack); err != nil {
+		return err
+	}
+	if err = addSpanRetryLoop(stack, options); err != nil {
 		return err
 	}
 	if err = addClientUserAgent(stack, options); err != nil {
@@ -204,10 +211,10 @@ func (c *Client) addOperationPutRecordsMiddlewares(stack *middleware.Stack, opti
 	if err = addSetLegacyContextSigningOptionsMiddleware(stack); err != nil {
 		return err
 	}
-	if err = addTimeOffsetBuild(stack, c); err != nil {
+	if err = addUserAgentRetryMode(stack, options); err != nil {
 		return err
 	}
-	if err = addUserAgentRetryMode(stack, options); err != nil {
+	if err = addCredentialSource(stack, options); err != nil {
 		return err
 	}
 	if err = addOpPutRecordsValidationMiddleware(stack); err != nil {
@@ -229,6 +236,15 @@ func (c *Client) addOperationPutRecordsMiddlewares(stack *middleware.Stack, opti
 		return err
 	}
 	if err = addDisableHTTPSMiddleware(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptBeforeRetryLoop(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptAttempt(stack, options); err != nil {
+		return err
+	}
+	if err = addInterceptors(stack, options); err != nil {
 		return err
 	}
 	return nil

@@ -17,6 +17,7 @@ import (
 	"github.com/aws/smithy-go/endpoints/private/rulesfn"
 	"github.com/aws/smithy-go/middleware"
 	"github.com/aws/smithy-go/ptr"
+	"github.com/aws/smithy-go/tracing"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"net/http"
 	"net/url"
@@ -217,11 +218,15 @@ func resolveBaseEndpoint(cfg aws.Config, o *Options) {
 	}
 }
 
-func bindRegion(region string) *string {
+func bindRegion(region string) (*string, error) {
 	if region == "" {
-		return nil
+		return nil, nil
 	}
-	return aws.String(endpoints.MapFIPSRegion(region))
+	if !rulesfn.IsValidHostLabel(region, true) {
+		return nil, fmt.Errorf("invalid input region %s", region)
+	}
+
+	return aws.String(endpoints.MapFIPSRegion(region)), nil
 }
 
 // EndpointParameters provides the parameters that influence how endpoints are
@@ -261,6 +266,11 @@ type EndpointParameters struct {
 	//
 	// SDK::Endpoint
 	Endpoint *string
+
+	// The unique identifier of the Kinesis stream
+	//
+	// Parameter is required.
+	StreamId *string
 
 	// The ARN of the Kinesis stream
 	//
@@ -349,8 +359,455 @@ func (r *resolver) ResolveEndpoint(
 		return endpoint, fmt.Errorf("endpoint parameters are not valid, %w", err)
 	}
 	_UseDualStack := *params.UseDualStack
+	_ = _UseDualStack
 	_UseFIPS := *params.UseFIPS
+	_ = _UseFIPS
 
+	if exprVal := params.StreamId; exprVal != nil {
+		_StreamId := *exprVal
+		_ = _StreamId
+		if exprVal := rulesfn.SubString(_StreamId, 20, 21, false); exprVal != nil {
+			_StreamIdDelimiterValue := *exprVal
+			_ = _StreamIdDelimiterValue
+			if _StreamIdDelimiterValue == "-" {
+				if exprVal := rulesfn.SubString(_StreamId, 3, 4, true); exprVal != nil {
+					_StreamIdDelimiterReversedValue := *exprVal
+					_ = _StreamIdDelimiterReversedValue
+					if _StreamIdDelimiterReversedValue == "-" {
+						if exprVal := rulesfn.SubString(_StreamId, 0, 20, false); exprVal != nil {
+							_StreamIdPrefixValue := *exprVal
+							_ = _StreamIdPrefixValue
+							if exprVal := rulesfn.SubString(_StreamId, 21, 24, false); exprVal != nil {
+								_StreamIdSuffixValue := *exprVal
+								_ = _StreamIdSuffixValue
+								if exprVal := params.Region; exprVal != nil {
+									_Region := *exprVal
+									_ = _Region
+									if exprVal := awsrulesfn.GetPartition(_Region); exprVal != nil {
+										_PartitionResult := *exprVal
+										_ = _PartitionResult
+										if !(_PartitionResult.Name == "aws-iso") {
+											if !(_PartitionResult.Name == "aws-iso-b") {
+												if exprVal := params.OperationType; exprVal != nil {
+													_OperationType := *exprVal
+													_ = _OperationType
+													if exprVal := params.Endpoint; exprVal != nil {
+														_Endpoint := *exprVal
+														_ = _Endpoint
+														if exprVal := rulesfn.SubString(_Endpoint, 15, 16, false); exprVal != nil {
+															_HttpsCustomEndpointDelimiterValue := *exprVal
+															_ = _HttpsCustomEndpointDelimiterValue
+															if _HttpsCustomEndpointDelimiterValue == "-" {
+																if exprVal := rulesfn.SubString(_Endpoint, 20, 21, false); exprVal != nil {
+																	_HttpsEndpointDelimiterValue := *exprVal
+																	_ = _HttpsEndpointDelimiterValue
+																	if _HttpsEndpointDelimiterValue == "." {
+																		if exprVal := rulesfn.SubString(_Endpoint, 15, 20, false); exprVal != nil {
+																			_HttpsCustomEndpointSuffixValue := *exprVal
+																			_ = _HttpsCustomEndpointSuffixValue
+																			if _UseFIPS == true {
+																				if _UseDualStack == true {
+																					if _PartitionResult.SupportsFIPS == true {
+																						if _PartitionResult.SupportsDualStack == true {
+																							uriString := func() string {
+																								var out strings.Builder
+																								out.WriteString("https://")
+																								out.WriteString(_StreamIdPrefixValue)
+																								out.WriteString(".")
+																								out.WriteString(_StreamIdSuffixValue)
+																								out.WriteString(".")
+																								out.WriteString(_OperationType)
+																								out.WriteString("-kinesis")
+																								out.WriteString(_HttpsCustomEndpointSuffixValue)
+																								out.WriteString("-fips.")
+																								out.WriteString(_Region)
+																								out.WriteString(".")
+																								out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																								return out.String()
+																							}()
+
+																							uri, err := url.Parse(uriString)
+																							if err != nil {
+																								return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																							}
+
+																							return smithyendpoints.Endpoint{
+																								URI:     *uri,
+																								Headers: http.Header{},
+																							}, nil
+																						}
+																						return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled, but this partition does not support DualStack.")
+																					}
+																					return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled, but this partition does not support FIPS.")
+																				}
+																			}
+																			if _UseFIPS == true {
+																				if _PartitionResult.SupportsFIPS == true {
+																					uriString := func() string {
+																						var out strings.Builder
+																						out.WriteString("https://")
+																						out.WriteString(_StreamIdPrefixValue)
+																						out.WriteString(".")
+																						out.WriteString(_StreamIdSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_OperationType)
+																						out.WriteString("-kinesis")
+																						out.WriteString(_HttpsCustomEndpointSuffixValue)
+																						out.WriteString("-fips.")
+																						out.WriteString(_Region)
+																						out.WriteString(".")
+																						out.WriteString(_PartitionResult.DnsSuffix)
+																						return out.String()
+																					}()
+
+																					uri, err := url.Parse(uriString)
+																					if err != nil {
+																						return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																					}
+
+																					return smithyendpoints.Endpoint{
+																						URI:     *uri,
+																						Headers: http.Header{},
+																					}, nil
+																				}
+																				return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled but this partition does not support FIPS")
+																			}
+																			if _UseDualStack == true {
+																				if _PartitionResult.SupportsDualStack == true {
+																					uriString := func() string {
+																						var out strings.Builder
+																						out.WriteString("https://")
+																						out.WriteString(_StreamIdPrefixValue)
+																						out.WriteString(".")
+																						out.WriteString(_StreamIdSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_OperationType)
+																						out.WriteString("-kinesis")
+																						out.WriteString(_HttpsCustomEndpointSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_Region)
+																						out.WriteString(".")
+																						out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																						return out.String()
+																					}()
+
+																					uri, err := url.Parse(uriString)
+																					if err != nil {
+																						return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																					}
+
+																					return smithyendpoints.Endpoint{
+																						URI:     *uri,
+																						Headers: http.Header{},
+																					}, nil
+																				}
+																				return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled but this partition does not support DualStack")
+																			}
+																			uriString := func() string {
+																				var out strings.Builder
+																				out.WriteString("https://")
+																				out.WriteString(_StreamIdPrefixValue)
+																				out.WriteString(".")
+																				out.WriteString(_StreamIdSuffixValue)
+																				out.WriteString(".")
+																				out.WriteString(_OperationType)
+																				out.WriteString("-kinesis")
+																				out.WriteString(_HttpsCustomEndpointSuffixValue)
+																				out.WriteString(".")
+																				out.WriteString(_Region)
+																				out.WriteString(".")
+																				out.WriteString(_PartitionResult.DnsSuffix)
+																				return out.String()
+																			}()
+
+																			uri, err := url.Parse(uriString)
+																			if err != nil {
+																				return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																			}
+
+																			return smithyendpoints.Endpoint{
+																				URI:     *uri,
+																				Headers: http.Header{},
+																			}, nil
+																		}
+																	}
+																}
+															}
+														}
+													}
+													if exprVal := params.Endpoint; exprVal != nil {
+														_Endpoint := *exprVal
+														_ = _Endpoint
+														if exprVal := rulesfn.SubString(_Endpoint, 7, 8, false); exprVal != nil {
+															_PlainCustomEndpointDelimiterValue := *exprVal
+															_ = _PlainCustomEndpointDelimiterValue
+															if _PlainCustomEndpointDelimiterValue == "-" {
+																if exprVal := rulesfn.SubString(_Endpoint, 12, 13, false); exprVal != nil {
+																	_PlainEndpointDelimiterValue := *exprVal
+																	_ = _PlainEndpointDelimiterValue
+																	if _PlainEndpointDelimiterValue == "." {
+																		if exprVal := rulesfn.SubString(_Endpoint, 7, 12, false); exprVal != nil {
+																			_PlainCustomEndpointSuffixValue := *exprVal
+																			_ = _PlainCustomEndpointSuffixValue
+																			if _UseFIPS == true {
+																				if _UseDualStack == true {
+																					if _PartitionResult.SupportsFIPS == true {
+																						if _PartitionResult.SupportsDualStack == true {
+																							uriString := func() string {
+																								var out strings.Builder
+																								out.WriteString("https://")
+																								out.WriteString(_StreamIdPrefixValue)
+																								out.WriteString(".")
+																								out.WriteString(_StreamIdSuffixValue)
+																								out.WriteString(".")
+																								out.WriteString(_OperationType)
+																								out.WriteString("-kinesis")
+																								out.WriteString(_PlainCustomEndpointSuffixValue)
+																								out.WriteString("-fips.")
+																								out.WriteString(_Region)
+																								out.WriteString(".")
+																								out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																								return out.String()
+																							}()
+
+																							uri, err := url.Parse(uriString)
+																							if err != nil {
+																								return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																							}
+
+																							return smithyendpoints.Endpoint{
+																								URI:     *uri,
+																								Headers: http.Header{},
+																							}, nil
+																						}
+																						return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled, but this partition does not support DualStack.")
+																					}
+																					return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled, but this partition does not support FIPS.")
+																				}
+																			}
+																			if _UseFIPS == true {
+																				if _PartitionResult.SupportsFIPS == true {
+																					uriString := func() string {
+																						var out strings.Builder
+																						out.WriteString("https://")
+																						out.WriteString(_StreamIdPrefixValue)
+																						out.WriteString(".")
+																						out.WriteString(_StreamIdSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_OperationType)
+																						out.WriteString("-kinesis")
+																						out.WriteString(_PlainCustomEndpointSuffixValue)
+																						out.WriteString("-fips.")
+																						out.WriteString(_Region)
+																						out.WriteString(".")
+																						out.WriteString(_PartitionResult.DnsSuffix)
+																						return out.String()
+																					}()
+
+																					uri, err := url.Parse(uriString)
+																					if err != nil {
+																						return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																					}
+
+																					return smithyendpoints.Endpoint{
+																						URI:     *uri,
+																						Headers: http.Header{},
+																					}, nil
+																				}
+																				return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled but this partition does not support FIPS")
+																			}
+																			if _UseDualStack == true {
+																				if _PartitionResult.SupportsDualStack == true {
+																					uriString := func() string {
+																						var out strings.Builder
+																						out.WriteString("https://")
+																						out.WriteString(_StreamIdPrefixValue)
+																						out.WriteString(".")
+																						out.WriteString(_StreamIdSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_OperationType)
+																						out.WriteString("-kinesis")
+																						out.WriteString(_PlainCustomEndpointSuffixValue)
+																						out.WriteString(".")
+																						out.WriteString(_Region)
+																						out.WriteString(".")
+																						out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																						return out.String()
+																					}()
+
+																					uri, err := url.Parse(uriString)
+																					if err != nil {
+																						return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																					}
+
+																					return smithyendpoints.Endpoint{
+																						URI:     *uri,
+																						Headers: http.Header{},
+																					}, nil
+																				}
+																				return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled but this partition does not support DualStack")
+																			}
+																			uriString := func() string {
+																				var out strings.Builder
+																				out.WriteString("https://")
+																				out.WriteString(_StreamIdPrefixValue)
+																				out.WriteString(".")
+																				out.WriteString(_StreamIdSuffixValue)
+																				out.WriteString(".")
+																				out.WriteString(_OperationType)
+																				out.WriteString("-kinesis")
+																				out.WriteString(_PlainCustomEndpointSuffixValue)
+																				out.WriteString(".")
+																				out.WriteString(_Region)
+																				out.WriteString(".")
+																				out.WriteString(_PartitionResult.DnsSuffix)
+																				return out.String()
+																			}()
+
+																			uri, err := url.Parse(uriString)
+																			if err != nil {
+																				return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																			}
+
+																			return smithyendpoints.Endpoint{
+																				URI:     *uri,
+																				Headers: http.Header{},
+																			}, nil
+																		}
+																	}
+																}
+															}
+														}
+													}
+													if _UseFIPS == true {
+														if _UseDualStack == true {
+															if _PartitionResult.SupportsFIPS == true {
+																if _PartitionResult.SupportsDualStack == true {
+																	uriString := func() string {
+																		var out strings.Builder
+																		out.WriteString("https://")
+																		out.WriteString(_StreamIdPrefixValue)
+																		out.WriteString(".")
+																		out.WriteString(_StreamIdSuffixValue)
+																		out.WriteString(".")
+																		out.WriteString(_OperationType)
+																		out.WriteString("-kinesis-fips.")
+																		out.WriteString(_Region)
+																		out.WriteString(".")
+																		out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																		return out.String()
+																	}()
+
+																	uri, err := url.Parse(uriString)
+																	if err != nil {
+																		return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+																	}
+
+																	return smithyendpoints.Endpoint{
+																		URI:     *uri,
+																		Headers: http.Header{},
+																	}, nil
+																}
+																return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled, but this partition does not support DualStack.")
+															}
+															return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled, but this partition does not support FIPS.")
+														}
+													}
+													if _UseFIPS == true {
+														if _PartitionResult.SupportsFIPS == true {
+															uriString := func() string {
+																var out strings.Builder
+																out.WriteString("https://")
+																out.WriteString(_StreamIdPrefixValue)
+																out.WriteString(".")
+																out.WriteString(_StreamIdSuffixValue)
+																out.WriteString(".")
+																out.WriteString(_OperationType)
+																out.WriteString("-kinesis-fips.")
+																out.WriteString(_Region)
+																out.WriteString(".")
+																out.WriteString(_PartitionResult.DnsSuffix)
+																return out.String()
+															}()
+
+															uri, err := url.Parse(uriString)
+															if err != nil {
+																return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+															}
+
+															return smithyendpoints.Endpoint{
+																URI:     *uri,
+																Headers: http.Header{},
+															}, nil
+														}
+														return endpoint, fmt.Errorf("endpoint rule error, %s", "FIPS is enabled but this partition does not support FIPS")
+													}
+													if _UseDualStack == true {
+														if _PartitionResult.SupportsDualStack == true {
+															uriString := func() string {
+																var out strings.Builder
+																out.WriteString("https://")
+																out.WriteString(_StreamIdPrefixValue)
+																out.WriteString(".")
+																out.WriteString(_StreamIdSuffixValue)
+																out.WriteString(".")
+																out.WriteString(_OperationType)
+																out.WriteString("-kinesis.")
+																out.WriteString(_Region)
+																out.WriteString(".")
+																out.WriteString(_PartitionResult.DualStackDnsSuffix)
+																return out.String()
+															}()
+
+															uri, err := url.Parse(uriString)
+															if err != nil {
+																return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+															}
+
+															return smithyendpoints.Endpoint{
+																URI:     *uri,
+																Headers: http.Header{},
+															}, nil
+														}
+														return endpoint, fmt.Errorf("endpoint rule error, %s", "DualStack is enabled but this partition does not support DualStack")
+													}
+													uriString := func() string {
+														var out strings.Builder
+														out.WriteString("https://")
+														out.WriteString(_StreamIdPrefixValue)
+														out.WriteString(".")
+														out.WriteString(_StreamIdSuffixValue)
+														out.WriteString(".")
+														out.WriteString(_OperationType)
+														out.WriteString("-kinesis.")
+														out.WriteString(_Region)
+														out.WriteString(".")
+														out.WriteString(_PartitionResult.DnsSuffix)
+														return out.String()
+													}()
+
+													uri, err := url.Parse(uriString)
+													if err != nil {
+														return endpoint, fmt.Errorf("Failed to parse uri: %s", uriString)
+													}
+
+													return smithyendpoints.Endpoint{
+														URI:     *uri,
+														Headers: http.Header{},
+													}, nil
+												}
+												return endpoint, fmt.Errorf("endpoint rule error, %s", "Operation Type is not set. Please contact service team for resolution.")
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	if exprVal := params.StreamARN; exprVal != nil {
 		_StreamARN := *exprVal
 		_ = _StreamARN
@@ -1032,10 +1489,15 @@ type endpointParamsBinder interface {
 	bindEndpointParams(*EndpointParameters)
 }
 
-func bindEndpointParams(ctx context.Context, input interface{}, options Options) *EndpointParameters {
+func bindEndpointParams(ctx context.Context, input interface{}, options Options) (*EndpointParameters, error) {
 	params := &EndpointParameters{}
 
-	params.Region = bindRegion(options.Region)
+	region, err := bindRegion(options.Region)
+	if err != nil {
+		return nil, err
+	}
+	params.Region = region
+
 	params.UseDualStack = aws.Bool(options.EndpointOptions.UseDualStackEndpoint == aws.DualStackEndpointStateEnabled)
 	params.UseFIPS = aws.Bool(options.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled)
 	params.Endpoint = options.BaseEndpoint
@@ -1044,7 +1506,7 @@ func bindEndpointParams(ctx context.Context, input interface{}, options Options)
 		b.bindEndpointParams(params)
 	}
 
-	return params
+	return params, nil
 }
 
 type resolveEndpointV2Middleware struct {
@@ -1058,12 +1520,11 @@ func (*resolveEndpointV2Middleware) ID() string {
 func (m *resolveEndpointV2Middleware) HandleFinalize(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (
 	out middleware.FinalizeOutput, metadata middleware.Metadata, err error,
 ) {
+	_, span := tracing.StartSpan(ctx, "ResolveEndpoint")
+	defer span.End()
+
 	if awsmiddleware.GetRequiresLegacyEndpoints(ctx) {
 		return next.HandleFinalize(ctx, in)
-	}
-
-	if err := checkAccountID(getIdentity(ctx), m.options.AccountIDEndpointMode); err != nil {
-		return out, metadata, fmt.Errorf("invalid accountID set: %w", err)
 	}
 
 	req, ok := in.Request.(*smithyhttp.Request)
@@ -1075,11 +1536,19 @@ func (m *resolveEndpointV2Middleware) HandleFinalize(ctx context.Context, in mid
 		return out, metadata, fmt.Errorf("expected endpoint resolver to not be nil")
 	}
 
-	params := bindEndpointParams(ctx, getOperationInput(ctx), m.options)
-	endpt, err := m.options.EndpointResolverV2.ResolveEndpoint(ctx, *params)
+	params, err := bindEndpointParams(ctx, getOperationInput(ctx), m.options)
+	if err != nil {
+		return out, metadata, fmt.Errorf("failed to bind endpoint params, %w", err)
+	}
+	endpt, err := timeOperationMetric(ctx, "client.call.resolve_endpoint_duration",
+		func() (smithyendpoints.Endpoint, error) {
+			return m.options.EndpointResolverV2.ResolveEndpoint(ctx, *params)
+		})
 	if err != nil {
 		return out, metadata, fmt.Errorf("failed to resolve service endpoint, %w", err)
 	}
+
+	span.SetProperty("client.call.resolved_endpoint", endpt.URI.String())
 
 	if endpt.URI.RawPath == "" && req.URL.RawPath != "" {
 		endpt.URI.RawPath = endpt.URI.Path
@@ -1102,5 +1571,6 @@ func (m *resolveEndpointV2Middleware) HandleFinalize(ctx context.Context, in mid
 		rscheme.SignerProperties.SetAll(&o.SignerProperties)
 	}
 
+	span.End()
 	return next.HandleFinalize(ctx, in)
 }
