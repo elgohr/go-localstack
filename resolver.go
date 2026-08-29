@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodbstreams"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -53,6 +54,16 @@ type CloudwatchResolverV2 struct{ i *Instance }
 
 func (c *CloudwatchResolverV2) ResolveEndpoint(_ context.Context, _ cloudwatch.EndpointParameters) (smithyendpoints.Endpoint, error) {
 	return resolveEndpoint(c.i.EndpointV2(CloudWatch))
+}
+
+// NewBatchResolver resolves the services ResolverV2 endpoint
+func NewBatchResolverV2(i *Instance) *BatchResolverV2 {
+	return &BatchResolverV2{i: i}
+}
+type BatchResolverV2 struct{ i *Instance }
+
+func (b *BatchResolverV2) ResolveEndpoint(_ context.Context, _ batch.EndpointParameters) (smithyendpoints.Endpoint, error) {
+	return resolveEndpoint(b.i.EndpointV2(Batch))
 }
 
 // NewCloudwatchLogsResolverV2 resolves the services ResolverV2 endpoint
